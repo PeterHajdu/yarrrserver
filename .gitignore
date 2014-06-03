@@ -1,0 +1,10 @@
+src/yarrrserver
+
+*swp
+*.cmake
+Makefile
+CMakeFiles
+CMakeCache.txt
+build
+install_manifest.txt
+

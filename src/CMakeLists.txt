@@ -1,0 +1,9 @@
+
+set(SOURCE_FILES
+  main.cpp
+    )
+
+add_executable(yarrrserver ${SOURCE_FILES})
+target_link_libraries(yarrrserver yarrr ${LIBS})
+install(TARGETS yarrrserver DESTINATION ${deploy_directory}/bin)
+
