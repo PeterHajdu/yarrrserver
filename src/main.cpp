@@ -17,8 +17,8 @@ int main( int argc, char ** argv )
   yarrr::Ship ship;
   yarrr::time_step( ship );
 
-  yarrr::SocketPool<TestMessageFactory> pool( 2000 );
-  pool.listen();
+  yarrr::SocketPool<TestMessageFactory> pool;
+  pool.listen( 2000 );
   pool.start();
   return 0;
 }
