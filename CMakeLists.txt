@@ -27,6 +27,7 @@ if(UNIX)
     endif(enable_libc++)
 endif(UNIX)
 
+include_directories(${deploy_directory}/include)
 include_directories(include)
 
 add_definitions(-std=c++11
