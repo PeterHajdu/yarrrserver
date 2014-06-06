@@ -1,7 +1,11 @@
 #include <iostream>
+#include <array>
 
 #include <yarrr/ship.hpp>
 #include <yarrr/network.hpp>
+
+//todo: remove when read is removed
+#include <unistd.h>
 
 namespace
 {
@@ -10,9 +14,13 @@ namespace
     std::cout << "new connection established" << std::endl;
   }
 
+  const int max_message_size( 1000 );
+  std::array<char,max_message_size> messageBuffer;
   void data_available_on( yarrr::Socket& socket )
   {
-    std::cout << "data is available" << std::endl;
+    //todo: move reading and data buffering to lower layer
+    const size_t length( ::read( socket.fd, &messageBuffer[0], max_message_size ) );
+    std::cout << "data arrived: " << std::string( &messageBuffer[0], &messageBuffer[length] ) << std::endl;
   }
 }
 
