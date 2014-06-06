@@ -4,7 +4,7 @@
 #include <chrono>
 
 #include <yarrr/ship.hpp>
-#include <yarrr/network.hpp>
+#include <yarrr/socket_pool.hpp>
 
 
 namespace
