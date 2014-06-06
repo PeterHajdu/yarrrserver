@@ -22,17 +22,38 @@ namespace
   }
 }
 
+class Player
+{
+  public:
+    Player( yarrr::Socket& socket )
+      : m_socket( socket )
+      , m_ship( "Ship: 1000 1100 1 2 3000 3" )
+    {
+    }
+
+    void update()
+    {
+      yarrr::time_step( m_ship );
+      const std::string ship_data( yarrr::serialize( m_ship ) );
+      m_socket.send( ship_data.data(), ship_data.size() );
+    }
+
+  private:
+    yarrr::Socket& m_socket;
+    yarrr::Ship m_ship;
+};
+
 int main( int argc, char ** argv )
 {
 
-  std::vector< std::reference_wrapper< yarrr::Socket > > clients;
-  std::mutex clients_mutex;
+  std::vector< Player > players;
+  std::mutex players_mutex;
 
   yarrr::SocketPool pool(
-      [ &clients, &clients_mutex ]( yarrr::Socket& socket )
+      [ &players, &players_mutex ]( yarrr::Socket& socket )
       {
-        std::lock_guard<std::mutex> lock( clients_mutex );
-        clients.emplace_back( socket );
+        std::lock_guard<std::mutex> lock( players_mutex );
+        players.emplace_back( socket );
       },
       lost_connection,
       data_available_on );
@@ -43,11 +64,10 @@ int main( int argc, char ** argv )
   while ( true )
   {
     {
-      std::lock_guard<std::mutex> lock( clients_mutex );
-      for ( auto& client : clients )
+      std::lock_guard<std::mutex> lock( players_mutex );
+      for ( auto& player : players )
       {
-        const std::string message( "hello dude" );
-        client.get().send( message.data(), message.length() );
+        player.update();
       }
     }
 
