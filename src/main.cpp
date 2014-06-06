@@ -3,6 +3,7 @@
 #include <thread>
 #include <chrono>
 #include <functional>
+#include <mutex>
 
 #include <yarrr/ship.hpp>
 #include <yarrr/socket_pool.hpp>
