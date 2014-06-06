@@ -6,9 +6,11 @@
 
 namespace
 {
-  void new_connection( yarrr::Socket& )
+  void new_connection( yarrr::Socket& socket )
   {
     std::cout << "new connection established" << std::endl;
+    const std::string helloMessage( "hello world" );
+    socket.send( helloMessage.data(), helloMessage.size() );
   }
 
   void lost_connection( yarrr::Socket& )
