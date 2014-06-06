@@ -4,6 +4,6 @@ set(SOURCE_FILES
     )
 
 add_executable(yarrrserver ${SOURCE_FILES})
-target_link_libraries(yarrrserver yarrr ${LIBS})
+target_link_libraries(yarrrserver yarrr pthread ${LIBS})
 install(TARGETS yarrrserver DESTINATION ${deploy_directory}/bin)
 

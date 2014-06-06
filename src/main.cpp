@@ -1,8 +1,11 @@
 #include <iostream>
 #include <array>
+#include <thread>
+#include <chrono>
 
 #include <yarrr/ship.hpp>
 #include <yarrr/network.hpp>
+
 
 namespace
 {
@@ -31,7 +34,13 @@ int main( int argc, char ** argv )
       lost_connection,
       data_available_on );
   pool.listen( 2000 );
-  pool.start();
+
+  std::thread network_thread( std::bind( &yarrr::SocketPool::start, &pool ) );
+
+  std::this_thread::sleep_for( std::chrono::seconds( 3 ) );
+
+  pool.stop();
+  network_thread.join();
   return 0;
 }
 
