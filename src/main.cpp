@@ -4,6 +4,7 @@
 #include <chrono>
 #include <functional>
 #include <mutex>
+#include <algorithm>
 
 #include <yarrr/ship.hpp>
 #include <thenet/socket_pool.hpp>
@@ -132,10 +133,12 @@ class Player
   public:
     typedef std::unique_ptr< Player > Pointer;
 
-    Player()
-      : m_ship( "Ship: 1000 1100 1 2 3000 3" )
+    Player( int network_id )
+      : id( network_id )
+      , m_ship( "Ship: 1000 1100 1 2 3000 3" )
     {
     }
+    const int id;
 
     void update()
     {
@@ -154,7 +157,7 @@ class Player
 
 int main( int argc, char ** argv )
 {
-  std::vector< Player::Pointer > players;
+  std::unordered_map< int, Player::Pointer > players;
   std::mutex players_mutex;
 
   std::vector< std::reference_wrapper< Connection > > connections;
@@ -163,13 +166,23 @@ int main( int argc, char ** argv )
       [ &connections, &players, &players_mutex ]( Connection& connection )
       {
         std::lock_guard<std::mutex> lock( players_mutex );
-        players.emplace_back( new Player() );
+        Player::Pointer new_player( new Player( connection.id ) );
+        players.emplace( std::make_pair(
+          connection.id,
+          std::move( new_player ) ) );
         connections.emplace_back( connection );
       },
       [ &connections, &players, &players_mutex ]( Connection& connection )
       {
         std::lock_guard<std::mutex> lock( players_mutex );
-        //todo: find player and connection and remove them
+        players.erase( connection.id );
+        connections.erase(
+          std::remove_if( begin( connections ), end( connections ),
+          [ &connection ]( std::reference_wrapper< Connection >& element )
+          {
+            return connection.id == element.get().id;
+          } ),
+          std::end( connections ) );
       } );
 
   the::net::SocketPool pool(
@@ -201,8 +214,8 @@ int main( int argc, char ** argv )
       std::vector< the::net::Data > ship_states;
       for ( auto& player : players )
       {
-        player->update();
-        ship_states.emplace_back( player->serialize() );
+        player.second->update();
+        ship_states.emplace_back( player.second->serialize() );
       }
 
       for ( auto& connection : connections )
