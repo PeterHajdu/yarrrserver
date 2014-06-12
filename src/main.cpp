@@ -46,6 +46,11 @@ class Player
       m_message_queue.send( { begin( ship_data ), end( ship_data ) } );
     }
 
+    void wake_up()
+    {
+      m_message_queue.wake_up();
+    }
+
   private:
     the::net::Socket& m_socket;
     the::net::MessageQueue m_message_queue;
@@ -69,12 +74,19 @@ int main( int argc, char ** argv )
   pool.listen( 2000 );
 
   std::thread network_thread(
-      [ &pool ]()
+      [ &pool, &players_mutex, &players ]()
       {
         while ( true )
         {
           const int ten_milliseconds( 10 );
           pool.run_for( ten_milliseconds );
+          {
+            std::lock_guard<std::mutex> lock( players_mutex );
+            for ( auto& player : players )
+            {
+              player->wake_up();
+            }
+          }
         }
       } );
 
