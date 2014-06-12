@@ -224,10 +224,17 @@ int main( int argc, char ** argv )
         {
           connection.get().send( the::net::Data( ship_state ) );
         }
+
+        the::net::Data message;
+        while ( connection.get().receive( message ) )
+        {
+          std::cout << "message arrived from player: " << connection.get().id << " " <<
+            std::string( begin( message ), end( message ) ) << std::endl;
+        }
       }
     }
 
-    std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+    std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
   }
 
   network_thread.join();
