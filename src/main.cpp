@@ -8,31 +8,32 @@
 #include <yarrr/ship.hpp>
 #include <thenet/socket_pool.hpp>
 #include <thenet/message_queue.hpp>
-
+#include <thenet/connection_buffer.hpp>
 
 namespace
 {
-  void lost_connection( the::net::Socket& )
+  size_t dummy_parser( const char*, size_t length )
   {
-    std::cout << "connection lost" << std::endl;
-  }
-
-  void data_available_on( the::net::Socket& socket, const char* message, size_t length )
-  {
-    std::cout << "data arrived: " << std::string( message, length ) << std::endl;
+    return length;
   }
 }
 
 class Connection
 {
   public:
+    typedef std::unique_ptr<Connection> Pointer;
     Connection( the::net::Socket& socket )
-      : m_socket( socket )
+      : id( socket.id )
+      , m_socket( socket )
       , m_message_queue(
           std::bind(
             &the::net::Socket::send,
             &m_socket,
             std::placeholders::_1, std::placeholders::_2 ) )
+      , m_incoming_buffer(
+          &dummy_parser,
+          std::bind(
+            &the::net::MessageQueue::message_from_network, &m_message_queue, std::placeholders::_1 ) )
     {
     }
 
@@ -51,38 +52,78 @@ class Connection
       m_message_queue.wake_up();
     }
 
+    void data_from_network( const char* data, size_t length )
+    {
+      m_incoming_buffer.receive( data, length );
+    }
+
+    const int id;
   private:
     the::net::Socket& m_socket;
     the::net::MessageQueue m_message_queue;
+    the::net::ConnectionBuffer m_incoming_buffer;
 };
 
 
 class ConnectionPool
 {
   public:
-    typedef std::function< void(Connection&) > NewConnectionCallback;
-    ConnectionPool( NewConnectionCallback new_connection )
+    typedef std::function< void(Connection&) > ConnectionCallback;
+    ConnectionPool(
+        ConnectionCallback new_connection,
+        ConnectionCallback lost_connection )
       : m_new_connection( new_connection )
+      , m_lost_connection( lost_connection )
     {
     }
 
     void on_new_socket( the::net::Socket& socket )
     {
-      m_connections.emplace_back( new Connection( socket ) );
-      m_new_connection( *m_connections.back() );
+      Connection::Pointer new_connection( new Connection( socket ) );
+      m_new_connection( *new_connection );
+
+      m_connections.emplace( std::make_pair(
+            socket.id,
+            std::move( new_connection ) ) );
     }
+
+    void on_lost_socket( the::net::Socket& socket )
+    {
+      ConnectionContainer::iterator connection( m_connections.find( socket.id ) );
+      if ( connection == m_connections.end() )
+      {
+        return;
+      }
+
+      m_lost_connection( *connection->second );
+      m_connections.erase( connection );
+    }
+
+    void on_data_arrived( the::net::Socket& socket, const char* message, size_t length )
+    {
+      ConnectionContainer::iterator connection( m_connections.find( socket.id ) );
+      if ( connection == m_connections.end() )
+      {
+        return;
+      }
+
+      connection->second->data_from_network( message, length );
+    }
+
 
     void wake_up_on_network_thread()
     {
       for ( auto& connection : m_connections )
       {
-        connection->wake_up_on_network_thread();
+        connection.second->wake_up_on_network_thread();
       }
     }
 
   private:
-    std::vector< std::unique_ptr< Connection > > m_connections;
-    NewConnectionCallback m_new_connection;
+    typedef std::unordered_map< int, Connection::Pointer > ConnectionContainer;
+    ConnectionContainer m_connections;
+    ConnectionCallback m_new_connection;
+    ConnectionCallback m_lost_connection;
 };
 
 
@@ -124,12 +165,18 @@ int main( int argc, char ** argv )
         std::lock_guard<std::mutex> lock( players_mutex );
         players.emplace_back( new Player() );
         connections.emplace_back( connection );
+      },
+      [ &connections, &players, &players_mutex ]( Connection& connection )
+      {
+        std::lock_guard<std::mutex> lock( players_mutex );
+        //todo: find player and connection and remove them
       } );
 
   the::net::SocketPool pool(
       std::bind( &ConnectionPool::on_new_socket, &cpool, std::placeholders::_1 ),
-      lost_connection,
-      data_available_on );
+      std::bind( &ConnectionPool::on_lost_socket, &cpool, std::placeholders::_1 ),
+      std::bind( &ConnectionPool::on_data_arrived, &cpool,
+        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3 ) );
 
   pool.listen( 2000 );
 
