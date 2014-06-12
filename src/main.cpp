@@ -9,14 +9,18 @@
 #include <yarrr/ship.hpp>
 #include <thenet/socket_pool.hpp>
 #include <thenet/message_queue.hpp>
-#include <thenet/connection_buffer.hpp>
+#include <thenet/message_buffer.hpp>
 
 namespace
 {
-  size_t dummy_parser( const char*, size_t length )
+  class DummyParser
   {
-    return length;
-  }
+    public:
+      static size_t parse( const char*, size_t length )
+      {
+        return length;
+      }
+  };
 }
 
 class Connection
@@ -31,10 +35,7 @@ class Connection
             &the::net::Socket::send,
             &m_socket,
             std::placeholders::_1, std::placeholders::_2 ) )
-      , m_incoming_buffer(
-          &dummy_parser,
-          std::bind(
-            &the::net::MessageQueue::message_from_network, &m_message_queue, std::placeholders::_1 ) )
+      , m_incoming_buffer( m_message_queue )
     {
     }
 
@@ -62,7 +63,7 @@ class Connection
   private:
     the::net::Socket& m_socket;
     the::net::MessageQueue m_message_queue;
-    the::net::ConnectionBuffer m_incoming_buffer;
+    the::net::MessageBuffer<DummyParser,the::net::MessageQueue> m_incoming_buffer;
 };
 
 
