@@ -5,9 +5,34 @@
 #include <functional>
 #include <mutex>
 #include <algorithm>
+#include <random>
 
 #include <yarrr/ship.hpp>
 #include <thenet/service.hpp>
+
+namespace
+{
+  std::random_device rd;
+  std::mt19937 gen( rd() );
+  std::uniform_int_distribution<> coordinate_dis( 200, 800 );
+  std::uniform_int_distribution<> angle_dis( 0, 360 );
+  std::uniform_int_distribution<> velocity_dis( -3, +3 );
+
+  yarrr::Ship random_ship()
+  {
+    yarrr::Ship ship;
+    ship.coordinate.x = coordinate_dis( gen );
+    ship.coordinate.y = coordinate_dis( gen );
+    ship.angle = angle_dis( gen );
+
+    ship.velocity.x = velocity_dis( gen );
+    ship.velocity.y = velocity_dis( gen );
+
+    ship.vangle = velocity_dis( gen );
+
+    return ship;
+  }
+}
 
 class Player
 {
@@ -16,7 +41,7 @@ class Player
 
     Player( int network_id )
       : id( network_id )
-      , m_ship( "Ship: 0 1000 1100 1 2 3000 3" )
+      , m_ship( random_ship() )
     {
       m_ship.id = id;
     }
