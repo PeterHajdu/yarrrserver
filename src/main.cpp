@@ -49,11 +49,13 @@ int main( int argc, char ** argv )
         players.emplace( std::make_pair(
           connection.id,
           std::move( new_player ) ) );
+        std::cout << "new connection " << connection.id << std::endl;
       },
       [ &players, &players_mutex ]( the::net::Connection& connection )
       {
         std::lock_guard<std::mutex> lock( players_mutex );
         players.erase( connection.id );
+        std::cout << "connection lost " << connection.id << std::endl;
       } );
 
   network_service.listen_on( 2000 );
