@@ -7,8 +7,7 @@
 #include <algorithm>
 
 #include <yarrr/ship.hpp>
-#include <thenet/socket_pool.hpp>
-#include <thenet/connection_pool.hpp>
+#include <thenet/service.hpp>
 
 class Player
 {
@@ -42,7 +41,7 @@ int main( int argc, char ** argv )
   std::unordered_map< int, Player::Pointer > players;
   std::mutex players_mutex;
 
-  the::net::ConnectionPool cpool(
+  the::net::Service network_service(
       [ &players, &players_mutex ]( the::net::Connection& connection )
       {
         std::lock_guard<std::mutex> lock( players_mutex );
@@ -57,27 +56,8 @@ int main( int argc, char ** argv )
         players.erase( connection.id );
       } );
 
-  the::net::SocketPool pool(
-      std::bind( &the::net::ConnectionPool::on_new_socket, &cpool, std::placeholders::_1 ),
-      std::bind( &the::net::ConnectionPool::on_socket_lost, &cpool, std::placeholders::_1 ),
-      std::bind( &the::net::ConnectionPool::on_data_available, &cpool,
-        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3 ) );
-
-  pool.listen( 2000 );
-
-  std::thread network_thread(
-      [ &cpool, &pool, &players_mutex, &players ]()
-      {
-        while ( true )
-        {
-          const int ten_milliseconds( 10 );
-          pool.run_for( ten_milliseconds );
-          {
-            std::lock_guard<std::mutex> lock( players_mutex );
-            cpool.wake_up_on_network_thread();
-          }
-        }
-      } );
+  network_service.listen_on( 2000 );
+  network_service.start();
 
   while ( true )
   {
@@ -91,7 +71,7 @@ int main( int argc, char ** argv )
       }
     }
 
-    cpool.enumerate(
+    network_service.enumerate(
         [ &ship_states ]( the::net::Connection& connection )
         {
           for ( auto& ship_state : ship_states )
@@ -110,7 +90,6 @@ int main( int argc, char ** argv )
     std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
   }
 
-  network_thread.join();
   return 0;
 }
 
