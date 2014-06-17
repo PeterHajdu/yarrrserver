@@ -16,8 +16,9 @@ class Player
 
     Player( int network_id )
       : id( network_id )
-      , m_ship( "Ship: 1000 1100 1 2 3000 3" )
+      , m_ship( "Ship: 0 1000 1100 1 2 3000 3" )
     {
+      m_ship.id = id;
     }
     const int id;
 
