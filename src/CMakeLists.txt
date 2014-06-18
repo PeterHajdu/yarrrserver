@@ -4,7 +4,6 @@ set(SOURCE_FILES
     )
 
 add_executable(yarrrserver ${SOURCE_FILES})
-target_link_libraries(yarrrserver yarrr pthread ${LIBS})
-target_link_libraries(yarrrserver thenet pthread ${LIBS})
+target_link_libraries(yarrrserver yarrr thenet thetime pthread ${LIBS})
 install(TARGETS yarrrserver DESTINATION ${deploy_directory}/bin)
 

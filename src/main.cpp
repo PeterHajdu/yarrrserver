@@ -9,6 +9,8 @@
 
 #include <yarrr/ship.hpp>
 #include <thenet/service.hpp>
+#include <thetime/frequency_stabilizer.hpp>
+#include <thetime/clock.hpp>
 
 namespace
 {
@@ -87,6 +89,8 @@ int main( int argc, char ** argv )
   network_service.listen_on( 2000 );
   network_service.start();
 
+  the::time::Clock clock;
+  the::time::FrequencyStabilizer< 60, the::time::Clock > frequency_stabilizer( clock );
   while ( true )
   {
     std::vector< the::net::Data > ship_states;
@@ -115,7 +119,7 @@ int main( int argc, char ** argv )
           }
         } );
 
-    std::this_thread::sleep_for( std::chrono::milliseconds( 16 ) );
+    frequency_stabilizer.stabilize();
   }
 
   return 0;
