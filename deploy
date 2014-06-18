@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
 
 make install
-killall -9 yarrrserver
-yarrrserver&
 
