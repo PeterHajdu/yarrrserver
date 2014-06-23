@@ -6,8 +6,9 @@
 #include <mutex>
 #include <algorithm>
 #include <random>
+#include <cassert>
 
-#include <yarrr/ship.hpp>
+#include <yarrr/object.hpp>
 #include <thenet/service.hpp>
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
@@ -16,15 +17,16 @@ namespace
 {
   std::random_device rd;
   std::mt19937 gen( rd() );
-  std::uniform_int_distribution<> coordinate_dis( 200, 800 );
+  std::uniform_int_distribution<> x_dis( 300, 500 );
+  std::uniform_int_distribution<> y_dis( 300, 400 );
   std::uniform_int_distribution<> angle_dis( 0, 360 );
-  std::uniform_int_distribution<> velocity_dis( -3, +3 );
+  std::uniform_int_distribution<> velocity_dis( -100, +100 );
 
-  yarrr::Ship random_ship()
+  yarrr::Object random_ship()
   {
-    yarrr::Ship ship;
-    ship.coordinate.x = coordinate_dis( gen );
-    ship.coordinate.y = coordinate_dis( gen );
+    yarrr::Object ship;
+    ship.coordinate.x = x_dis( gen );
+    ship.coordinate.y = y_dis( gen );
     ship.angle = angle_dis( gen );
 
     ship.velocity.x = velocity_dis( gen );
@@ -49,9 +51,9 @@ class Player
     }
     const int id;
 
-    void update()
+    void update( const the::time::Clock::Time& timestamp )
     {
-      yarrr::time_step( m_ship );
+      yarrr::advance_time_to( timestamp, m_ship );
     }
 
     the::net::Data serialize() const
@@ -61,7 +63,7 @@ class Player
     }
 
   private:
-    yarrr::Ship m_ship;
+    yarrr::Object m_ship;
 };
 
 int main( int argc, char ** argv )
@@ -90,16 +92,18 @@ int main( int argc, char ** argv )
   network_service.start();
 
   the::time::Clock clock;
-  the::time::FrequencyStabilizer< 60, the::time::Clock > frequency_stabilizer( clock );
+  the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
   while ( true )
   {
+    auto now( clock.now() );
     std::vector< the::net::Data > ship_states;
     {
       std::lock_guard<std::mutex> lock( players_mutex );
       for ( auto& player : players )
       {
-        player.second->update();
+        player.second->update( now );
         ship_states.emplace_back( player.second->serialize() );
+        std::cout << "add ship state " << player.second->id << std::endl;
       }
     }
 
@@ -108,7 +112,8 @@ int main( int argc, char ** argv )
         {
           for ( auto& ship_state : ship_states )
           {
-            connection.send( the::net::Data( ship_state ) );
+            std::cout << "send ship state " << std::string( begin( ship_state ), end( ship_state ) ) << " to " << connection.id << std::endl;
+            assert( connection.send( the::net::Data( ship_state ) ) );
           }
 
           the::net::Data message;
