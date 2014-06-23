@@ -27,8 +27,8 @@ if(UNIX)
     endif(enable_libc++)
 endif(UNIX)
 
-include_directories(${deploy_directory}/include)
 include_directories(include)
+include_directories(${deploy_directory}/include)
 
 add_definitions(-std=c++11
                 -Wall
