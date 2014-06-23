@@ -79,13 +79,11 @@ int main( int argc, char ** argv )
         players.emplace( std::make_pair(
           connection.id,
           std::move( new_player ) ) );
-        std::cout << "new connection " << connection.id << std::endl;
       },
       [ &players, &players_mutex ]( the::net::Connection& connection )
       {
         std::lock_guard<std::mutex> lock( players_mutex );
         players.erase( connection.id );
-        std::cout << "connection lost " << connection.id << std::endl;
       } );
 
   network_service.listen_on( 2000 );
@@ -93,6 +91,7 @@ int main( int argc, char ** argv )
 
   the::time::Clock clock;
   the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
+
   while ( true )
   {
     auto now( clock.now() );
@@ -103,7 +102,6 @@ int main( int argc, char ** argv )
       {
         player.second->update( now );
         ship_states.emplace_back( player.second->serialize() );
-        std::cout << "add ship state " << player.second->id << std::endl;
       }
     }
 
@@ -114,13 +112,6 @@ int main( int argc, char ** argv )
           {
             std::cout << "send ship state " << std::string( begin( ship_state ), end( ship_state ) ) << " to " << connection.id << std::endl;
             assert( connection.send( the::net::Data( ship_state ) ) );
-          }
-
-          the::net::Data message;
-          while ( connection.receive( message ) )
-          {
-            std::cout << "message arrived from player: " << connection.id << " " <<
-            std::string( begin( message ), end( message ) ) << std::endl;
           }
         } );
 
