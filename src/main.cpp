@@ -86,7 +86,7 @@ int main( int argc, char ** argv )
         players.erase( connection.id );
       } );
 
-  network_service.listen_on( 2000 );
+  network_service.listen_on( 2001 );
   network_service.start();
 
   the::time::Clock clock;
