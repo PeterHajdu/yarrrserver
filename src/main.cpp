@@ -15,6 +15,16 @@
 
 namespace
 {
+  std::string dump( const the::net::Data& data )
+  {
+    std::string ret;
+    for ( auto character : data )
+    {
+      ret += std::to_string( character ) + ",";
+    }
+    return ret;
+  }
+
   std::random_device rd;
   std::mt19937 gen( rd() );
   std::uniform_int_distribution<> x_dis( 300, 500 );
@@ -62,7 +72,38 @@ class Player
       return the::net::Data( begin( ship_data ) , end( ship_data ) );
     }
 
+    void command( char cmd )
+    {
+      std::cout << "command ship from " << m_ship << std::endl;
+      std::cout << "command " << (int) cmd << std::endl;
+      switch( cmd )
+      {
+        case 1: thruster(); break;
+        case 2: ccw(); break;
+        case 3: cw(); break;
+      }
+      std::cout << "command ship to " << m_ship << std::endl;
+    }
+
   private:
+    void thruster()
+    {
+      const yarrr::Coordinate heading{
+        static_cast< int64_t >( 20 * cos( m_ship.angle * 3.14 / 180 ) ),
+        static_cast< int64_t >( 20 * sin( m_ship.angle * 3.14 / 180 ) ) };
+      m_ship.velocity += heading;
+    }
+
+    void ccw()
+    {
+      m_ship.vangle -= 30;
+    }
+
+    void cw()
+    {
+      m_ship.vangle += 30;
+    }
+
     yarrr::Object m_ship;
 };
 
@@ -106,12 +147,23 @@ int main( int argc, char ** argv )
     }
 
     network_service.enumerate(
-        [ &ship_states ]( the::net::Connection& connection )
+        [ &players_mutex, &players, &ship_states ]( the::net::Connection& connection )
         {
           for ( auto& ship_state : ship_states )
           {
             std::cout << "send ship state " << std::string( begin( ship_state ), end( ship_state ) ) << " to " << connection.id << std::endl;
             assert( connection.send( the::net::Data( ship_state ) ) );
+          }
+
+          {
+            std::lock_guard<std::mutex> lock( players_mutex );
+            the::net::Data message;
+            Player& current_player( *players[ connection.id ] );
+            while ( connection.receive( message ) )
+            {
+              std::cout << "command from client: " << dump( message ) << std::endl;
+              current_player.command( message[0] );
+            }
           }
         } );
 
