@@ -16,6 +16,8 @@
 
 namespace
 {
+
+  /*
   std::string dump( const the::net::Data& data )
   {
     std::string ret;
@@ -25,6 +27,7 @@ namespace
     }
     return ret;
   }
+  */
 
   std::random_device rd;
   std::mt19937 gen( rd() );
@@ -142,6 +145,7 @@ int main( int argc, char ** argv )
   while ( true )
   {
     auto now( clock.now() );
+    std::cout << "time: " << now << std::endl;
     std::vector< the::net::Data > ship_states;
     {
       std::lock_guard<std::mutex> lock( players_mutex );
@@ -157,7 +161,6 @@ int main( int argc, char ** argv )
         {
           for ( auto& ship_state : ship_states )
           {
-            std::cout << "send ship state " << std::string( begin( ship_state ), end( ship_state ) ) << " to " << connection.id << std::endl;
             assert( connection.send( the::net::Data( ship_state ) ) );
           }
 
@@ -167,7 +170,6 @@ int main( int argc, char ** argv )
             Player& current_player( *players[ connection.id ] );
             while ( connection.receive( message ) )
             {
-              std::cout << "command from client: " << dump( message ) << std::endl;
               current_player.command( message[0] );
             }
           }
