@@ -9,6 +9,7 @@
 #include <cassert>
 
 #include <yarrr/object.hpp>
+#include <yarrr/clock_synchronizer.hpp>
 #include <thenet/service.hpp>
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
@@ -112,14 +113,20 @@ int main( int argc, char ** argv )
   std::unordered_map< int, Player::Pointer > players;
   std::mutex players_mutex;
 
+  the::time::Clock clock;
   the::net::Service network_service(
-      [ &players, &players_mutex ]( the::net::Connection& connection )
+      [ &players, &players_mutex, &clock ]( the::net::Connection& connection )
       {
         std::lock_guard<std::mutex> lock( players_mutex );
         Player::Pointer new_player( new Player( connection.id ) );
         players.emplace( std::make_pair(
           connection.id,
           std::move( new_player ) ) );
+
+        connection.register_task( the::net::NetworkTask::Pointer(
+            new yarrr::clock_sync::Server< the::time::Clock, the::net::Connection >(
+              clock,
+              connection ) ) );
       },
       [ &players, &players_mutex ]( the::net::Connection& connection )
       {
@@ -130,7 +137,6 @@ int main( int argc, char ** argv )
   network_service.listen_on( 2001 );
   network_service.start();
 
-  the::time::Clock clock;
   the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
 
   while ( true )
