@@ -67,7 +67,7 @@ class Player
 
     void update( const the::time::Clock::Time& timestamp )
     {
-      yarrr::advance_time_to( timestamp, m_ship );
+      yarrr::travel_in_time_to( timestamp, m_ship );
     }
 
     the::net::Data serialize() const
