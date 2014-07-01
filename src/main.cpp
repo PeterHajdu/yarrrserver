@@ -33,8 +33,9 @@ namespace
   std::mt19937 gen( rd() );
   std::uniform_int_distribution<> x_dis( 300, 500 );
   std::uniform_int_distribution<> y_dis( 300, 400 );
-  std::uniform_int_distribution<> angle_dis( 0, 360 );
+  std::uniform_int_distribution<> angle_dis( 0, 360 * 4 );
   std::uniform_int_distribution<> velocity_dis( -100, +100 );
+  std::uniform_int_distribution<> ang_velocity_dis( -10, +10 );
 
   yarrr::Object random_ship()
   {
@@ -46,7 +47,7 @@ namespace
     ship.velocity.x = velocity_dis( gen );
     ship.velocity.y = velocity_dis( gen );
 
-    ship.vangle = velocity_dis( gen );
+    ship.vangle = ang_velocity_dis( gen );
 
     return ship;
   }
@@ -76,36 +77,34 @@ class Player
       return the::net::Data( begin( ship_data ) , end( ship_data ) );
     }
 
-    void command( char cmd )
+    void command( char cmd, const the::time::Time timestamp )
     {
-      std::cout << "command ship from " << m_ship << std::endl;
-      std::cout << "command " << (int) cmd << std::endl;
+      yarrr::travel_in_time_to( timestamp, m_ship );
       switch( cmd )
       {
         case 1: thruster(); break;
         case 2: ccw(); break;
         case 3: cw(); break;
       }
-      std::cout << "command ship to " << m_ship << std::endl;
     }
 
   private:
     void thruster()
     {
       const yarrr::Coordinate heading{
-        static_cast< int64_t >( 20 * cos( m_ship.angle * 3.14 / 180 ) ),
-        static_cast< int64_t >( 20 * sin( m_ship.angle * 3.14 / 180 ) ) };
+        static_cast< int64_t >( 40.0 * cos( m_ship.angle * 3.14 / 180.0 / 4.0 ) ),
+        static_cast< int64_t >( 40.0 * sin( m_ship.angle * 3.14 / 180.0 / 4.0 ) ) };
       m_ship.velocity += heading;
     }
 
     void ccw()
     {
-      m_ship.vangle -= 30;
+      m_ship.vangle -= 100;
     }
 
     void cw()
     {
-      m_ship.vangle += 30;
+      m_ship.vangle += 100;
     }
 
     yarrr::Object m_ship;
@@ -145,7 +144,22 @@ int main( int argc, char ** argv )
   while ( true )
   {
     auto now( clock.now() );
-    std::cout << "time: " << now << std::endl;
+
+    network_service.enumerate(
+        [ &players_mutex, &players ]( the::net::Connection& connection )
+        {
+          std::lock_guard<std::mutex> lock( players_mutex );
+          the::net::Data message;
+          Player& current_player( *players[ connection.id ] );
+          while ( connection.receive( message ) )
+          {
+            if ( message[ 0 ] == 2 )
+            {
+              current_player.command( message[1], *reinterpret_cast<const uint64_t*>(&message[2]) );
+            }
+          }
+        } );
+
     std::vector< the::net::Data > ship_states;
     {
       std::lock_guard<std::mutex> lock( players_mutex );
@@ -162,16 +176,6 @@ int main( int argc, char ** argv )
           for ( auto& ship_state : ship_states )
           {
             assert( connection.send( the::net::Data( ship_state ) ) );
-          }
-
-          {
-            std::lock_guard<std::mutex> lock( players_mutex );
-            the::net::Data message;
-            Player& current_player( *players[ connection.id ] );
-            while ( connection.receive( message ) )
-            {
-              current_player.command( message[0] );
-            }
           }
         } );
 
