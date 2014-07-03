@@ -11,10 +11,15 @@
 #include <yarrr/object.hpp>
 #include <yarrr/clock_synchronizer.hpp>
 #include <yarrr/object_state_update.hpp>
+#include <yarrr/login.hpp>
+#include <yarrr/command.hpp>
 
 #include <thenet/service.hpp>
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
+
+#include <thectci/factory.hpp>
+#include <thectci/dispatcher.hpp>
 
 namespace
 {
@@ -142,22 +147,45 @@ int main( int argc, char ** argv )
 
   the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
 
+  the::ctci::Factory< yarrr::Event > event_factory;
+  the::ctci::ExactCreator< yarrr::Event, yarrr::LoginRequest > login_request_creator;
+  event_factory.register_creator( yarrr::LoginRequest::ctci, login_request_creator );
+
+  the::ctci::ExactCreator< yarrr::Event, yarrr::Command > command_creator;
+  event_factory.register_creator( yarrr::Command::ctci, command_creator );
+
+  the::ctci::Dispatcher event_dispatcher;
+  event_dispatcher.register_listener<yarrr::LoginRequest>( yarrr::LoginRequest::ctci,
+      []( const yarrr::LoginRequest& )
+      {
+        std::cout << "login request arrived" << std::endl;
+      } );
+
+  event_dispatcher.register_listener<yarrr::Command>( yarrr::Command::ctci,
+      []( const yarrr::Command& )
+      {
+        std::cout << "command arrived" << std::endl;
+      } );
+
+
   while ( true )
   {
     auto now( clock.now() );
 
     network_service.enumerate(
-        [ &players_mutex, &players ]( the::net::Connection& connection )
+        [ &event_factory, &event_dispatcher ]( the::net::Connection& connection )
         {
-          std::lock_guard<std::mutex> lock( players_mutex );
           the::net::Data message;
-          Player& current_player( *players[ connection.id ] );
           while ( connection.receive( message ) )
           {
-            if ( message[ 0 ] == 2 )
+            yarrr::Event::Pointer event( event_factory.create( *reinterpret_cast<const the::ctci::Id*>( &message[0] ) ) );
+            if ( !event )
             {
-              current_player.command( message[1], *reinterpret_cast<const uint64_t*>(&message[2]) );
+              continue;
             }
+
+            event->deserialize( message );
+            event_dispatcher.dispatch( event->polymorphic_ctci(), *event );
           }
         } );
 
