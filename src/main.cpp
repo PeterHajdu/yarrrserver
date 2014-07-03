@@ -10,6 +10,8 @@
 
 #include <yarrr/object.hpp>
 #include <yarrr/clock_synchronizer.hpp>
+#include <yarrr/object_state_update.hpp>
+
 #include <thenet/service.hpp>
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
@@ -73,8 +75,7 @@ class Player
 
     the::net::Data serialize() const
     {
-      const std::string ship_data( yarrr::serialize( m_ship ) );
-      return the::net::Data( begin( ship_data ) , end( ship_data ) );
+      return yarrr::ObjectStateUpdate( m_ship ).serialize();
     }
 
     void command( char cmd, const the::time::Time timestamp )
