@@ -155,13 +155,13 @@ int main( int argc, char ** argv )
   event_factory.register_creator( yarrr::Command::ctci, command_creator );
 
   the::ctci::Dispatcher event_dispatcher;
-  event_dispatcher.register_listener<yarrr::LoginRequest>( yarrr::LoginRequest::ctci,
+  event_dispatcher.register_listener<yarrr::LoginRequest>(
       []( const yarrr::LoginRequest& )
       {
         std::cout << "login request arrived" << std::endl;
       } );
 
-  event_dispatcher.register_listener<yarrr::Command>( yarrr::Command::ctci,
+  event_dispatcher.register_listener<yarrr::Command>(
       []( const yarrr::Command& )
       {
         std::cout << "command arrived" << std::endl;
@@ -185,7 +185,7 @@ int main( int argc, char ** argv )
             }
 
             event->deserialize( message );
-            event_dispatcher.dispatch( event->polymorphic_ctci(), *event );
+            event_dispatcher.polymorphic_dispatch( *event );
           }
         } );
 
