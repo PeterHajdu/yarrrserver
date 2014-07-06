@@ -124,7 +124,7 @@ class ConnectionHandler
 {
     the::ctci::Dispatcher m_dispatcher;
     PlayerContainer& m_players;
-    //the::net::Connection& m_connection;
+    the::net::Connection& m_connection;
 
   public:
     typedef std::unique_ptr< ConnectionHandler > Pointer;
@@ -133,7 +133,7 @@ class ConnectionHandler
         PlayerContainer& players )
       : m_dispatcher()
       , m_players( players )
-      //, m_connection( connection )
+      , m_connection( connection )
       , id( connection.id )
     {
       m_dispatcher.register_listener<yarrr::LoginRequest>(
@@ -151,6 +151,7 @@ class ConnectionHandler
     void handle_login_request( const yarrr::LoginRequest& request )
     {
       std::cout << "login_request arrived" << std::endl;
+      m_connection.send( yarrr::LoginResponse( id ).serialize() );
       m_players.emplace( std::make_pair(
             id,
             Player::Pointer( new Player(
