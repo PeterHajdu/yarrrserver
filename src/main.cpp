@@ -9,6 +9,7 @@
 #include <cassert>
 
 #include <yarrr/object.hpp>
+#include <yarrr/ship_control.hpp>
 #include <yarrr/clock_synchronizer.hpp>
 #include <yarrr/object_state_update.hpp>
 #include <yarrr/login.hpp>
@@ -23,18 +24,6 @@
 
 namespace
 {
-
-  /*
-  std::string dump( const the::net::Data& data )
-  {
-    std::string ret;
-    for ( auto character : data )
-    {
-      ret += std::to_string( character ) + ",";
-    }
-    return ret;
-  }
-  */
 
   std::random_device rd;
   std::mt19937 gen( rd() );
@@ -68,11 +57,12 @@ class Player
     Player( int network_id, const std::string& name, the::ctci::Dispatcher& dispatcher )
       : id( network_id )
       , m_ship( random_ship() )
+      , m_ship_control( m_ship )
       , m_name( name )
     {
       m_ship.id = id;
       dispatcher.register_listener<yarrr::Command>( std::bind(
-            &Player::handle_command, this, std::placeholders::_1 ) );
+            &yarrr::ShipControl::handle_command, m_ship_control, std::placeholders::_1 ) );
     }
     const int id;
 
@@ -86,37 +76,10 @@ class Player
       return yarrr::ObjectStateUpdate( m_ship ).serialize();
     }
 
-    void handle_command( const yarrr::Command& event )
-    {
-      yarrr::travel_in_time_to( event.timestamp(), m_ship );
-      switch( event.id() )
-      {
-        case 1: thruster(); break;
-        case 2: ccw(); break;
-        case 3: cw(); break;
-      }
-    }
-
   private:
-    void thruster()
-    {
-      const yarrr::Coordinate heading{
-        static_cast< int64_t >( 40.0 * cos( m_ship.angle * 3.14 / 180.0 / 4.0 ) ),
-        static_cast< int64_t >( 40.0 * sin( m_ship.angle * 3.14 / 180.0 / 4.0 ) ) };
-      m_ship.velocity += heading;
-    }
-
-    void ccw()
-    {
-      m_ship.vangle -= 100;
-    }
-
-    void cw()
-    {
-      m_ship.vangle += 100;
-    }
 
     yarrr::Object m_ship;
+    yarrr::ShipControl m_ship_control;
     std::string m_name;
 };
 
