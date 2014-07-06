@@ -65,12 +65,14 @@ class Player
   public:
     typedef std::unique_ptr< Player > Pointer;
 
-    Player( int network_id, const std::string& name )
+    Player( int network_id, const std::string& name, the::ctci::Dispatcher& dispatcher )
       : id( network_id )
       , m_ship( random_ship() )
       , m_name( name )
     {
       m_ship.id = id;
+      dispatcher.register_listener<yarrr::Command>( std::bind(
+            &Player::handle_command, this, std::placeholders::_1 ) );
     }
     const int id;
 
@@ -84,10 +86,10 @@ class Player
       return yarrr::ObjectStateUpdate( m_ship ).serialize();
     }
 
-    void command( char cmd, const the::time::Time timestamp )
+    void handle_command( const yarrr::Command& event )
     {
-      yarrr::travel_in_time_to( timestamp, m_ship );
-      switch( cmd )
+      yarrr::travel_in_time_to( event.timestamp(), m_ship );
+      switch( event.id() )
       {
         case 1: thruster(); break;
         case 2: ccw(); break;
@@ -156,7 +158,8 @@ class ConnectionHandler
             id,
             Player::Pointer( new Player(
                 id,
-                request.login_id() ) ) ) );
+                request.login_id(),
+                m_dispatcher ) ) ) );
     }
 
     ~ConnectionHandler()
