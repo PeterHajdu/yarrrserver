@@ -65,9 +65,10 @@ class Player
   public:
     typedef std::unique_ptr< Player > Pointer;
 
-    Player( int network_id )
+    Player( int network_id, const std::string& name )
       : id( network_id )
       , m_ship( random_ship() )
+      , m_name( name )
     {
       m_ship.id = id;
     }
@@ -114,32 +115,82 @@ class Player
     }
 
     yarrr::Object m_ship;
+    std::string m_name;
 };
+
+typedef std::unordered_map< int, Player::Pointer > PlayerContainer;
+
+class ConnectionHandler
+{
+    the::ctci::Dispatcher m_dispatcher;
+    PlayerContainer& m_players;
+    //the::net::Connection& m_connection;
+
+  public:
+    typedef std::unique_ptr< ConnectionHandler > Pointer;
+    ConnectionHandler(
+        the::net::Connection& connection,
+        PlayerContainer& players )
+      : m_dispatcher()
+      , m_players( players )
+      //, m_connection( connection )
+      , id( connection.id )
+    {
+      m_dispatcher.register_listener<yarrr::LoginRequest>(
+          std::bind( &ConnectionHandler::handle_login_request, this, std::placeholders::_1 ) );
+    }
+
+    const int id;
+
+
+    void handle( const yarrr::Event& event )
+    {
+      m_dispatcher.polymorphic_dispatch( event );
+    }
+
+    void handle_login_request( const yarrr::LoginRequest& request )
+    {
+      std::cout << "login_request arrived" << std::endl;
+      m_players.emplace( std::make_pair(
+            id,
+            Player::Pointer( new Player(
+                id,
+                request.login_id() ) ) ) );
+    }
+
+    ~ConnectionHandler()
+    {
+      std::cout << "connection lost" << std::endl;
+    }
+};
+
 
 int main( int argc, char ** argv )
 {
-  std::unordered_map< int, Player::Pointer > players;
-  std::mutex players_mutex;
+  std::unordered_map< int, ConnectionHandler::Pointer > connection_handlers;
+  std::mutex connection_handlers_mutex;
+
+  PlayerContainer players;
 
   the::time::Clock clock;
   the::net::Service network_service(
-      [ &players, &players_mutex, &clock ]( the::net::Connection& connection )
+      [ &players, &connection_handlers, &connection_handlers_mutex, &clock ]( the::net::Connection& connection )
       {
-        std::lock_guard<std::mutex> lock( players_mutex );
-        Player::Pointer new_player( new Player( connection.id ) );
-        players.emplace( std::make_pair(
+        std::lock_guard<std::mutex> lock( connection_handlers_mutex );
+        ConnectionHandler::Pointer new_connection_handler( new ConnectionHandler( connection, players ) );
+        connection_handlers.emplace( std::make_pair(
           connection.id,
-          std::move( new_player ) ) );
+          std::move( new_connection_handler ) ) );
 
         connection.register_task( the::net::NetworkTask::Pointer(
             new yarrr::clock_sync::Server< the::time::Clock, the::net::Connection >(
               clock,
               connection ) ) );
       },
-      [ &players, &players_mutex ]( the::net::Connection& connection )
+      [ &connection_handlers, &connection_handlers_mutex ]( the::net::Connection& connection )
       {
-        std::lock_guard<std::mutex> lock( players_mutex );
-        players.erase( connection.id );
+        std::lock_guard<std::mutex> lock( connection_handlers_mutex );
+        connection_handlers.erase( connection.id );
       } );
 
   network_service.listen_on( 2001 );
@@ -154,26 +205,13 @@ int main( int argc, char ** argv )
   the::ctci::ExactCreator< yarrr::Event, yarrr::Command > command_creator;
   event_factory.register_creator( yarrr::Command::ctci, command_creator );
 
-  the::ctci::Dispatcher event_dispatcher;
-  event_dispatcher.register_listener<yarrr::LoginRequest>(
-      []( const yarrr::LoginRequest& )
-      {
-        std::cout << "login request arrived" << std::endl;
-      } );
-
-  event_dispatcher.register_listener<yarrr::Command>(
-      []( const yarrr::Command& )
-      {
-        std::cout << "command arrived" << std::endl;
-      } );
-
 
   while ( true )
   {
     auto now( clock.now() );
 
     network_service.enumerate(
-        [ &event_factory, &event_dispatcher ]( the::net::Connection& connection )
+        [ &event_factory, &connection_handlers ]( the::net::Connection& connection )
         {
           the::net::Data message;
           while ( connection.receive( message ) )
@@ -185,13 +223,12 @@ int main( int argc, char ** argv )
             }
 
             event->deserialize( message );
-            event_dispatcher.polymorphic_dispatch( *event );
+            connection_handlers[ connection.id ]->handle( *event );
           }
         } );
 
     std::vector< the::net::Data > ship_states;
     {
-      std::lock_guard<std::mutex> lock( players_mutex );
       for ( auto& player : players )
       {
         player.second->update( now );
@@ -199,8 +236,9 @@ int main( int argc, char ** argv )
       }
     }
 
+    //todo: for each player, not connection!
     network_service.enumerate(
-        [ &players_mutex, &players, &ship_states ]( the::net::Connection& connection )
+        [ &players, &ship_states ]( the::net::Connection& connection )
         {
           for ( auto& ship_state : ship_states )
           {
