@@ -1,5 +1,6 @@
 src/yarrrserver
 
+*core*
 *swp
 *.cmake
 Makefile
