@@ -24,6 +24,9 @@
 
 namespace
 {
+  the::ctci::Factory< yarrr::Event > event_factory;
+  the::ctci::ExactCreator< yarrr::Event, yarrr::LoginRequest > login_request_creator;
+  the::ctci::ExactCreator< yarrr::Event, yarrr::Command > command_creator;
 
   std::random_device rd;
   std::mt19937 gen( rd() );
@@ -54,11 +57,17 @@ class Player
   public:
     typedef std::unique_ptr< Player > Pointer;
 
-    Player( int network_id, const std::string& name, the::ctci::Dispatcher& dispatcher )
+    Player(
+        int network_id,
+        const std::string& name,
+        the::ctci::Dispatcher& dispatcher,
+        the::net::Connection& connection )
+
       : id( network_id )
       , m_ship( random_ship() )
       , m_ship_control( m_ship )
       , m_name( name )
+      , m_connection( connection )
     {
       m_ship.id = id;
       dispatcher.register_listener<yarrr::Command>( std::bind(
@@ -76,11 +85,17 @@ class Player
       return yarrr::ObjectStateUpdate( m_ship ).serialize();
     }
 
+    bool send( yarrr::Data&& message )
+    {
+      return m_connection.send( std::move( message ) );
+    }
+
   private:
 
     yarrr::Object m_ship;
     yarrr::ShipControl m_ship_control;
     std::string m_name;
+    the::net::Connection& m_connection;
 };
 
 typedef std::unordered_map< int, Player::Pointer > PlayerContainer;
@@ -107,12 +122,6 @@ class ConnectionHandler
 
     const int id;
 
-
-    void handle( const yarrr::Event& event )
-    {
-      m_dispatcher.polymorphic_dispatch( event );
-    }
-
     void handle_login_request( const yarrr::LoginRequest& request )
     {
       std::cout << "login_request arrived" << std::endl;
@@ -122,18 +131,38 @@ class ConnectionHandler
             Player::Pointer( new Player(
                 id,
                 request.login_id(),
-                m_dispatcher ) ) ) );
+                m_dispatcher,
+                m_connection ) ) ) );
     }
 
     ~ConnectionHandler()
     {
       std::cout << "connection lost" << std::endl;
     }
+
+    void handle_incoming_messages()
+    {
+      the::net::Data message;
+      while ( m_connection.receive( message ) )
+      {
+        yarrr::Event::Pointer event( event_factory.create( yarrr::extract<the::ctci::Id>(&message[0])) );
+        if ( !event )
+        {
+          continue;
+        }
+
+        event->deserialize( message );
+        m_dispatcher.polymorphic_dispatch( *event );
+      }
+    }
+
 };
 
 
 int main( int argc, char ** argv )
 {
+  event_factory.register_creator( yarrr::LoginRequest::ctci, login_request_creator );
+  event_factory.register_creator( yarrr::Command::ctci, command_creator );
   std::unordered_map< int, ConnectionHandler::Pointer > connection_handlers;
   std::mutex connection_handlers_mutex;
 
@@ -165,34 +194,19 @@ int main( int argc, char ** argv )
 
   the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
 
-  the::ctci::Factory< yarrr::Event > event_factory;
-  the::ctci::ExactCreator< yarrr::Event, yarrr::LoginRequest > login_request_creator;
-  event_factory.register_creator( yarrr::LoginRequest::ctci, login_request_creator );
-
-  the::ctci::ExactCreator< yarrr::Event, yarrr::Command > command_creator;
-  event_factory.register_creator( yarrr::Command::ctci, command_creator );
 
 
   while ( true )
   {
     auto now( clock.now() );
 
-    network_service.enumerate(
-        [ &event_factory, &connection_handlers ]( the::net::Connection& connection )
-        {
-          the::net::Data message;
-          while ( connection.receive( message ) )
-          {
-            yarrr::Event::Pointer event( event_factory.create( yarrr::extract<the::ctci::Id>(&message[0])) );
-            if ( !event )
-            {
-              continue;
-            }
-
-            event->deserialize( message );
-            connection_handlers[ connection.id ]->handle( *event );
-          }
-        } );
+    {
+      std::lock_guard< std::mutex > guard_connection_handlers( connection_handlers_mutex );
+      for ( auto& handler : connection_handlers )
+      {
+        handler.second->handle_incoming_messages();
+      }
+    }
 
     std::vector< the::net::Data > ship_states;
     {
@@ -203,15 +217,13 @@ int main( int argc, char ** argv )
       }
     }
 
-    //todo: for each player, not connection!
-    network_service.enumerate(
-        [ &players, &ship_states ]( the::net::Connection& connection )
-        {
-          for ( auto& ship_state : ship_states )
-          {
-            assert( connection.send( the::net::Data( ship_state ) ) );
-          }
-        } );
+    for ( auto& player : players )
+    {
+      for ( auto& ship_state : ship_states )
+      {
+        assert( player.second->send( the::net::Data( ship_state ) ) );
+      }
+    }
 
     frequency_stabilizer.stabilize();
   }
