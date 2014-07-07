@@ -14,20 +14,16 @@
 #include <yarrr/object_state_update.hpp>
 #include <yarrr/login.hpp>
 #include <yarrr/command.hpp>
+#include <yarrr/event_factory.hpp>
 
 #include <thenet/service.hpp>
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
 
-#include <thectci/factory.hpp>
 #include <thectci/dispatcher.hpp>
 
 namespace
 {
-  the::ctci::Factory< yarrr::Event > event_factory;
-  the::ctci::ExactCreator< yarrr::Event, yarrr::LoginRequest > login_request_creator;
-  the::ctci::ExactCreator< yarrr::Event, yarrr::Command > command_creator;
-
   std::random_device rd;
   std::mt19937 gen( rd() );
   std::uniform_int_distribution<> x_dis( 300, 500 );
@@ -145,7 +141,8 @@ class ConnectionHandler
       the::net::Data message;
       while ( m_connection.receive( message ) )
       {
-        yarrr::Event::Pointer event( event_factory.create( yarrr::extract<the::ctci::Id>(&message[0])) );
+        yarrr::Event::Pointer event(
+            yarrr::EventFactory::create( message ) );
         if ( !event )
         {
           continue;
@@ -161,8 +158,6 @@ class ConnectionHandler
 
 int main( int argc, char ** argv )
 {
-  event_factory.register_creator( yarrr::LoginRequest::ctci, login_request_creator );
-  event_factory.register_creator( yarrr::Command::ctci, command_creator );
   std::unordered_map< int, ConnectionHandler::Pointer > connection_handlers;
   std::mutex connection_handlers_mutex;
 
