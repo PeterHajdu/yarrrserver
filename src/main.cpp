@@ -3,7 +3,6 @@
 #include <thread>
 #include <chrono>
 #include <functional>
-#include <mutex>
 #include <algorithm>
 #include <random>
 #include <cassert>
@@ -15,6 +14,7 @@
 #include <yarrr/login.hpp>
 #include <yarrr/command.hpp>
 #include <yarrr/event_factory.hpp>
+#include <yarrr/callback_queue.hpp>
 
 #include <thenet/service.hpp>
 #include <thetime/frequency_stabilizer.hpp>
@@ -120,7 +120,6 @@ class ConnectionHandler
 
     void handle_login_request( const yarrr::LoginRequest& request )
     {
-      std::cout << "login_request arrived" << std::endl;
       m_connection.send( yarrr::LoginResponse( id ).serialize() );
       m_players.emplace( std::make_pair(
             id,
@@ -133,7 +132,7 @@ class ConnectionHandler
 
     ~ConnectionHandler()
     {
-      std::cout << "connection lost" << std::endl;
+      m_players.erase( id );
     }
 
     void handle_incoming_messages()
@@ -158,30 +157,35 @@ class ConnectionHandler
 
 int main( int argc, char ** argv )
 {
+  yarrr::CallbackQueue callback_queue;
   std::unordered_map< int, ConnectionHandler::Pointer > connection_handlers;
-  std::mutex connection_handlers_mutex;
 
   PlayerContainer players;
 
   the::time::Clock clock;
   the::net::Service network_service(
-      [ &players, &connection_handlers, &connection_handlers_mutex, &clock ]( the::net::Connection& connection )
+      [ &callback_queue, &players, &connection_handlers, &clock ]( the::net::Connection& connection )
       {
-        std::lock_guard<std::mutex> lock( connection_handlers_mutex );
-        ConnectionHandler::Pointer new_connection_handler( new ConnectionHandler( connection, players ) );
-        connection_handlers.emplace( std::make_pair(
-          connection.id,
-          std::move( new_connection_handler ) ) );
-
+        callback_queue.push_back(
+          [ &connection_handlers, &connection, &players ]()
+          {
+            ConnectionHandler::Pointer new_connection_handler( new ConnectionHandler( connection, players ) );
+            connection_handlers.emplace( std::make_pair(
+              connection.id,
+              std::move( new_connection_handler ) ) );
+          } );
         connection.register_task( the::net::NetworkTask::Pointer(
             new yarrr::clock_sync::Server< the::time::Clock, the::net::Connection >(
               clock,
               connection ) ) );
       },
-      [ &connection_handlers, &connection_handlers_mutex ]( the::net::Connection& connection )
+      [ &callback_queue, &connection_handlers ]( the::net::Connection& connection )
       {
-        std::lock_guard<std::mutex> lock( connection_handlers_mutex );
-        connection_handlers.erase( connection.id );
+        callback_queue.push_back(
+          [ &connection_handlers, &connection ]()
+          {
+            connection_handlers.erase( connection.id );
+          });
       } );
 
   network_service.listen_on( 2001 );
@@ -195,12 +199,9 @@ int main( int argc, char ** argv )
   {
     auto now( clock.now() );
 
+    for ( auto& handler : connection_handlers )
     {
-      std::lock_guard< std::mutex > guard_connection_handlers( connection_handlers_mutex );
-      for ( auto& handler : connection_handlers )
-      {
-        handler.second->handle_incoming_messages();
-      }
+      handler.second->handle_incoming_messages();
     }
 
     std::vector< the::net::Data > ship_states;
@@ -220,6 +221,7 @@ int main( int argc, char ** argv )
       }
     }
 
+    callback_queue.process_callbacks();
     frequency_stabilizer.stabilize();
   }
 
