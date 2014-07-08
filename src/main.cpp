@@ -13,6 +13,7 @@
 #include <yarrr/object_state_update.hpp>
 #include <yarrr/login.hpp>
 #include <yarrr/command.hpp>
+#include <yarrr/delete_object.hpp>
 #include <yarrr/event_factory.hpp>
 #include <yarrr/callback_queue.hpp>
 
@@ -46,7 +47,6 @@ namespace
 
     return ship;
   }
-}
 
 class Player
 {
@@ -154,6 +154,7 @@ class ConnectionHandler
 
 };
 
+}
 
 int main( int argc, char ** argv )
 {
@@ -179,12 +180,17 @@ int main( int argc, char ** argv )
               clock,
               connection ) ) );
       },
-      [ &callback_queue, &connection_handlers ]( the::net::Connection& connection )
+      [ &callback_queue, &players, &connection_handlers ]( the::net::Connection& connection )
       {
         callback_queue.push_back(
-          [ &connection_handlers, &connection ]()
+          [ &players, &connection_handlers, &connection ]()
           {
             connection_handlers.erase( connection.id );
+            for ( auto& player : players )
+            {
+              std::cout << "sending delete object" << std::endl;
+              player.second->send( yarrr::DeleteObject( connection.id ).serialize() );
+            }
           });
       } );
 
@@ -205,12 +211,10 @@ int main( int argc, char ** argv )
     }
 
     std::vector< the::net::Data > ship_states;
+    for ( auto& player : players )
     {
-      for ( auto& player : players )
-      {
-        player.second->update( now );
-        ship_states.emplace_back( player.second->serialize() );
-      }
+      player.second->update( now );
+      ship_states.emplace_back( player.second->serialize() );
     }
 
     for ( auto& player : players )
