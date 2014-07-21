@@ -147,7 +147,6 @@ class ConnectionHandler
           continue;
         }
 
-        event->deserialize( message );
         m_dispatcher.polymorphic_dispatch( *event );
       }
     }
