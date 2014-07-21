@@ -33,9 +33,9 @@ namespace
   std::uniform_int_distribution<> velocity_dis( -100, +100 );
   std::uniform_int_distribution<> ang_velocity_dis( -10, +10 );
 
-  yarrr::Object random_ship()
+  yarrr::PhysicalParameters random_ship()
   {
-    yarrr::Object ship;
+    yarrr::PhysicalParameters ship;
     ship.coordinate.x = x_dis( gen );
     ship.coordinate.y = y_dis( gen );
     ship.angle = angle_dis( gen );
@@ -88,7 +88,7 @@ class Player
 
   private:
 
-    yarrr::Object m_ship;
+    yarrr::PhysicalParameters m_ship;
     yarrr::ShipControl m_ship_control;
     std::string m_name;
     the::net::Connection& m_connection;
