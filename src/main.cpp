@@ -16,6 +16,7 @@
 #include <yarrr/delete_object.hpp>
 #include <yarrr/event_factory.hpp>
 #include <yarrr/callback_queue.hpp>
+#include <yarrr/connection_wrapper.hpp>
 
 #include <thenet/service.hpp>
 #include <thetime/frequency_stabilizer.hpp>
@@ -48,6 +49,9 @@ namespace
     return ship;
   }
 
+
+  typedef yarrr::ConnectionWrapper<the::net::Connection> ConnectionWrapper;
+
 class Player
 {
   public:
@@ -56,19 +60,20 @@ class Player
     Player(
         int network_id,
         const std::string& name,
-        the::ctci::Dispatcher& dispatcher,
-        the::net::Connection& connection )
+        ConnectionWrapper& connection_wrapper )
 
       : id( network_id )
       , m_ship( random_ship() )
       , m_ship_control( m_ship )
       , m_name( name )
-      , m_connection( connection )
+      , m_connection( connection_wrapper.connection )
     {
       m_ship.id = id;
-      dispatcher.register_listener<yarrr::Command>( std::bind(
+      m_dispatcher.register_listener<yarrr::Command>( std::bind(
             &yarrr::ShipControl::handle_command, m_ship_control, std::placeholders::_1 ) );
+      connection_wrapper.register_dispatcher( m_dispatcher );
     }
+
     const int id;
 
     void update( const the::time::Clock::Time& timestamp )
@@ -88,6 +93,7 @@ class Player
 
   private:
 
+    the::ctci::Dispatcher m_dispatcher;
     yarrr::PhysicalParameters m_ship;
     yarrr::ShipControl m_ship_control;
     std::string m_name;
@@ -96,95 +102,97 @@ class Player
 
 typedef std::unordered_map< int, Player::Pointer > PlayerContainer;
 
-class ConnectionHandler
+class LoginHandler
 {
     the::ctci::Dispatcher m_dispatcher;
     PlayerContainer& m_players;
+    ConnectionWrapper& m_connection_wrapper;
     the::net::Connection& m_connection;
+    const int m_id;
 
   public:
-    typedef std::unique_ptr< ConnectionHandler > Pointer;
-    ConnectionHandler(
-        the::net::Connection& connection,
+    typedef std::unique_ptr< LoginHandler > Pointer;
+    LoginHandler(
+        ConnectionWrapper& connection_wrapper,
         PlayerContainer& players )
       : m_dispatcher()
       , m_players( players )
-      , m_connection( connection )
-      , id( connection.id )
+      , m_connection_wrapper( connection_wrapper )
+      , m_connection( connection_wrapper.connection )
+      , m_id( m_connection.id )
     {
       m_dispatcher.register_listener<yarrr::LoginRequest>(
-          std::bind( &ConnectionHandler::handle_login_request, this, std::placeholders::_1 ) );
+          std::bind( &LoginHandler::handle_login_request, this, std::placeholders::_1 ) );
+      connection_wrapper.register_dispatcher( m_dispatcher );
     }
-
-    const int id;
 
     void handle_login_request( const yarrr::LoginRequest& request )
     {
-      m_connection.send( yarrr::LoginResponse( id ).serialize() );
+      m_connection.send( yarrr::LoginResponse( m_id ).serialize() );
       m_players.emplace( std::make_pair(
-            id,
+            m_id,
             Player::Pointer( new Player(
-                id,
+                m_id,
                 request.login_id(),
-                m_dispatcher,
-                m_connection ) ) ) );
+                m_connection_wrapper ) ) ) );
     }
 
-    ~ConnectionHandler()
+    ~LoginHandler()
     {
-      m_players.erase( id );
+      m_players.erase( m_id );
     }
 
-    void handle_incoming_messages()
+};
+
+
+class ConnectionBundle
+{
+  public:
+    typedef std::unique_ptr< ConnectionBundle > Pointer;
+    ConnectionBundle(
+        the::net::Connection& connection,
+        PlayerContainer& players )
+      : connection_wrapper( connection )
+      , login_handler( connection_wrapper, players )
     {
-      the::net::Data message;
-      while ( m_connection.receive( message ) )
-      {
-        yarrr::Event::Pointer event(
-            yarrr::EventFactory::create( message ) );
-        if ( !event )
-        {
-          continue;
-        }
-
-        m_dispatcher.polymorphic_dispatch( *event );
-      }
     }
 
+    ConnectionWrapper connection_wrapper;
+    LoginHandler login_handler;
 };
 
 }
 
 int main( int argc, char ** argv )
 {
-  yarrr::CallbackQueue callback_queue;
-  std::unordered_map< int, ConnectionHandler::Pointer > connection_handlers;
-
   PlayerContainer players;
+
+  yarrr::CallbackQueue callback_queue;
+  std::unordered_map< int, ConnectionBundle::Pointer > connection_bundles;
 
   the::time::Clock clock;
   the::net::Service network_service(
-      [ &callback_queue, &players, &connection_handlers, &clock ]( the::net::Connection& connection )
+      [ &callback_queue, &players, &connection_bundles, &clock ]( the::net::Connection& connection )
       {
         callback_queue.push_back(
-          [ &connection_handlers, &connection, &players ]()
+          [ &connection_bundles, &connection, &players ]()
           {
-            ConnectionHandler::Pointer new_connection_handler( new ConnectionHandler( connection, players ) );
-            connection_handlers.emplace( std::make_pair(
+            ConnectionBundle::Pointer new_connection_bundle( new ConnectionBundle( connection, players ) );
+            connection_bundles.emplace( std::make_pair(
               connection.id,
-              std::move( new_connection_handler ) ) );
+              std::move( new_connection_bundle ) ) );
           } );
         connection.register_task( the::net::NetworkTask::Pointer(
             new yarrr::clock_sync::Server< the::time::Clock, the::net::Connection >(
               clock,
               connection ) ) );
       },
-      [ &callback_queue, &players, &connection_handlers ]( the::net::Connection& connection )
+      [ &callback_queue, &players, &connection_bundles ]( the::net::Connection& connection )
       {
         callback_queue.push_back(
-          [ &players, &connection_handlers, &connection ]()
+          [ &players, &connection_bundles, &connection ]()
           {
-            connection_handlers.erase( connection.id );
+            connection_bundles.erase( connection.id );
             for ( auto& player : players )
             {
               std::cout << "sending delete object" << std::endl;
@@ -204,9 +212,9 @@ int main( int argc, char ** argv )
   {
     auto now( clock.now() );
 
-    for ( auto& handler : connection_handlers )
+    for ( auto& bundle : connection_bundles )
     {
-      handler.second->handle_incoming_messages();
+      bundle.second->connection_wrapper.process_incoming_messages();
     }
 
     std::vector< the::net::Data > ship_states;
