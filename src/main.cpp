@@ -189,14 +189,15 @@ int main( int argc, char ** argv )
       },
       [ &callback_queue, &players, &connection_bundles ]( the::net::Connection& connection )
       {
+        const int id( connection.id );
         callback_queue.push_back(
-          [ &players, &connection_bundles, &connection ]()
+          [ &players, &connection_bundles, id ]()
           {
-            connection_bundles.erase( connection.id );
+            connection_bundles.erase( id );
             for ( auto& player : players )
             {
               std::cout << "sending delete object" << std::endl;
-              player.second->send( yarrr::DeleteObject( connection.id ).serialize() );
+              player.second->send( yarrr::DeleteObject( id ).serialize() );
             }
           });
       } );
