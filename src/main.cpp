@@ -161,49 +161,80 @@ class ConnectionBundle
     LoginHandler login_handler;
 };
 
+//todo: should be stored somewhere in world or something like that
+PlayerContainer players;
+
+class NetworkService
+{
+  public:
+    NetworkService( the::time::Clock& clock )
+      : m_clock( clock )
+      , m_network_service(
+          std::bind( &NetworkService::handle_new_connection, this, std::placeholders::_1 ),
+          std::bind( &NetworkService::handle_connection_lost, this, std::placeholders::_1 ) )
+    {
+      m_network_service.listen_on( 2001 );
+      m_network_service.start();
+    }
+
+    void handle_new_connection( the::net::Connection& connection )
+    {
+      connection.register_task( the::net::NetworkTask::Pointer(
+            new yarrr::clock_sync::Server< the::time::Clock, the::net::Connection >(
+              m_clock,
+              connection ) ) );
+
+      //todo: connection might be deleted before it gets added on the main thread
+      //todo: should we lock?
+      m_callback_queue.push_back( std::bind(
+            &NetworkService::handle_new_connection_on_main_thread, this, &connection ) );
+    }
+
+    void handle_new_connection_on_main_thread( the::net::Connection* connection )
+    {
+      ConnectionBundle::Pointer new_connection_bundle( new ConnectionBundle( *connection, players ) );
+      m_connection_bundles.emplace(
+            connection->id,
+            std::move( new_connection_bundle ) );
+    }
+
+    void handle_connection_lost( the::net::Connection& connection )
+    {
+      m_callback_queue.push_back( std::bind(
+            &NetworkService::handle_connection_lost_on_main_thread, this, connection.id ) );
+    }
+
+    void handle_connection_lost_on_main_thread( int connection_id )
+    {
+      m_connection_bundles.erase( connection_id );
+      for ( auto& player : players )
+      {
+        player.second->send( yarrr::DeleteObject( connection_id ).serialize() );
+      }
+    }
+
+    void process_network_events()
+    {
+      m_callback_queue.process_callbacks();
+      for ( auto& bundle : m_connection_bundles )
+      {
+        bundle.second->connection_wrapper.process_incoming_messages();
+      }
+    }
+
+  private:
+    the::time::Clock& m_clock;
+    the::net::Service m_network_service;
+    yarrr::CallbackQueue m_callback_queue;
+    std::unordered_map< int, ConnectionBundle::Pointer > m_connection_bundles;
+};
+
 }
 
 int main( int argc, char ** argv )
 {
-  PlayerContainer players;
-
-  yarrr::CallbackQueue callback_queue;
-  std::unordered_map< int, ConnectionBundle::Pointer > connection_bundles;
-
   the::time::Clock clock;
-  the::net::Service network_service(
-      [ &callback_queue, &players, &connection_bundles, &clock ]( the::net::Connection& connection )
-      {
-        callback_queue.push_back(
-          [ &connection_bundles, &connection, &players ]()
-          {
-            ConnectionBundle::Pointer new_connection_bundle( new ConnectionBundle( connection, players ) );
-            connection_bundles.emplace( std::make_pair(
-              connection.id,
-              std::move( new_connection_bundle ) ) );
-          } );
-        connection.register_task( the::net::NetworkTask::Pointer(
-            new yarrr::clock_sync::Server< the::time::Clock, the::net::Connection >(
-              clock,
-              connection ) ) );
-      },
-      [ &callback_queue, &players, &connection_bundles ]( the::net::Connection& connection )
-      {
-        const int id( connection.id );
-        callback_queue.push_back(
-          [ &players, &connection_bundles, id ]()
-          {
-            connection_bundles.erase( id );
-            for ( auto& player : players )
-            {
-              std::cout << "sending delete object" << std::endl;
-              player.second->send( yarrr::DeleteObject( id ).serialize() );
-            }
-          });
-      } );
-
-  network_service.listen_on( 2001 );
-  network_service.start();
+  NetworkService network_service( clock );
 
   the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
 
@@ -213,10 +244,7 @@ int main( int argc, char ** argv )
   {
     auto now( clock.now() );
 
-    for ( auto& bundle : connection_bundles )
-    {
-      bundle.second->connection_wrapper.process_incoming_messages();
-    }
+    network_service.process_network_events();
 
     std::vector< the::net::Data > ship_states;
     for ( auto& player : players )
@@ -233,7 +261,6 @@ int main( int argc, char ** argv )
       }
     }
 
-    callback_queue.process_callbacks();
     frequency_stabilizer.stabilize();
   }
 
