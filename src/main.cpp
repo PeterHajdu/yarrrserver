@@ -52,6 +52,8 @@ namespace
 
   typedef yarrr::ConnectionWrapper<the::net::Connection> ConnectionWrapper;
 
+the::ctci::Dispatcher local_event_dispatcher;
+
 class Player
 {
   public:
@@ -100,23 +102,107 @@ class Player
     the::net::Connection& m_connection;
 };
 
-typedef std::unordered_map< int, Player::Pointer > PlayerContainer;
+class PlayerLoggedIn
+{
+  public:
+    add_ctci( "player_logged_in" );
+    PlayerLoggedIn(
+        ConnectionWrapper& connection_wrapper,
+        int id,
+        const std::string& name )
+      : connection_wrapper( connection_wrapper )
+      , id( id )
+      , name( name )
+    {
+    }
+
+    ConnectionWrapper& connection_wrapper;
+    const int id;
+    const std::string& name;
+};
+
+class PlayerLoggedOut
+{
+  public:
+    add_ctci( "player_logged_out" );
+    PlayerLoggedOut( int id )
+      : id( id )
+    {
+    }
+
+    const int id;
+};
+
+class Players
+{
+  public:
+    Players()
+    {
+      local_event_dispatcher.register_listener< PlayerLoggedIn >(
+          std::bind( &Players::handle_player_login, this, std::placeholders::_1 ) );
+      local_event_dispatcher.register_listener< PlayerLoggedOut >(
+          std::bind( &Players::handle_player_logout, this, std::placeholders::_1 ) );
+    }
+
+    void update_to( the::time::Time& timestamp )
+    {
+      m_last_ship_states.clear();
+      for ( auto& player : m_players )
+      {
+        player.second->update( timestamp );
+        m_last_ship_states.emplace_back( player.second->serialize() );
+      }
+
+      broadcast_ship_states();
+    }
+
+  private:
+    void broadcast_ship_states() const
+    {
+      for ( auto& player : m_players )
+      {
+        for ( auto& ship_state : m_last_ship_states )
+        {
+          assert( player.second->send( the::net::Data( ship_state ) ) );
+        }
+      }
+    }
+
+    void handle_player_login( const PlayerLoggedIn& login )
+    {
+      m_players.emplace( std::make_pair(
+            login.id,
+            Player::Pointer( new Player(
+                login.id,
+                login.name,
+                login.connection_wrapper ) ) ) );
+    }
+
+    void handle_player_logout( const PlayerLoggedOut& logout )
+    {
+      m_players.erase( logout.id );
+      for ( auto& player : m_players )
+      {
+        player.second->send( yarrr::DeleteObject( logout.id ).serialize() );
+      }
+    }
+
+    std::vector< the::net::Data > m_last_ship_states;
+    typedef std::unordered_map< int, Player::Pointer > PlayerContainer;
+    PlayerContainer m_players;
+};
 
 class LoginHandler
 {
     the::ctci::Dispatcher m_dispatcher;
-    PlayerContainer& m_players;
     ConnectionWrapper& m_connection_wrapper;
     the::net::Connection& m_connection;
     const int m_id;
 
   public:
     typedef std::unique_ptr< LoginHandler > Pointer;
-    LoginHandler(
-        ConnectionWrapper& connection_wrapper,
-        PlayerContainer& players )
+    LoginHandler( ConnectionWrapper& connection_wrapper )
       : m_dispatcher()
-      , m_players( players )
       , m_connection_wrapper( connection_wrapper )
       , m_connection( connection_wrapper.connection )
       , m_id( m_connection.id )
@@ -129,17 +215,12 @@ class LoginHandler
     void handle_login_request( const yarrr::LoginRequest& request )
     {
       m_connection.send( yarrr::LoginResponse( m_id ).serialize() );
-      m_players.emplace( std::make_pair(
-            m_id,
-            Player::Pointer( new Player(
-                m_id,
-                request.login_id(),
-                m_connection_wrapper ) ) ) );
+      local_event_dispatcher.dispatch( PlayerLoggedIn( m_connection_wrapper, m_id, request.login_id() ) );
     }
 
     ~LoginHandler()
     {
-      m_players.erase( m_id );
+      local_event_dispatcher.dispatch( PlayerLoggedOut( m_id ) );
     }
 
 };
@@ -149,20 +230,15 @@ class ConnectionBundle
 {
   public:
     typedef std::unique_ptr< ConnectionBundle > Pointer;
-    ConnectionBundle(
-        the::net::Connection& connection,
-        PlayerContainer& players )
+    ConnectionBundle( the::net::Connection& connection )
       : connection_wrapper( connection )
-      , login_handler( connection_wrapper, players )
+      , login_handler( connection_wrapper )
     {
     }
 
     ConnectionWrapper connection_wrapper;
     LoginHandler login_handler;
 };
-
-//todo: should be stored somewhere in world or something like that
-PlayerContainer players;
 
 class NetworkService
 {
@@ -192,7 +268,7 @@ class NetworkService
 
     void handle_new_connection_on_main_thread( the::net::Connection* connection )
     {
-      ConnectionBundle::Pointer new_connection_bundle( new ConnectionBundle( *connection, players ) );
+      ConnectionBundle::Pointer new_connection_bundle( new ConnectionBundle( *connection ) );
       m_connection_bundles.emplace(
             connection->id,
             std::move( new_connection_bundle ) );
@@ -207,10 +283,6 @@ class NetworkService
     void handle_connection_lost_on_main_thread( int connection_id )
     {
       m_connection_bundles.erase( connection_id );
-      for ( auto& player : players )
-      {
-        player.second->send( yarrr::DeleteObject( connection_id ).serialize() );
-      }
     }
 
     void process_network_events()
@@ -235,32 +307,16 @@ int main( int argc, char ** argv )
 {
   the::time::Clock clock;
   NetworkService network_service( clock );
+  Players players;
 
   the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
-
-
-
   while ( true )
   {
     auto now( clock.now() );
 
     network_service.process_network_events();
 
-    std::vector< the::net::Data > ship_states;
-    for ( auto& player : players )
-    {
-      player.second->update( now );
-      ship_states.emplace_back( player.second->serialize() );
-    }
-
-    for ( auto& player : players )
-    {
-      for ( auto& ship_state : ship_states )
-      {
-        assert( player.second->send( the::net::Data( ship_state ) ) );
-      }
-    }
-
+    players.update_to( now );
     frequency_stabilizer.stabilize();
   }
 
