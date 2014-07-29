@@ -14,8 +14,7 @@ class Player
     typedef std::unique_ptr< Player > Pointer;
 
     Player( int network_id, const std::string& name, ConnectionWrapper& connection_wrapper );
-    const int id;
-    bool send( yarrr::Data&& message );
+    bool send( yarrr::Data&& message ) const;
 
   private:
     //todo: remove if not needed
@@ -29,6 +28,7 @@ class Players
 {
   public:
     Players();
+    void broadcast( const std::vector< yarrr::Data > messages ) const;
 
   private:
     void handle_player_login( const PlayerLoggedIn& login );

@@ -7,8 +7,7 @@ Player::Player(
     int network_id,
     const std::string& name,
     ConnectionWrapper& connection_wrapper )
-  : id( network_id )
-  , m_name( name )
+  : m_name( name )
   , m_connection( connection_wrapper.connection )
 {
   connection_wrapper.register_dispatcher( m_dispatcher );
@@ -16,7 +15,7 @@ Player::Player(
 
 
 bool
-Player::send( yarrr::Data&& message )
+Player::send( yarrr::Data&& message ) const
 {
   return m_connection.send( std::move( message ) );
 }
@@ -30,6 +29,19 @@ Players::Players()
       std::bind( &Players::handle_player_login, this, std::placeholders::_1 ) );
   local_event_dispatcher.register_listener< PlayerLoggedOut >(
       std::bind( &Players::handle_player_logout, this, std::placeholders::_1 ) );
+}
+
+
+void
+Players::broadcast( const std::vector< yarrr::Data > messages ) const
+{
+  for ( const auto& player : m_players )
+  {
+    for ( const auto& message : messages )
+    {
+      player.second->send( yarrr::Data( message ) );
+    }
+  }
 }
 
 

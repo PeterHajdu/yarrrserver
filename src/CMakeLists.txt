@@ -4,6 +4,7 @@ set(SOURCE_FILES
   local_event_dispatcher.cpp
   network_service.cpp
   player.cpp
+  object_container.cpp
     )
 
 add_executable(yarrrserver ${SOURCE_FILES})
