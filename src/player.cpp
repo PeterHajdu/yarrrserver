@@ -1,7 +1,32 @@
 #include "player.hpp"
 #include "local_event_dispatcher.hpp"
+#include "object_container.hpp"
 
 #include <yarrr/delete_object.hpp>
+#include <yarrr/object.hpp>
+#include <yarrr/basic_behaviors.hpp>
+
+namespace
+{
+  yarrr::ObjectBehavior::Pointer create_physical_behavior( const PlayerLoggedIn& login )
+  {
+    yarrr::LocalPhysicalBehavior* physical_behavior( new yarrr::LocalPhysicalBehavior() );
+    yarrr::ObjectBehavior::Pointer behavior( physical_behavior );
+    physical_behavior->physical_parameters.id = login.id;
+    return behavior;
+  }
+
+  yarrr::Object::Pointer create_object( const PlayerLoggedIn& login )
+  {
+    yarrr::Object::Pointer ship( new yarrr::Object() );
+    ship->add_behavior( yarrr::ObjectBehavior::Pointer( create_physical_behavior( login ) ) );
+    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::SimplePhysicsUpdater() ) );
+    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::Engine() ) );
+    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::PhysicalParameterSerializer() ) );
+    login.connection_wrapper.register_multiplexer( *ship );
+    return ship;
+  }
+}
 
 Player::Player(
     int network_id,
@@ -54,13 +79,15 @@ Players::handle_player_login( const PlayerLoggedIn& login )
             login.id,
             login.name,
             login.connection_wrapper ) ) ) );
-  //todo: send chat message
+
+  the::ctci::service< ObjectContainer >().add_object( login.id, create_object( login ) );
 }
 
 
 void
 Players::handle_player_logout( const PlayerLoggedOut& logout )
 {
+  the::ctci::service< ObjectContainer >().delete_object( logout.id );
   m_players.erase( logout.id );
   for ( auto& player : m_players )
   {

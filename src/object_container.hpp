@@ -1,11 +1,12 @@
 #pragma once
 
 #include <yarrr/object.hpp>
+#include <thectci/id.hpp>
 
 class ObjectContainer
 {
   public:
-    ObjectContainer();
+    add_ctci( "object_container" );
     void add_object( int id, yarrr::Object::Pointer&& );
     void delete_object( int id );
 

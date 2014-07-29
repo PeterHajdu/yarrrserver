@@ -5,11 +5,12 @@
 #include <yarrr/basic_behaviors.hpp>
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
+#include <thectci/service_registry.hpp>
 
 int main( int argc, char ** argv )
 {
   the::time::Clock clock;
-  ObjectContainer object_container;
+  ObjectContainer& object_container( the::ctci::service< ObjectContainer >() );
   NetworkService network_service( clock );
   Players players;
 

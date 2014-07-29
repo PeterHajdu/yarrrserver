@@ -1,9 +1,5 @@
 #include "object_container.hpp"
-
-ObjectContainer::ObjectContainer()
-{
-}
-
+#include <thectci/service_registry.hpp>
 
 void
 ObjectContainer::add_object( int id, yarrr::Object::Pointer&& object )
@@ -16,5 +12,10 @@ void
 ObjectContainer::delete_object( int id )
 {
   m_objects.erase( id );
+}
+
+namespace
+{
+  the::ctci::AutoServiceRegister< ObjectContainer, ObjectContainer > auto_register_object_container;
 }
 
