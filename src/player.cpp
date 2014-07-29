@@ -5,6 +5,7 @@
 #include <yarrr/delete_object.hpp>
 #include <yarrr/object.hpp>
 #include <yarrr/basic_behaviors.hpp>
+#include <yarrr/chat_message.hpp>
 
 namespace
 {
@@ -32,12 +33,10 @@ Player::Player(
     int network_id,
     const std::string& name,
     ConnectionWrapper& connection_wrapper )
-  : m_name( name )
+  : name( name )
   , m_connection( connection_wrapper.connection )
 {
-  connection_wrapper.register_dispatcher( m_dispatcher );
 }
-
 
 bool
 Player::send( yarrr::Data&& message ) const
@@ -81,6 +80,7 @@ Players::handle_player_login( const PlayerLoggedIn& login )
             login.connection_wrapper ) ) ) );
 
   the::ctci::service< ObjectContainer >().add_object( login.id, create_object( login ) );
+  broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name ).serialize() } );
 }
 
 
@@ -88,11 +88,9 @@ void
 Players::handle_player_logout( const PlayerLoggedOut& logout )
 {
   the::ctci::service< ObjectContainer >().delete_object( logout.id );
+  broadcast( {
+      yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name ).serialize(),
+      yarrr::DeleteObject( logout.id ).serialize() } );
   m_players.erase( logout.id );
-  for ( auto& player : m_players )
-  {
-    player.second->send( yarrr::DeleteObject( logout.id ).serialize() );
-  }
-  //todo: send chat message
 }
 

@@ -15,11 +15,9 @@ class Player
 
     Player( int network_id, const std::string& name, ConnectionWrapper& connection_wrapper );
     bool send( yarrr::Data&& message ) const;
+    const std::string name;
 
   private:
-    //todo: remove if not needed
-    the::ctci::Dispatcher m_dispatcher;
-    const std::string m_name;
     the::net::Connection& m_connection;
 };
 
