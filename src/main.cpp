@@ -1,17 +1,8 @@
 #include "network_service.hpp"
 #include "player.hpp"
 
-#include <yarrr/object.hpp>
-#include <yarrr/ship_control.hpp>
-#include <yarrr/object_state_update.hpp>
-#include <yarrr/command.hpp>
-#include <yarrr/delete_object.hpp>
-#include <yarrr/event_factory.hpp>
-
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
-
-#include <thectci/dispatcher.hpp>
 
 int main( int argc, char ** argv )
 {
