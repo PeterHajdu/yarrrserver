@@ -24,7 +24,7 @@ namespace
     ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::SimplePhysicsUpdater() ) );
     ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::Engine() ) );
     ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::PhysicalParameterSerializer() ) );
-    login.connection_wrapper.register_multiplexer( *ship );
+    login.connection_wrapper.register_dispatcher( *ship );
     return ship;
   }
 }
@@ -80,7 +80,7 @@ Players::handle_player_login( const PlayerLoggedIn& login )
             login.connection_wrapper ) ) ) );
 
   the::ctci::service< ObjectContainer >().add_object( login.id, create_object( login ) );
-  broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name ).serialize() } );
+  broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name, "server" ).serialize() } );
 }
 
 
@@ -89,7 +89,7 @@ Players::handle_player_logout( const PlayerLoggedOut& logout )
 {
   the::ctci::service< ObjectContainer >().delete_object( logout.id );
   broadcast( {
-      yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name ).serialize(),
+      yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name, "server" ).serialize(),
       yarrr::DeleteObject( logout.id ).serialize() } );
   m_players.erase( logout.id );
 }
