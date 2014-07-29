@@ -30,12 +30,17 @@ namespace
 }
 
 Player::Player(
+    Players& players,
     int network_id,
     const std::string& name,
     ConnectionWrapper& connection_wrapper )
   : name( name )
+  , m_players( players )
+  , m_id( network_id )
   , m_connection( connection_wrapper.connection )
 {
+  connection_wrapper.register_listener< yarrr::ChatMessage >(
+      std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
 }
 
 bool
@@ -44,6 +49,11 @@ Player::send( yarrr::Data&& message ) const
   return m_connection.send( std::move( message ) );
 }
 
+void
+Player::handle_chat_message( const yarrr::ChatMessage& message )
+{
+  m_players.handle_chat_message_from( message, m_id );
+}
 
 Players::Players()
 {
@@ -68,6 +78,20 @@ Players::broadcast( const std::vector< yarrr::Data > messages ) const
   }
 }
 
+void
+Players::handle_chat_message_from( const yarrr::ChatMessage& message, int id )
+{
+  yarrr::Data serialized_message( message.serialize() );
+  for ( const auto& player : m_players )
+  {
+    if ( player.first == id )
+    {
+      continue;
+    }
+
+    player.second->send( yarrr::Data( serialized_message ) );
+  }
+}
 
 void
 Players::handle_player_login( const PlayerLoggedIn& login )
@@ -75,6 +99,7 @@ Players::handle_player_login( const PlayerLoggedIn& login )
   m_players.emplace( std::make_pair(
         login.id,
         Player::Pointer( new Player(
+            *this,
             login.id,
             login.name,
             login.connection_wrapper ) ) ) );
