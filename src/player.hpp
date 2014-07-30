@@ -42,6 +42,7 @@ class Players
   private:
     void handle_player_login( const PlayerLoggedIn& login );
     void handle_player_logout( const PlayerLoggedOut& logout );
+    void greet_new_player( const PlayerLoggedIn& login );
 
     typedef std::unordered_map< int, Player::Pointer > PlayerContainer;
     PlayerContainer m_players;

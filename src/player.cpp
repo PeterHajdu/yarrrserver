@@ -96,6 +96,8 @@ Players::handle_chat_message_from( const yarrr::ChatMessage& message, int id )
 void
 Players::handle_player_login( const PlayerLoggedIn& login )
 {
+  greet_new_player( login );
+
   m_players.emplace( std::make_pair(
         login.id,
         Player::Pointer( new Player(
@@ -106,6 +108,18 @@ Players::handle_player_login( const PlayerLoggedIn& login )
 
   the::ctci::service< ObjectContainer >().add_object( login.id, create_object( login ) );
   broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name, "server" ).serialize() } );
+}
+
+
+void
+Players::greet_new_player( const PlayerLoggedIn& login )
+{
+  std::string greeting( "Welcome " + login.name + "! The following players are online: " );
+  for ( const auto& player : m_players )
+  {
+    greeting += player.second->name + ", ";
+  }
+  login.connection_wrapper.connection.send( yarrr::ChatMessage( greeting, "server" ).serialize() );
 }
 
 
