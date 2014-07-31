@@ -69,6 +69,14 @@ class ConnectionBundle
     LoginHandler login_handler;
 };
 
+namespace the
+{
+namespace time
+{
+class Clock;
+}
+}
+
 class NetworkService
 {
   public:

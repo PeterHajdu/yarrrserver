@@ -3,6 +3,7 @@
 #include "local_event_dispatcher.hpp"
 #include <thectci/dispatcher.hpp>
 #include <thenet/service.hpp>
+#include <thetime/clock.hpp>
 #include <yarrr/connection_wrapper.hpp>
 #include <yarrr/login.hpp>
 #include <yarrr/callback_queue.hpp>
