@@ -1,7 +1,7 @@
 #include "player.hpp"
 #include "local_event_dispatcher.hpp"
-#include "object_container.hpp"
 
+#include <yarrr/object_container.hpp>
 #include <yarrr/delete_object.hpp>
 #include <yarrr/object.hpp>
 #include <yarrr/basic_behaviors.hpp>
@@ -55,7 +55,8 @@ Player::handle_chat_message( const yarrr::ChatMessage& message )
   m_players.handle_chat_message_from( message, m_id );
 }
 
-Players::Players()
+Players::Players( yarrr::ObjectContainer& object_container )
+  : m_object_container( object_container )
 {
   the::ctci::Dispatcher& local_event_dispatcher(
       the::ctci::service< LocalEventDispatcher >().dispatcher );
@@ -106,7 +107,7 @@ Players::handle_player_login( const PlayerLoggedIn& login )
             login.name,
             login.connection_wrapper ) ) ) );
 
-  the::ctci::service< ObjectContainer >().add_object( login.id, create_object( login ) );
+  m_object_container.add_object( login.id, create_object( login ) );
   broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name, "server" ).serialize() } );
 }
 
@@ -126,7 +127,7 @@ Players::greet_new_player( const PlayerLoggedIn& login )
 void
 Players::handle_player_logout( const PlayerLoggedOut& logout )
 {
-  the::ctci::service< ObjectContainer >().delete_object( logout.id );
+  m_object_container.delete_object( logout.id );
   broadcast( {
       yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name, "server" ).serialize(),
       yarrr::DeleteObject( logout.id ).serialize() } );

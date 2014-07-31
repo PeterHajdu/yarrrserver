@@ -2,6 +2,7 @@
 
 #include "network_service.hpp"
 #include <yarrr/types.hpp>
+#include <yarrr/object_container.hpp>
 #include <thectci/dispatcher.hpp>
 #include <memory>
 
@@ -35,7 +36,7 @@ class Player
 class Players
 {
   public:
-    Players();
+    Players( yarrr::ObjectContainer& );
     void broadcast( const std::vector< yarrr::Data > messages ) const;
     void handle_chat_message_from( const yarrr::ChatMessage&, int id );
 
@@ -46,5 +47,6 @@ class Players
 
     typedef std::unordered_map< int, Player::Pointer > PlayerContainer;
     PlayerContainer m_players;
+    yarrr::ObjectContainer& m_object_container;
 };
 

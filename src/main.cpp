@@ -1,7 +1,7 @@
 #include "network_service.hpp"
 #include "player.hpp"
-#include "object_container.hpp"
 
+#include <yarrr/object_container.hpp>
 #include <yarrr/basic_behaviors.hpp>
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
@@ -10,9 +10,9 @@
 int main( int argc, char ** argv )
 {
   the::time::Clock clock;
-  ObjectContainer& object_container( the::ctci::service< ObjectContainer >() );
   NetworkService network_service( clock );
-  Players players;
+  yarrr::ObjectContainer object_container;
+  Players players( object_container );
 
   the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
   while ( true )
