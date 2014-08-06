@@ -22,14 +22,8 @@ int main( int argc, char ** argv )
   while ( true )
   {
     network_service.process_network_events();
-
     object_container.dispatch( yarrr::TimerUpdate( clock.now() ) );
-
-    yarrr::SerializePhysicalParameter::SerializedDataBuffer ship_states;
-    object_container.dispatch( yarrr::SerializePhysicalParameter( ship_states ) );
-
-    players.broadcast( ship_states );
-
+    //todo:collect object updates and broadcast it
     frequency_stabilizer.stabilize();
   }
 

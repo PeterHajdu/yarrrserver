@@ -9,21 +9,11 @@
 
 namespace
 {
-  yarrr::ObjectBehavior::Pointer create_physical_behavior( const PlayerLoggedIn& login )
-  {
-    yarrr::LocalPhysicalBehavior* physical_behavior( new yarrr::LocalPhysicalBehavior() );
-    yarrr::ObjectBehavior::Pointer behavior( physical_behavior );
-    physical_behavior->physical_parameters.id = login.id;
-    return behavior;
-  }
-
   yarrr::Object::Pointer create_object( const PlayerLoggedIn& login )
   {
     yarrr::Object::Pointer ship( new yarrr::Object() );
-    ship->add_behavior( yarrr::ObjectBehavior::Pointer( create_physical_behavior( login ) ) );
-    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::SimplePhysicsUpdater() ) );
+    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::PhysicalBehavior() ) );
     ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::Engine() ) );
-    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::PhysicalParameterSerializer() ) );
     login.connection_wrapper.register_dispatcher( *ship );
     return ship;
   }
@@ -107,7 +97,7 @@ Players::handle_player_login( const PlayerLoggedIn& login )
             login.name,
             login.connection_wrapper ) ) ) );
 
-  m_object_container.add_object( login.id, create_object( login ) );
+  m_object_container.add_object( create_object( login ) );
   broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name, "server" ).serialize() } );
 }
 
