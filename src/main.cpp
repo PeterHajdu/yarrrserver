@@ -10,6 +10,24 @@
 #include <thelog/logger.hpp>
 #include <iostream>
 
+namespace
+{
+  std::vector< yarrr::Data >
+  collect_update_messages_from( const yarrr::ObjectContainer& objects )
+  {
+    std::vector< yarrr::ObjectUpdate::Pointer > object_updates( objects.generate_object_updates() );
+    std::vector< yarrr::Data > update_messages;
+    std::transform(
+        std::begin( object_updates ), std::end( object_updates ),
+        std::back_inserter( update_messages ),
+        []( const yarrr::ObjectUpdate::Pointer& update )
+        {
+          return update->serialize();
+        } );
+    return update_messages;
+  }
+}
+
 int main( int argc, char ** argv )
 {
   the::log::Logger::add_channel( std::cout );
@@ -23,7 +41,7 @@ int main( int argc, char ** argv )
   {
     network_service.process_network_events();
     object_container.dispatch( yarrr::TimerUpdate( clock.now() ) );
-    //todo:collect object updates and broadcast it
+    players.broadcast( collect_update_messages_from( object_container ) );
     frequency_stabilizer.stabilize();
   }
 
