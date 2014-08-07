@@ -20,15 +20,24 @@ class Player
   public:
     typedef std::unique_ptr< Player > Pointer;
 
-    Player( Players&, int network_id, const std::string& name, ConnectionWrapper& connection_wrapper );
+    Player(
+        Players&,
+        int network_id,
+        const std::string& name,
+        ConnectionWrapper& connection_wrapper,
+        yarrr::Object::Id );
+
     bool send( yarrr::Data&& message ) const;
+
     const std::string name;
+    const yarrr::Object::Id object_id;
 
   private:
+    const int m_network_id;
+
     void handle_chat_message( const yarrr::ChatMessage& );
 
     Players& m_players;
-    int m_id;
     the::net::Connection& m_connection;
 };
 

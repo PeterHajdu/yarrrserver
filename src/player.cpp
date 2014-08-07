@@ -23,10 +23,12 @@ Player::Player(
     Players& players,
     int network_id,
     const std::string& name,
-    ConnectionWrapper& connection_wrapper )
+    ConnectionWrapper& connection_wrapper,
+    yarrr::Object::Id object_id )
   : name( name )
+  , object_id( object_id )
+  , m_network_id( network_id )
   , m_players( players )
-  , m_id( network_id )
   , m_connection( connection_wrapper.connection )
 {
   connection_wrapper.register_listener< yarrr::ChatMessage >(
@@ -42,7 +44,7 @@ Player::send( yarrr::Data&& message ) const
 void
 Player::handle_chat_message( const yarrr::ChatMessage& message )
 {
-  m_players.handle_chat_message_from( message, m_id );
+  m_players.handle_chat_message_from( message, m_network_id );
 }
 
 Players::Players( yarrr::ObjectContainer& object_container )
@@ -89,7 +91,6 @@ Players::handle_player_login( const PlayerLoggedIn& login )
 {
   yarrr::Object::Pointer new_object( create_object( login ) );
   login.connection_wrapper.connection.send( yarrr::LoginResponse( new_object->id ).serialize() );
-  m_object_container.add_object( std::move( new_object ) );
   greet_new_player( login );
 
   m_players.emplace( std::make_pair(
@@ -98,7 +99,10 @@ Players::handle_player_login( const PlayerLoggedIn& login )
             *this,
             login.id,
             login.name,
-            login.connection_wrapper ) ) ) );
+            login.connection_wrapper,
+            new_object->id ) ) ) );
+
+  m_object_container.add_object( std::move( new_object ) );
   broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name, "server" ).serialize() } );
 }
 
@@ -118,10 +122,11 @@ Players::greet_new_player( const PlayerLoggedIn& login )
 void
 Players::handle_player_logout( const PlayerLoggedOut& logout )
 {
-  m_object_container.delete_object( logout.id );
+  yarrr::Object::Id controlled_object_id( m_players[ logout.id ]->object_id );
+  m_object_container.delete_object( controlled_object_id );
   broadcast( {
       yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name, "server" ).serialize(),
-      yarrr::DeleteObject( logout.id ).serialize() } );
+      yarrr::DeleteObject( controlled_object_id ).serialize() } );
   m_players.erase( logout.id );
 }
 
