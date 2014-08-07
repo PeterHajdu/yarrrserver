@@ -6,8 +6,6 @@
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
 #include <thectci/service_registry.hpp>
-
-#include <thelog/logger.hpp>
 #include <iostream>
 
 namespace
@@ -30,7 +28,6 @@ namespace
 
 int main( int argc, char ** argv )
 {
-  the::log::Logger::add_channel( std::cout );
   the::time::Clock clock;
   NetworkService network_service( clock );
   yarrr::ObjectContainer object_container;

@@ -87,6 +87,9 @@ Players::handle_chat_message_from( const yarrr::ChatMessage& message, int id )
 void
 Players::handle_player_login( const PlayerLoggedIn& login )
 {
+  yarrr::Object::Pointer new_object( create_object( login ) );
+  login.connection_wrapper.connection.send( yarrr::LoginResponse( new_object->id ).serialize() );
+  m_object_container.add_object( std::move( new_object ) );
   greet_new_player( login );
 
   m_players.emplace( std::make_pair(
@@ -96,8 +99,6 @@ Players::handle_player_login( const PlayerLoggedIn& login )
             login.id,
             login.name,
             login.connection_wrapper ) ) ) );
-
-  m_object_container.add_object( create_object( login ) );
   broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name, "server" ).serialize() } );
 }
 

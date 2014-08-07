@@ -15,7 +15,7 @@ LoginHandler::LoginHandler( ConnectionWrapper& connection_wrapper )
   : m_dispatcher()
   , m_connection_wrapper( connection_wrapper )
   , m_connection( connection_wrapper.connection )
-    , m_id( m_connection.id )
+  , m_id( m_connection.id )
 {
   m_dispatcher.register_listener<yarrr::LoginRequest>(
       std::bind( &LoginHandler::handle_login_request, this, std::placeholders::_1 ) );
@@ -25,7 +25,6 @@ LoginHandler::LoginHandler( ConnectionWrapper& connection_wrapper )
 void
 LoginHandler::handle_login_request( const yarrr::LoginRequest& request )
 {
-  m_connection.send( yarrr::LoginResponse( m_id ).serialize() );
   the::ctci::service< LocalEventDispatcher >().dispatcher.dispatch(
       PlayerLoggedIn( m_connection_wrapper, m_id, request.login_id() ) );
 }
