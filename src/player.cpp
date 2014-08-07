@@ -14,6 +14,7 @@ namespace
     yarrr::Object::Pointer ship( new yarrr::Object() );
     ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::PhysicalBehavior() ) );
     ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::Engine() ) );
+    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::GraphicalBehavior() ) );
     login.connection_wrapper.register_dispatcher( *ship );
     return ship;
   }
