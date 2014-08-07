@@ -7,19 +7,6 @@
 #include <yarrr/basic_behaviors.hpp>
 #include <yarrr/chat_message.hpp>
 
-namespace
-{
-  yarrr::Object::Pointer create_object( const PlayerLoggedIn& login )
-  {
-    yarrr::Object::Pointer ship( new yarrr::Object() );
-    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::PhysicalBehavior() ) );
-    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::Engine() ) );
-    ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::GraphicalBehavior() ) );
-    login.connection_wrapper.register_dispatcher( *ship );
-    return ship;
-  }
-}
-
 Player::Player(
     Players& players,
     int network_id,
@@ -90,7 +77,8 @@ Players::handle_chat_message_from( const yarrr::ChatMessage& message, int id )
 void
 Players::handle_player_login( const PlayerLoggedIn& login )
 {
-  yarrr::Object::Pointer new_object( create_object( login ) );
+  yarrr::Object::Pointer new_object( yarrr::create_ship( m_object_container ) );
+  login.connection_wrapper.register_dispatcher( *new_object );
   login.connection_wrapper.connection.send( yarrr::LoginResponse( new_object->id ).serialize() );
   greet_new_player( login );
 
