@@ -6,6 +6,7 @@
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
 #include <thectci/service_registry.hpp>
+#include <yarrr/main_thread_callback_queue.hpp>
 #include <iostream>
 
 namespace
@@ -40,6 +41,8 @@ int main( int argc, char ** argv )
     object_container.dispatch( yarrr::TimerUpdate( clock.now() ) );
     players.broadcast( collect_update_messages_from( object_container ) );
     frequency_stabilizer.stabilize();
+
+    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
   }
 
   return 0;

@@ -1,5 +1,6 @@
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/dummy_graphical_engine.hpp>
+#include <yarrr/main_thread_callback_queue.hpp>
 #include <thectci/service_registry.hpp>
 
 namespace
@@ -9,5 +10,8 @@ namespace
 
   the::ctci::AutoServiceRegister< yarrr::GraphicalEngine, yarrr::DummyGraphicalEngine >
     auto_graphical_engine_register;
+
+  the::ctci::AutoServiceRegister< yarrr::MainThreadCallbackQueue, yarrr::MainThreadCallbackQueue >
+    auto_main_thread_callback_queue_register;
 }
 

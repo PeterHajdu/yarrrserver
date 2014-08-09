@@ -3,6 +3,7 @@
 #include "network_service.hpp"
 #include <yarrr/types.hpp>
 #include <yarrr/object_container.hpp>
+#include <yarrr/basic_behaviors.hpp>
 #include <thectci/dispatcher.hpp>
 #include <memory>
 
@@ -53,6 +54,11 @@ class Players
     void handle_player_login( const PlayerLoggedIn& login );
     void handle_player_logout( const PlayerLoggedOut& logout );
     void greet_new_player( const PlayerLoggedIn& login );
+
+    void handle_add_laser( const yarrr::Canon::AddObject& );
+    void handle_delete_laser( const yarrr::SelfDestructor::DeleteObject& );
+
+    void delete_object_with_id( yarrr::Object::Id );
 
     typedef std::unordered_map< int, Player::Pointer > PlayerContainer;
     PlayerContainer m_players;

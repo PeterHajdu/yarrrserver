@@ -4,8 +4,9 @@
 #include <yarrr/object_container.hpp>
 #include <yarrr/delete_object.hpp>
 #include <yarrr/object.hpp>
-#include <yarrr/basic_behaviors.hpp>
 #include <yarrr/chat_message.hpp>
+#include <yarrr/engine_dispatcher.hpp>
+#include <yarrr/main_thread_callback_queue.hpp>
 
 Player::Player(
     Players& players,
@@ -44,6 +45,12 @@ Players::Players( yarrr::ObjectContainer& object_container )
       std::bind( &Players::handle_player_login, this, std::placeholders::_1 ) );
   local_event_dispatcher.register_listener< PlayerLoggedOut >(
       std::bind( &Players::handle_player_logout, this, std::placeholders::_1 ) );
+
+  the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::Canon::AddObject >(
+      std::bind( &Players::handle_add_laser, this, std::placeholders::_1 ) );
+
+  the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::SelfDestructor::DeleteObject >(
+      std::bind( &Players::handle_delete_laser, this, std::placeholders::_1 ) );
 }
 
 
@@ -77,7 +84,7 @@ Players::handle_chat_message_from( const yarrr::ChatMessage& message, int id )
 void
 Players::handle_player_login( const PlayerLoggedIn& login )
 {
-  yarrr::Object::Pointer new_object( yarrr::create_ship( ) );
+  yarrr::Object::Pointer new_object( yarrr::create_ship() );
   login.connection_wrapper.register_dispatcher( *new_object );
   login.connection_wrapper.connection.send( yarrr::LoginResponse( new_object->id ).serialize() );
   greet_new_player( login );
@@ -111,11 +118,39 @@ Players::greet_new_player( const PlayerLoggedIn& login )
 void
 Players::handle_player_logout( const PlayerLoggedOut& logout )
 {
-  yarrr::Object::Id controlled_object_id( m_players[ logout.id ]->object_id );
-  m_object_container.delete_object( controlled_object_id );
-  broadcast( {
-      yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name, "server" ).serialize(),
-      yarrr::DeleteObject( controlled_object_id ).serialize() } );
+  delete_object_with_id( m_players[ logout.id ]->object_id );
+  broadcast( { yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name, "server" ).serialize() });
   m_players.erase( logout.id );
+}
+
+
+void
+Players::handle_add_laser( const yarrr::Canon::AddObject& add_object )
+{
+  yarrr::Object* object( add_object.object.release() );
+  the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
+      [ this, object ]()
+      {
+        m_object_container.add_object( yarrr::Object::Pointer( object ) );
+      } );
+}
+
+
+void
+Players::handle_delete_laser( const yarrr::SelfDestructor::DeleteObject& delete_object )
+{
+  yarrr::Object::Id object_id( delete_object.id );
+  the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
+      [ this, object_id ]()
+      {
+        delete_object_with_id( object_id );
+      } );
+}
+
+void
+Players::delete_object_with_id( yarrr::Object::Id id )
+{
+  broadcast( { yarrr::DeleteObject( id ).serialize() } );
+  m_object_container.delete_object( id );
 }
 
