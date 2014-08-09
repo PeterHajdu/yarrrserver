@@ -6,14 +6,10 @@
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
 #include <thectci/service_registry.hpp>
-#include <yarrr/dummy_graphical_engine.hpp>
 #include <iostream>
 
 namespace
 {
-  the::ctci::AutoServiceRegister< yarrr::GraphicalEngine, yarrr::DummyGraphicalEngine > auto_graphical_engine_register;
-
-
   std::vector< yarrr::Data >
   collect_update_messages_from( const yarrr::ObjectContainer& objects )
   {
