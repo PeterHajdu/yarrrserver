@@ -85,7 +85,7 @@ void
 Players::handle_player_login( const PlayerLoggedIn& login )
 {
   yarrr::Object::Pointer new_object( yarrr::create_ship() );
-  login.connection_wrapper.register_dispatcher( *new_object );
+  login.connection_wrapper.register_dispatcher( new_object->dispatcher );
   login.connection_wrapper.connection.send( yarrr::LoginResponse( new_object->id ).serialize() );
   greet_new_player( login );
 
