@@ -39,6 +39,7 @@ int main( int argc, char ** argv )
   {
     network_service.process_network_events();
     object_container.dispatch( yarrr::TimerUpdate( clock.now() ) );
+    object_container.check_collision();
     players.broadcast( collect_update_messages_from( object_container ) );
     frequency_stabilizer.stabilize();
 

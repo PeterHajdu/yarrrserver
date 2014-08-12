@@ -14,6 +14,7 @@ class Players;
 namespace yarrr
 {
 class ChatMessage;
+class DeleteObject;
 }
 
 class Player
@@ -56,7 +57,7 @@ class Players
     void greet_new_player( const PlayerLoggedIn& login );
 
     void handle_add_laser( const yarrr::Canon::AddObject& );
-    void handle_delete_laser( const yarrr::SelfDestructor::DeleteObject& );
+    void handle_delete_laser( const yarrr::DeleteObject& );
 
     void delete_object_with_id( yarrr::Object::Id );
 

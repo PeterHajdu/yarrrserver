@@ -49,7 +49,7 @@ Players::Players( yarrr::ObjectContainer& object_container )
   the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::Canon::AddObject >(
       std::bind( &Players::handle_add_laser, this, std::placeholders::_1 ) );
 
-  the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::SelfDestructor::DeleteObject >(
+  the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::DeleteObject >(
       std::bind( &Players::handle_delete_laser, this, std::placeholders::_1 ) );
 }
 
@@ -137,9 +137,9 @@ Players::handle_add_laser( const yarrr::Canon::AddObject& add_object )
 
 
 void
-Players::handle_delete_laser( const yarrr::SelfDestructor::DeleteObject& delete_object )
+Players::handle_delete_laser( const yarrr::DeleteObject& delete_object )
 {
-  yarrr::Object::Id object_id( delete_object.id );
+  yarrr::Object::Id object_id( delete_object.object_id() );
   the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
       [ this, object_id ]()
       {
