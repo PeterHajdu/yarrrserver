@@ -3,6 +3,8 @@
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <thectci/service_registry.hpp>
 
+#include "dummy_particle_factory.hpp"
+
 namespace
 {
   the::ctci::AutoServiceRegister< yarrr::EngineDispatcher, yarrr::EngineDispatcher >
@@ -13,5 +15,8 @@ namespace
 
   the::ctci::AutoServiceRegister< yarrr::MainThreadCallbackQueue, yarrr::MainThreadCallbackQueue >
     auto_main_thread_callback_queue_register;
+
+  the::ctci::AutoServiceRegister< yarrr::ParticleFactory, DummyParticleFactory >
+    auto_particle_factory_register;
 }
 
