@@ -8,7 +8,6 @@ if(UNIX)
 endif(UNIX)
 
 
-SET(deploy_directory ~/deploy)
 set(LIBS ${LIBS})
 
 if(UNIX)
@@ -28,7 +27,6 @@ if(UNIX)
 endif(UNIX)
 
 include_directories(include)
-include_directories(${deploy_directory}/include)
 
 add_definitions(-std=c++11
                 -Wall
