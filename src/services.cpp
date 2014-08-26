@@ -4,9 +4,13 @@
 #include <thectci/service_registry.hpp>
 
 #include "dummy_particle_factory.hpp"
+#include "local_event_dispatcher.hpp"
 
 namespace
 {
+  the::ctci::AutoServiceRegister< LocalEventDispatcher, LocalEventDispatcher >
+    local_event_dispatcher_register;
+
   the::ctci::AutoServiceRegister< yarrr::EngineDispatcher, yarrr::EngineDispatcher >
     auto_engine_dispatcher_register;
 
