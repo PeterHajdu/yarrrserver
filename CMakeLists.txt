@@ -45,4 +45,5 @@ else(sanitize)
 endif(sanitize)
 
 add_subdirectory(src)
+add_subdirectory(test)
 

@@ -10,4 +10,6 @@ CMakeFiles
 CMakeCache.txt
 build
 install_manifest.txt
+test/test_runner
+test/valgrind*
 
