@@ -1,5 +1,7 @@
 src/yarrrserver
+src/*.a
 
+package_version
 *core*
 *swp
 *.cmake
