@@ -8,6 +8,7 @@
 #include <yarrr/login.hpp>
 #include <yarrr/callback_queue.hpp>
 #include <yarrr/clock_synchronizer.hpp>
+#include <yarrr/log.hpp>
 
 typedef yarrr::ConnectionWrapper<the::net::Connection> ConnectionWrapper;
 
@@ -49,6 +50,7 @@ NetworkService::NetworkService( the::time::Clock& clock )
 void
 NetworkService::handle_new_connection( the::net::Connection& connection )
 {
+  thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
   connection.register_task( the::net::NetworkTask::Pointer(
         new yarrr::clock_sync::Server< the::time::Clock, the::net::Connection >(
           m_clock,
@@ -63,6 +65,7 @@ NetworkService::handle_new_connection( the::net::Connection& connection )
 void
 NetworkService::handle_new_connection_on_main_thread( the::net::Connection* connection )
 {
+  thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
   ConnectionBundle::Pointer new_connection_bundle( new ConnectionBundle( *connection ) );
   m_connection_bundles.emplace(
       connection->id,
@@ -72,6 +75,7 @@ NetworkService::handle_new_connection_on_main_thread( the::net::Connection* conn
 void
 NetworkService::handle_connection_lost( the::net::Connection& connection )
 {
+  thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
   m_callback_queue.push_back( std::bind(
         &NetworkService::handle_connection_lost_on_main_thread, this, connection.id ) );
 }
@@ -79,6 +83,7 @@ NetworkService::handle_connection_lost( the::net::Connection& connection )
 void
 NetworkService::handle_connection_lost_on_main_thread( int connection_id )
 {
+  thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
   m_connection_bundles.erase( connection_id );
 }
 

@@ -7,6 +7,7 @@
 #include <yarrr/chat_message.hpp>
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
+#include <yarrr/log.hpp>
 
 Player::Player(
     Players& players,
@@ -69,6 +70,7 @@ Players::broadcast( const std::vector< yarrr::Data > messages ) const
 void
 Players::handle_chat_message_from( const yarrr::ChatMessage& message, int id )
 {
+  thelog( yarrr::log::info )( "chat message: ", message.sender(), message.message() );
   yarrr::Data serialized_message( message.serialize() );
   for ( const auto& player : m_players )
   {
@@ -84,10 +86,12 @@ Players::handle_chat_message_from( const yarrr::ChatMessage& message, int id )
 void
 Players::handle_player_login( const PlayerLoggedIn& login )
 {
+  thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
   yarrr::Object::Pointer new_object( yarrr::create_ship() );
   login.connection_wrapper.register_dispatcher( new_object->dispatcher );
   login.connection_wrapper.connection.send( yarrr::LoginResponse( new_object->id ).serialize() );
   greet_new_player( login );
+
 
   m_players.emplace( std::make_pair(
         login.id,
@@ -98,6 +102,8 @@ Players::handle_player_login( const PlayerLoggedIn& login )
             login.connection_wrapper,
             new_object->id ) ) ) );
 
+  thelog( yarrr::log::info )( "player logged in", login.id, login.name );
+
   m_object_container.add_object( std::move( new_object ) );
   broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name, "server" ).serialize() } );
 }
@@ -106,6 +112,7 @@ Players::handle_player_login( const PlayerLoggedIn& login )
 void
 Players::greet_new_player( const PlayerLoggedIn& login )
 {
+  thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
   std::string greeting( "Welcome " + login.name + "! The following players are online: " );
   for ( const auto& player : m_players )
   {
@@ -118,6 +125,7 @@ Players::greet_new_player( const PlayerLoggedIn& login )
 void
 Players::handle_player_logout( const PlayerLoggedOut& logout )
 {
+  thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
   delete_object_with_id( m_players[ logout.id ]->object_id );
   broadcast( { yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name, "server" ).serialize() });
   m_players.erase( logout.id );
