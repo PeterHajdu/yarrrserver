@@ -22,3 +22,10 @@ Then(/^the connection should be closed$/) do
   expect( @client_connection.gets ).to be nil
 end
 
+When(/^I send the "(.*?)" thenet message on the connection$/) do | message |
+  length = [ message.length ]
+  thenet_message = length.pack( "N" ) + message
+  p thenet_message
+  @client_connection.send thenet_message, 0
+end
+

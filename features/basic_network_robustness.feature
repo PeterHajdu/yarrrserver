@@ -17,3 +17,10 @@ Feature: Malicious traffic robustness
     Then the server should be running
     And the connection should be closed
 
+  Scenario: invalid yarrr message in valid thenet message
+    Given a running server
+    And a tcp connection
+    When I send the "apple" thenet message on the connection
+    Then the connection should be closed
+    And the server should be running
+
