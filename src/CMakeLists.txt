@@ -6,7 +6,6 @@ set(LIBRARY_SOURCE_FILES
 set(EXECUTABLE_SOURCE_FILES
   main.cpp
   services.cpp
-  clock_sync_catcher.cpp
   )
 
 add_library(yarrrserverlib STATIC ${LIBRARY_SOURCE_FILES})
