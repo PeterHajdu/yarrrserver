@@ -129,7 +129,15 @@ void
 Players::handle_player_logout( const PlayerLoggedOut& logout )
 {
   thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
-  delete_object_with_id( m_players[ logout.id ]->object_id );
+
+  PlayerContainer::const_iterator player( m_players.find( logout.id ) );
+  if ( m_players.end() == player )
+  {
+    thelog( yarrr::log::warning )( "Logout arrived with invalid player id." );
+    return;
+  }
+
+  delete_object_with_id( player->second->object_id );
   broadcast( { yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name, "server" ).serialize() });
   m_players.erase( logout.id );
 }
