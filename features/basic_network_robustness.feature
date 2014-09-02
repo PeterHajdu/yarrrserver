@@ -8,6 +8,5 @@ Feature: Malicious traffic robustness
     Given a running server
     And a tcp connection
     When I close the connection
-    And I wait one second
     Then the server should be running
 

@@ -26,7 +26,3 @@ Then(/^the server should be running$/) do
   expect( @yarrr_server.is_running ).to be true
 end
 
-When(/^I wait one second$/) do
-  sleep 1
-end
-
