@@ -13,3 +13,12 @@ When(/^I close the connection$/) do
   sleep_a_bit
 end
 
+When(/^I send "(.*?)" on the connection$/) do | message |
+  @client_connection.send message, 0
+  sleep_a_bit
+end
+
+Then(/^the connection should be closed$/) do
+  expect( @client_connection.gets ).to be nil
+end
+
