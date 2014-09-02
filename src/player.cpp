@@ -9,6 +9,9 @@
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/log.hpp>
 
+namespace yarrrs
+{
+
 Player::Player(
     Players& players,
     int network_id,
@@ -160,5 +163,7 @@ Players::delete_object_with_id( yarrr::Object::Id id )
 {
   broadcast( { yarrr::DeleteObject( id ).serialize() } );
   m_object_container.delete_object( id );
+}
+
 }
 

@@ -7,15 +7,20 @@
 #include <thectci/dispatcher.hpp>
 #include <memory>
 
-class PlayerLoggedIn;
-class PlayerLoggedOut;
-
-class Players;
 namespace yarrr
 {
+
 class ChatMessage;
 class DeleteObject;
+
 }
+
+namespace yarrrs
+{
+
+class PlayerLoggedIn;
+class PlayerLoggedOut;
+class Players;
 
 class Player
 {
@@ -65,4 +70,6 @@ class Players
     PlayerContainer m_players;
     yarrr::ObjectContainer& m_object_container;
 };
+
+}
 

@@ -30,9 +30,9 @@ namespace
 int main( int argc, char ** argv )
 {
   the::time::Clock clock;
-  NetworkService network_service( clock );
+  yarrrs::NetworkService network_service( clock );
   yarrr::ObjectContainer object_container;
-  Players players( object_container );
+  yarrrs::Players players( object_container );
 
   the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
   while ( true )

@@ -10,7 +10,8 @@
 #include <yarrr/clock_synchronizer.hpp>
 #include <yarrr/log.hpp>
 
-typedef yarrr::ConnectionWrapper<the::net::Connection> ConnectionWrapper;
+namespace yarrrs
+{
 
 LoginHandler::LoginHandler( ConnectionWrapper& connection_wrapper )
   : m_dispatcher()
@@ -95,5 +96,7 @@ NetworkService::process_network_events()
   {
     bundle.second->connection_wrapper.process_incoming_messages();
   }
+}
+
 }
 

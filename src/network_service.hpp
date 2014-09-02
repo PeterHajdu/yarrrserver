@@ -7,6 +7,18 @@
 #include <yarrr/callback_queue.hpp>
 #include <yarrr/clock_synchronizer.hpp>
 
+
+namespace the
+{
+namespace time
+{
+class Clock;
+}
+}
+
+namespace yarrrs
+{
+
 typedef yarrr::ConnectionWrapper<the::net::Connection> ConnectionWrapper;
 
 class PlayerLoggedIn
@@ -69,14 +81,6 @@ class ConnectionBundle
     LoginHandler login_handler;
 };
 
-namespace the
-{
-namespace time
-{
-class Clock;
-}
-}
-
 class NetworkService
 {
   public:
@@ -94,4 +98,6 @@ class NetworkService
     yarrr::CallbackQueue m_callback_queue;
     std::unordered_map< int, ConnectionBundle::Pointer > m_connection_bundles;
 };
+
+}
 

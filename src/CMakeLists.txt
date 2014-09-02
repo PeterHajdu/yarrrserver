@@ -9,8 +9,10 @@ set(EXECUTABLE_SOURCE_FILES
   )
 
 add_library(yarrrserverlib STATIC ${LIBRARY_SOURCE_FILES})
-
 add_executable(yarrrserver ${EXECUTABLE_SOURCE_FILES})
-target_link_libraries(yarrrserver yarrrserverlib yarrr thelog thenet thetime thectci pthread ${LIBS})
+
+set(LIB_YARRR "-Wl,--whole-archive -lyarrr -Wl,--no-whole-archive")
+target_link_libraries(yarrrserver yarrrserverlib thelog thenet thetime thectci pthread ${LIB_YARRR} ${LIBS} theconf )
+
 install(TARGETS yarrrserver DESTINATION bin)
 
