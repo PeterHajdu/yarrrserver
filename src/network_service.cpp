@@ -1,14 +1,16 @@
 #include "network_service.hpp"
-
 #include "local_event_dispatcher.hpp"
-#include <thectci/dispatcher.hpp>
-#include <thenet/service.hpp>
-#include <thetime/clock.hpp>
+
 #include <yarrr/connection_wrapper.hpp>
 #include <yarrr/login.hpp>
 #include <yarrr/callback_queue.hpp>
 #include <yarrr/clock_synchronizer.hpp>
 #include <yarrr/log.hpp>
+
+#include <thectci/dispatcher.hpp>
+#include <thenet/service.hpp>
+#include <thetime/clock.hpp>
+#include <theconf/configuration.hpp>
 
 namespace yarrrs
 {
@@ -44,7 +46,7 @@ NetworkService::NetworkService( the::time::Clock& clock )
       std::bind( &NetworkService::handle_new_connection, this, std::placeholders::_1 ),
       std::bind( &NetworkService::handle_connection_lost, this, std::placeholders::_1 ) )
 {
-  m_network_service.listen_on( 2001 );
+  m_network_service.listen_on( the::conf::get<int>( "port" ) );
   m_network_service.start();
 }
 

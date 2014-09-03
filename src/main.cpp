@@ -7,28 +7,51 @@
 #include <thetime/clock.hpp>
 #include <thectci/service_registry.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
+#include <theconf/configuration.hpp>
 #include <iostream>
 
 namespace
 {
-  std::vector< yarrr::Data >
-  collect_update_messages_from( const yarrr::ObjectContainer& objects )
+
+std::vector< yarrr::Data >
+collect_update_messages_from( const yarrr::ObjectContainer& objects )
+{
+  std::vector< yarrr::ObjectUpdate::Pointer > object_updates( objects.generate_object_updates() );
+  std::vector< yarrr::Data > update_messages;
+  std::transform(
+      std::begin( object_updates ), std::end( object_updates ),
+      std::back_inserter( update_messages ),
+      []( const yarrr::ObjectUpdate::Pointer& update )
+      {
+        return update->serialize();
+      } );
+  return update_messages;
+}
+
+
+void
+print_help_and_exit()
+{
+  std::cout << "usage: yarrrserver --port <port>" << std::endl;
+  exit( 0 );
+}
+
+
+void
+parse_and_handle_configuration( const the::conf::ParameterVector& parameters )
+{
+  the::conf::parse( parameters );
+  if ( !the::conf::has( "port" ) )
   {
-    std::vector< yarrr::ObjectUpdate::Pointer > object_updates( objects.generate_object_updates() );
-    std::vector< yarrr::Data > update_messages;
-    std::transform(
-        std::begin( object_updates ), std::end( object_updates ),
-        std::back_inserter( update_messages ),
-        []( const yarrr::ObjectUpdate::Pointer& update )
-        {
-          return update->serialize();
-        } );
-    return update_messages;
+    print_help_and_exit();
   }
+}
+
 }
 
 int main( int argc, char ** argv )
 {
+  parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );
   the::time::Clock clock;
   yarrrs::NetworkService network_service( clock );
   yarrr::ObjectContainer object_container;
