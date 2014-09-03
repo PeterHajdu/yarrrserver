@@ -39,7 +39,8 @@ When(/^I start a client$/) do
   sleep 1.0
 end
 
-Then(/^I should receive a notification$/) do
-  expect( @notification_file.gets ).not_to be nil
+Then(/^I should receive a notification containing "(.*?)"$/) do | notification_message |
+  @notification_message = @notification_file.gets
+  expect( @notification_message ).to match( /#{notification_message}/ )
 end
 

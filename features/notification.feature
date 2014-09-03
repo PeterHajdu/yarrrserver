@@ -7,5 +7,5 @@ Feature: Send notification on various events
   Scenario: send notification if new player logs in
     Given a running server
     When I start a client
-    Then I should receive a notification
+    Then I should receive a notification containing "Player logged in"
 

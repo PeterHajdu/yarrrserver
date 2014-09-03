@@ -1,5 +1,6 @@
 #include "network_service.hpp"
 #include "player.hpp"
+#include "notifier.hpp"
 
 #include <yarrr/object_container.hpp>
 #include <yarrr/basic_behaviors.hpp>
@@ -9,6 +10,7 @@
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <theconf/configuration.hpp>
 #include <iostream>
+#include <fstream>
 
 namespace
 {
@@ -47,11 +49,25 @@ parse_and_handle_configuration( const the::conf::ParameterVector& parameters )
   }
 }
 
+std::ostream&
+create_notification_stream()
+{
+  static std::ofstream notification_stream(
+      the::conf::has( "notify" ) ?
+        the::conf::get< std::string >( "notify" ).c_str() :
+        "dummy_notification_file" );
+  return notification_stream;
+}
+
 }
 
 int main( int argc, char ** argv )
 {
   parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );
+
+  the::ctci::AutoServiceRegister< yarrrs::Notifier, yarrrs::Notifier > notifier_register(
+      create_notification_stream() );
+
   the::time::Clock clock;
   yarrrs::NetworkService network_service( clock );
   yarrr::ObjectContainer object_container;

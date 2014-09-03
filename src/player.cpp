@@ -1,5 +1,6 @@
 #include "player.hpp"
 #include "local_event_dispatcher.hpp"
+#include "notifier.hpp"
 
 #include <yarrr/object_container.hpp>
 #include <yarrr/delete_object.hpp>
@@ -8,6 +9,8 @@
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/log.hpp>
+
+#include <thectci/service_registry.hpp>
 
 namespace yarrrs
 {
@@ -95,6 +98,7 @@ Players::handle_player_login( const PlayerLoggedIn& login )
   login.connection_wrapper.connection.send( yarrr::LoginResponse( new_object->id ).serialize() );
   greet_new_player( login );
 
+  the::ctci::service< yarrrs::Notifier >().send( "Player logged in: " + login.name );
 
   m_players.emplace( std::make_pair(
         login.id,

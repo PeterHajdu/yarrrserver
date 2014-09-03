@@ -6,6 +6,7 @@ set(TEST_SOURCE_FILES
     test_runner.cpp
     test_services.cpp
     test_players.cpp
+    test_notifier.cpp
     )
 
 

@@ -1,6 +1,7 @@
 set(LIBRARY_SOURCE_FILES
   network_service.cpp
   player.cpp
+  notifier.cpp
   )
 
 set(EXECUTABLE_SOURCE_FILES
