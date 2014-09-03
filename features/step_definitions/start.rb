@@ -12,7 +12,7 @@ end
 
 Given(/^a running server$/) do
   @server_port = 21346
-  step "I start the server with command line parameter --port #{@server_port}"
+  step "I start the server with command line parameter --port #{@server_port} --notify #{@notification_file_path}"
 end
 
 Then(/^I should see (.+)$/) do | pattern |
@@ -29,5 +29,17 @@ end
 
 Then(/^It should print the usage text to the terminal$/) do
   step "I should see yarrrserver --port"
+end
+
+When(/^I start a client$/) do
+  @yarrr_client = ProcessRunner.new(
+    {},
+    "yarrrclient --text --server localhost:#{@server_port}" )
+  @yarrr_client.start
+  sleep 1.0
+end
+
+Then(/^I should receive a notification$/) do
+  expect( @notification_file.gets ).not_to be nil
 end
 

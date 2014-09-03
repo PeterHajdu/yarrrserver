@@ -1,6 +1,7 @@
 src/yarrrserver
 src/*.a
 
+notifications
 package_version
 *core*
 *swp
