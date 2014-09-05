@@ -53,7 +53,7 @@ Players::Players( yarrr::ObjectContainer& object_container )
   local_event_dispatcher.register_listener< PlayerLoggedOut >(
       std::bind( &Players::handle_player_logout, this, std::placeholders::_1 ) );
 
-  the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::Canon::AddObject >(
+  the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::ObjectCreated >(
       std::bind( &Players::handle_add_laser, this, std::placeholders::_1 ) );
 
   the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::DeleteObject >(
@@ -148,7 +148,7 @@ Players::handle_player_logout( const PlayerLoggedOut& logout )
 
 
 void
-Players::handle_add_laser( const yarrr::Canon::AddObject& add_object )
+Players::handle_add_laser( const yarrr::ObjectCreated& add_object )
 {
   yarrr::Object* object( add_object.object.release() );
   the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(

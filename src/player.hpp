@@ -61,7 +61,7 @@ class Players
     void handle_player_logout( const PlayerLoggedOut& logout );
     void greet_new_player( const PlayerLoggedIn& login );
 
-    void handle_add_laser( const yarrr::Canon::AddObject& );
+    void handle_add_laser( const yarrr::ObjectCreated& );
     void handle_delete_laser( const yarrr::DeleteObject& );
 
     void delete_object_with_id( yarrr::Object::Id );
