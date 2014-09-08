@@ -3,6 +3,7 @@
 #include "notifier.hpp"
 
 #include <yarrr/object_container.hpp>
+#include <yarrr/object_creator.hpp>
 #include <yarrr/delete_object.hpp>
 #include <yarrr/object.hpp>
 #include <yarrr/chat_message.hpp>
