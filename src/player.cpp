@@ -21,13 +21,12 @@ Player::Player(
     Players& players,
     int network_id,
     const std::string& name,
-    ConnectionWrapper& connection_wrapper,
-    yarrr::Object::Id object_id )
+    ConnectionWrapper& connection_wrapper )
   : name( name )
-  , object_id( object_id )
   , m_network_id( network_id )
   , m_players( players )
-  , m_connection( connection_wrapper.connection )
+  , m_connection_wrapper( connection_wrapper )
+  , m_last_ship( nullptr )
 {
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
@@ -36,13 +35,34 @@ Player::Player(
 bool
 Player::send( yarrr::Data&& message ) const
 {
-  return m_connection.send( std::move( message ) );
+  return m_connection_wrapper.connection.send( std::move( message ) );
 }
 
 void
 Player::handle_chat_message( const yarrr::ChatMessage& message )
 {
   m_players.handle_chat_message_from( message, m_network_id );
+}
+
+yarrr::Object::Id
+Player::object_id()
+{
+  return m_last_ship->id;
+}
+
+yarrr::Object::Pointer
+Player::create_new_ship()
+{
+  if ( m_last_ship )
+  {
+    m_connection_wrapper.remove_dispatcher( m_last_ship->dispatcher );
+  }
+
+  yarrr::Object::Pointer new_object( yarrr::create_ship() );
+  m_last_ship = new_object.get();
+  m_connection_wrapper.register_dispatcher( new_object->dispatcher );
+  send( yarrr::LoginResponse( new_object->id ).serialize() );
+  return new_object;
 }
 
 Players::Players( yarrr::ObjectContainer& object_container )
@@ -98,25 +118,19 @@ void
 Players::handle_player_login( const PlayerLoggedIn& login )
 {
   thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
-  yarrr::Object::Pointer new_object( yarrr::create_ship() );
-  login.connection_wrapper.register_dispatcher( new_object->dispatcher );
-  login.connection_wrapper.connection.send( yarrr::LoginResponse( new_object->id ).serialize() );
-  greet_new_player( login );
-
   the::ctci::service< yarrrs::Notifier >().send( "Player logged in: " + login.name );
-
   m_players.emplace( std::make_pair(
         login.id,
         Player::Pointer( new Player(
             *this,
             login.id,
             login.name,
-            login.connection_wrapper,
-            new_object->id ) ) ) );
+            login.connection_wrapper ) ) ) );
 
+  greet_new_player( login );
   thelog( yarrr::log::info )( "player logged in", login.id, login.name );
 
-  m_object_container.add_object( std::move( new_object ) );
+  m_object_container.add_object( m_players[ login.id ]->create_new_ship() );
   broadcast( { yarrr::ChatMessage( "New player logged in: " + login.name, "server" ).serialize() } );
 }
 
@@ -146,7 +160,7 @@ Players::handle_player_logout( const PlayerLoggedOut& logout )
     return;
   }
 
-  delete_object_with_id( player->second->object_id );
+  delete_object_with_id( player->second->object_id() );
   broadcast( { yarrr::ChatMessage( "Player logged out: " + m_players[ logout.id ]->name, "server" ).serialize() });
   m_players.erase( logout.id );
 }
@@ -167,6 +181,8 @@ Players::handle_add_object( const yarrr::ObjectCreated& add_object )
 void
 Players::handle_player_killed( const yarrr::PlayerKilled& player_killed )
 {
+  Player* player( player_from_object_id( player_killed.object_id ) );
+  m_object_container.add_object( player->create_new_ship() );
   postponed_delete_object_with_id( player_killed.object_id );
 }
 
@@ -192,6 +208,20 @@ Players::delete_object_with_id( yarrr::Object::Id id )
 {
   broadcast( { yarrr::DeleteObject( id ).serialize() } );
   m_object_container.delete_object( id );
+}
+
+Player*
+Players::player_from_object_id( yarrr::Object::Id id )
+{
+  for ( const auto& player : m_players )
+  {
+    if ( player.second->object_id() == id )
+    {
+      return player.second.get();
+    }
+  }
+
+  return nullptr;
 }
 
 }

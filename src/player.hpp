@@ -32,21 +32,23 @@ class Player
         Players&,
         int network_id,
         const std::string& name,
-        ConnectionWrapper& connection_wrapper,
-        yarrr::Object::Id );
+        ConnectionWrapper& connection_wrapper );
 
     bool send( yarrr::Data&& message ) const;
 
     const std::string name;
-    const yarrr::Object::Id object_id;
+
+    //todo: rewrite this whole mess
+    yarrr::Object::Id object_id();
+    yarrr::Object::Pointer create_new_ship();
 
   private:
-    const int m_network_id;
-
     void handle_chat_message( const yarrr::ChatMessage& );
 
+    const int m_network_id;
     Players& m_players;
-    the::net::Connection& m_connection;
+    ConnectionWrapper& m_connection_wrapper;
+    yarrr::Object* m_last_ship;
 };
 
 
@@ -68,6 +70,8 @@ class Players
 
     void postponed_delete_object_with_id( yarrr::Object::Id );
     void delete_object_with_id( yarrr::Object::Id );
+
+    Player* player_from_object_id( yarrr::Object::Id id );
 
     typedef std::unordered_map< int, Player::Pointer > PlayerContainer;
     PlayerContainer m_players;
