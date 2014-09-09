@@ -61,7 +61,7 @@ Player::create_new_ship()
   yarrr::Object::Pointer new_object( yarrr::create_ship() );
   m_last_ship = new_object.get();
   m_connection_wrapper.register_dispatcher( new_object->dispatcher );
-  send( yarrr::LoginResponse( new_object->id ).serialize() );
+  send( yarrr::ObjectAssigned( new_object->id ).serialize() );
   return new_object;
 }
 
