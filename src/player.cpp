@@ -9,6 +9,7 @@
 #include <yarrr/chat_message.hpp>
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
+#include <yarrr/destruction_handlers.hpp>
 #include <yarrr/log.hpp>
 
 #include <thectci/service_registry.hpp>
@@ -55,10 +56,13 @@ Players::Players( yarrr::ObjectContainer& object_container )
       std::bind( &Players::handle_player_logout, this, std::placeholders::_1 ) );
 
   the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::ObjectCreated >(
-      std::bind( &Players::handle_add_laser, this, std::placeholders::_1 ) );
+      std::bind( &Players::handle_add_object, this, std::placeholders::_1 ) );
 
   the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::DeleteObject >(
-      std::bind( &Players::handle_delete_laser, this, std::placeholders::_1 ) );
+      std::bind( &Players::handle_delete_object, this, std::placeholders::_1 ) );
+
+  the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::PlayerKilled >(
+      std::bind( &Players::handle_player_killed, this, std::placeholders::_1 ) );
 }
 
 
@@ -149,7 +153,7 @@ Players::handle_player_logout( const PlayerLoggedOut& logout )
 
 
 void
-Players::handle_add_laser( const yarrr::ObjectCreated& add_object )
+Players::handle_add_object( const yarrr::ObjectCreated& add_object )
 {
   yarrr::Object* object( add_object.object.release() );
   the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
@@ -161,7 +165,13 @@ Players::handle_add_laser( const yarrr::ObjectCreated& add_object )
 
 
 void
-Players::handle_delete_laser( const yarrr::DeleteObject& delete_object )
+Players::handle_player_killed( const yarrr::PlayerKilled& player_killed )
+{
+}
+
+
+void
+Players::handle_delete_object( const yarrr::DeleteObject& delete_object )
 {
   yarrr::Object::Id object_id( delete_object.object_id() );
   the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
