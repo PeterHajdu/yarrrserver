@@ -184,6 +184,7 @@ Players::handle_player_killed( const yarrr::PlayerKilled& player_killed )
   Player* player( player_from_object_id( player_killed.object_id ) );
   m_object_container.add_object( player->create_new_ship() );
   postponed_delete_object_with_id( player_killed.object_id );
+  broadcast( { yarrr::ChatMessage( player->name + " was shot down!", "server" ).serialize() } );
 }
 
 
