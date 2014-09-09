@@ -66,6 +66,7 @@ class Players
     void handle_delete_object( const yarrr::DeleteObject& );
     void handle_player_killed( const yarrr::PlayerKilled& );
 
+    void postponed_delete_object_with_id( yarrr::Object::Id );
     void delete_object_with_id( yarrr::Object::Id );
 
     typedef std::unordered_map< int, Player::Pointer > PlayerContainer;

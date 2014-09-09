@@ -167,13 +167,19 @@ Players::handle_add_object( const yarrr::ObjectCreated& add_object )
 void
 Players::handle_player_killed( const yarrr::PlayerKilled& player_killed )
 {
+  postponed_delete_object_with_id( player_killed.object_id );
 }
 
 
 void
 Players::handle_delete_object( const yarrr::DeleteObject& delete_object )
 {
-  yarrr::Object::Id object_id( delete_object.object_id() );
+  postponed_delete_object_with_id( delete_object.object_id() );
+}
+
+void
+Players::postponed_delete_object_with_id( yarrr::Object::Id object_id )
+{
   the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
       [ this, object_id ]()
       {
