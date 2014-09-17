@@ -73,7 +73,7 @@ int main( int argc, char ** argv )
   yarrr::ObjectContainer object_container;
   yarrrs::Players players( object_container );
 
-  the::time::FrequencyStabilizer< 30, the::time::Clock > frequency_stabilizer( clock );
+  the::time::FrequencyStabilizer< 10, the::time::Clock > frequency_stabilizer( clock );
   while ( true )
   {
     network_service.process_network_events();
