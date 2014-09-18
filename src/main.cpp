@@ -1,4 +1,5 @@
 #include "network_service.hpp"
+#include "duck_hunt.hpp"
 #include "player.hpp"
 #include "notifier.hpp"
 
@@ -72,6 +73,7 @@ int main( int argc, char ** argv )
   yarrrs::NetworkService network_service( clock );
   yarrr::ObjectContainer object_container;
   yarrrs::Players players( object_container );
+  yarrrs::DuckHunt duck_hunt( object_container );
 
   the::time::FrequencyStabilizer< 10, the::time::Clock > frequency_stabilizer( clock );
   while ( true )
