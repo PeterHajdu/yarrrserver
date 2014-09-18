@@ -31,6 +31,9 @@ std::uniform_int_distribution<int> angular_velocity_distribution{ -500_degrees, 
 ObjectBehavior::Pointer random_physical_behavior()
 {
   PhysicalBehavior* behavior( new PhysicalBehavior() );
+
+  behavior->physical_parameters.coordinate = yarrr::Coordinate( 0, 0 );
+
   behavior->physical_parameters.velocity += yarrr::Coordinate(
       velocity_distribution( random_engine ),
       velocity_distribution( random_engine ) );
