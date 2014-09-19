@@ -28,7 +28,7 @@ std::default_random_engine random_engine( random_device() );
 std::uniform_int_distribution<int> velocity_distribution{ -75_metres, 75_metres };
 std::uniform_int_distribution<int> angular_velocity_distribution{ -500_degrees, +500_degrees };
 
-ObjectBehavior::Pointer random_physical_behavior()
+ObjectBehavior::Pointer random_physical_behavior( const the::time::Time& now )
 {
   PhysicalBehavior* behavior( new PhysicalBehavior() );
 
@@ -41,13 +41,15 @@ ObjectBehavior::Pointer random_physical_behavior()
   behavior->physical_parameters.angular_velocity +=
     angular_velocity_distribution( random_engine );
 
+  behavior->physical_parameters.timestamp = now;
+
   return ObjectBehavior::Pointer( behavior );
 }
 
-yarrr::Object::Pointer create_duck()
+yarrr::Object::Pointer create_duck( const the::time::Time& now )
 {
   yarrr::Object::Pointer duck( new Object() );
-  duck->add_behavior( random_physical_behavior() );
+  duck->add_behavior( random_physical_behavior( now ) );
   duck->add_behavior( ObjectBehavior::Pointer( new yarrr::Inventory() ) );
 
   ShapeBehavior* shape( new ShapeBehavior() );
@@ -93,8 +95,9 @@ yarrr::Object::Pointer create_duck()
 namespace yarrrs
 {
 
-DuckHunt::DuckHunt( yarrr::ObjectContainer& objects )
+DuckHunt::DuckHunt( yarrr::ObjectContainer& objects, const the::time::Clock& clock )
   : m_objects( objects )
+  , m_clock( clock )
 {
   the::ctci::Dispatcher& local_event_dispatcher(
       the::ctci::service< LocalEventDispatcher >().dispatcher );
@@ -106,7 +109,7 @@ DuckHunt::DuckHunt( yarrr::ObjectContainer& objects )
 void
 DuckHunt::handle_player_login( const PlayerLoggedIn& ) const
 {
-  3_times( [ this ]() { m_objects.add_object( create_duck() ); } );
+  3_times( [ this ]() { m_objects.add_object( create_duck( m_clock.now() ) ); } );
 }
 
 }
