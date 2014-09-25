@@ -4,6 +4,8 @@ set(LIBRARY_SOURCE_FILES
   notifier.cpp
   duck_hunt.cpp
   object_factory.cpp
+  lua_engine.cpp
+  lua_setup.cpp
   )
 
 set(EXECUTABLE_SOURCE_FILES
@@ -15,7 +17,7 @@ add_library(yarrrserverlib STATIC ${LIBRARY_SOURCE_FILES})
 add_executable(yarrrserver ${EXECUTABLE_SOURCE_FILES})
 
 set(LIB_YARRR "-Wl,--whole-archive -lyarrr -Wl,--no-whole-archive")
-target_link_libraries(yarrrserver yarrrserverlib thelog thenet thetime thectci pthread ${LIB_YARRR} ${LIBS} theconf )
+target_link_libraries(yarrrserver yarrrserverlib thelog thenet thetime thectci pthread ${LIB_YARRR} ${LIBS} theconf lua)
 
 install(TARGETS yarrrserver DESTINATION bin)
 

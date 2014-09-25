@@ -8,13 +8,16 @@ set(TEST_SOURCE_FILES
     test_players.cpp
     test_notifier.cpp
     test_object_factory.cpp
+    test_shape_creation.cpp
+    test_lua_engine.cpp
+    test_lua_setup.cpp
     )
 
 
 add_executable(test_runner EXCLUDE_FROM_ALL ${TEST_SOURCE_FILES})
 
 set(LIB_YARRR "-Wl,--whole-archive -lyarrr -Wl,--no-whole-archive")
-target_link_libraries(test_runner yarrrserverlib thelog theconf thenet thectci ${LIB_YARRR} ${LIBS} theconf)
+target_link_libraries(test_runner yarrrserverlib thelog theconf thenet thectci ${LIB_YARRR} ${LIBS} theconf lua)
 
 get_target_property(TEST_RUNNER_BIN test_runner LOCATION)
 

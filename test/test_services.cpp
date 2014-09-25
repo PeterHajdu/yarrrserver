@@ -1,6 +1,7 @@
 #include "../src/local_event_dispatcher.hpp"
 #include "../src/notifier.hpp"
 #include <yarrr/engine_dispatcher.hpp>
+#include <yarrr/dummy_graphical_engine.hpp>
 #include <thectci/service_registry.hpp>
 
 #include <sstream>
@@ -17,6 +18,9 @@ namespace test
 
 namespace
 {
+  the::ctci::AutoServiceRegister< yarrr::GraphicalEngine, yarrr::DummyGraphicalEngine >
+    graphical_engine_register;
+
   the::ctci::AutoServiceRegister< LocalEventDispatcher, LocalEventDispatcher >
     local_event_dispatcher_register;
 

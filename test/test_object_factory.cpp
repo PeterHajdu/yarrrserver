@@ -1,9 +1,23 @@
 #include "../src/object_factory.hpp"
+#include "../src/lua_engine.hpp"
 #include <yarrr/object.hpp>
 #include <thectci/service_registry.hpp>
 #include <igloo/igloo_alt.h>
 
 using namespace igloo;
+
+namespace
+{
+
+bool factory_method_was_called{ false };
+yarrr::Object an_object;
+yarrr::Object& dogfood()
+{
+  factory_method_was_called = true;
+  return an_object;
+}
+
+}
 
 Describe( an_object_factory )
 {
@@ -60,6 +74,14 @@ Describe( an_object_factory )
   {
     yarrrs::ObjectFactory& object_factory( the::ctci::service< yarrrs::ObjectFactory >() );
     (void)object_factory;
+  }
+
+  It( exports_factory_registration_to_the_lua_world )
+  {
+    yarrr::Lua::state().set_function( "dogfood", dogfood );
+    yarrr::Lua::state().script( "register_object_factory( \"dogfood\", dogfood )" );
+    the::ctci::service< yarrrs::ObjectFactory >().create_a( "dogfood" );
+    AssertThat( factory_method_was_called, Equals( true ) );
   }
 
   yarrr::Object::Id created_object_id;

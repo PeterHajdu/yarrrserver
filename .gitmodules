@@ -1,3 +1,6 @@
 [submodule "igloo"]
-	path = test/igloo
+	path = thirdparty/igloo
 	url = https://github.com/joakimkarlsson/igloo.git
+[submodule "sol"]
+	path = thirdparty/sol
+	url = https://github.com/Rapptz/sol.git

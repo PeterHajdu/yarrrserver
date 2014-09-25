@@ -3,21 +3,23 @@
 #include "player.hpp"
 #include "notifier.hpp"
 #include "object_factory.hpp"
+#include "lua_setup.hpp"
 
 #include <yarrr/object_container.hpp>
-#include <yarrr/object_creator.hpp>
 #include <yarrr/basic_behaviors.hpp>
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
+#include <yarrr/resources.hpp>
 #include <thectci/service_registry.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <theconf/configuration.hpp>
 #include <iostream>
 #include <fstream>
 
+#include <stdlib.h>
+
 namespace
 {
-
 std::vector< yarrr::Data >
 collect_update_messages_from( const yarrr::ObjectContainer& objects )
 {
@@ -62,22 +64,24 @@ create_notification_stream()
   return notification_stream;
 }
 
-void register_object_creators()
-{
-  yarrrs::ObjectFactory& object_factory( the::ctci::service< yarrrs::ObjectFactory >() );
-  object_factory.register_creator( "ship", &yarrr::create_ship );
-}
-
 }
 
 int main( int argc, char ** argv )
 {
   parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );
+  const std::string home_folder( std::string( getenv( "HOME" ) ) + "/.yarrrserver/" );
+  the::conf::set( "lua_configuration_path", home_folder );
+
+  the::ctci::AutoServiceRegister< yarrr::ResourceFinder, yarrr::ResourceFinder > resource_finder_register(
+      yarrr::ResourceFinder::PathList{
+      home_folder,
+      "/usr/local/share/yarrr/",
+      "/usr/share/yarrr/" } );
 
   the::ctci::AutoServiceRegister< yarrrs::Notifier, yarrrs::Notifier > notifier_register(
       create_notification_stream() );
 
-  register_object_creators();
+  yarrr::initialize_lua_engine();
 
   the::time::Clock clock;
   yarrrs::NetworkService network_service( clock );

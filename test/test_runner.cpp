@@ -1,4 +1,4 @@
-#include "igloo/igloo.h"
+#include <igloo/igloo.h>
 
 using namespace igloo;
 

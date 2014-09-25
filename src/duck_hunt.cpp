@@ -58,25 +58,19 @@ yarrr::Object::Pointer create_duck( const the::time::Time& now )
   shape->shape.add_tile( Tile{ { 0, -1 }, { 0, -1 } } );
   duck->add_behavior( ObjectBehavior::Pointer( shape ) );
 
-  const Coordinate main_thruster_relative_to_center_of_mass(
-      Coordinate{ -5_metres, Tile::unit_length / 2 } - shape->shape.center_of_mass() );
-
   duck->add_behavior( ObjectBehavior::Pointer( new Thruster(
           Command::main_thruster,
-          main_thruster_relative_to_center_of_mass,
+          { -1, 0 },
           180_degrees ) ) );
-
-  const Coordinate front_thrusters_relative_to_center_of_mass(
-      Coordinate{ 15_metres, Tile::unit_length / 2 } - shape->shape.center_of_mass() );
 
   duck->add_behavior( ObjectBehavior::Pointer( new Thruster(
           Command::port_thruster,
-          front_thrusters_relative_to_center_of_mass,
+          { 2, 0 },
           90_degrees ) ) );
 
   duck->add_behavior( ObjectBehavior::Pointer( new Thruster(
           Command::starboard_thruster,
-          front_thrusters_relative_to_center_of_mass,
+          { 2, 0 },
           -90_degrees ) ) );
 
   duck->add_behavior( ObjectBehavior::Pointer( new Canon() ) );
