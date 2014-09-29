@@ -49,6 +49,12 @@ Describe( an_object_factory )
     AssertThat( was_another_creator_called, Equals( true ) );
   }
 
+  It( returns_nullptr_if_the_key_is_unknown )
+  {
+    auto object( object_factory->create_a( "cat" ) );
+    AssertThat( object.get() == nullptr, Equals( true ) );
+  }
+
   yarrr::Object::Id created_object_id;
   std::unique_ptr< yarrrs::ObjectFactory > object_factory;
   const std::string key{ "duck" };
