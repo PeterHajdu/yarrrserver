@@ -1,5 +1,6 @@
 #include "../src/object_factory.hpp"
 #include <yarrr/object.hpp>
+#include <thectci/service_registry.hpp>
 #include <igloo/igloo_alt.h>
 
 using namespace igloo;
@@ -53,6 +54,12 @@ Describe( an_object_factory )
   {
     auto object( object_factory->create_a( "cat" ) );
     AssertThat( object.get() == nullptr, Equals( true ) );
+  }
+
+  It( is_registered_as_a_service )
+  {
+    yarrrs::ObjectFactory& object_factory( the::ctci::service< yarrrs::ObjectFactory >() );
+    (void)object_factory;
   }
 
   yarrr::Object::Id created_object_id;
