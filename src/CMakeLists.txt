@@ -3,6 +3,7 @@ set(LIBRARY_SOURCE_FILES
   player.cpp
   notifier.cpp
   duck_hunt.cpp
+  object_factory.cpp
   )
 
 set(EXECUTABLE_SOURCE_FILES
