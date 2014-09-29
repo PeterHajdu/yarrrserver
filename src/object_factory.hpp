@@ -2,6 +2,7 @@
 
 #include <yarrr/object.hpp>
 #include <functional>
+#include <unordered_map>
 
 namespace yarrrs
 {
@@ -14,7 +15,8 @@ class ObjectFactory final
     void register_creator( const std::string& key, Creator creator );
 
   private:
-    Creator m_creator;
+    typedef std::unordered_map< std::string, Creator > Creators;
+    Creators m_creators;
 };
 
 }
