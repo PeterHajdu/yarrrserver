@@ -6,7 +6,7 @@ namespace yarrrs
 yarrr::Object::Pointer
 ObjectFactory::create_a( const std::string& key )
 {
-  return nullptr;
+  return m_creator();
 }
 
 void
@@ -14,6 +14,7 @@ ObjectFactory::register_creator(
     const std::string& key,
     Creator creator )
 {
+  m_creator = creator;
 }
 
 }
