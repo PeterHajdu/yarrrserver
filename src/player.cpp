@@ -1,6 +1,7 @@
 #include "player.hpp"
 #include "local_event_dispatcher.hpp"
 #include "notifier.hpp"
+#include "object_factory.hpp"
 
 #include <yarrr/object_container.hpp>
 #include <yarrr/object_creator.hpp>
@@ -58,7 +59,7 @@ Player::create_new_ship()
     m_connection_wrapper.remove_dispatcher( m_last_ship->dispatcher );
   }
 
-  yarrr::Object::Pointer new_object( yarrr::create_ship() );
+  yarrr::Object::Pointer new_object( the::ctci::service< yarrrs::ObjectFactory >().create_a( "ship" ) );
   m_last_ship = new_object.get();
   m_connection_wrapper.register_dispatcher( new_object->dispatcher );
   send( yarrr::ObjectAssigned( new_object->id ).serialize() );

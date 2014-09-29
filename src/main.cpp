@@ -2,8 +2,10 @@
 #include "duck_hunt.hpp"
 #include "player.hpp"
 #include "notifier.hpp"
+#include "object_factory.hpp"
 
 #include <yarrr/object_container.hpp>
+#include <yarrr/object_creator.hpp>
 #include <yarrr/basic_behaviors.hpp>
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
@@ -60,6 +62,12 @@ create_notification_stream()
   return notification_stream;
 }
 
+void register_object_creators()
+{
+  yarrrs::ObjectFactory& object_factory( the::ctci::service< yarrrs::ObjectFactory >() );
+  object_factory.register_creator( "ship", &yarrr::create_ship );
+}
+
 }
 
 int main( int argc, char ** argv )
@@ -68,6 +76,8 @@ int main( int argc, char ** argv )
 
   the::ctci::AutoServiceRegister< yarrrs::Notifier, yarrrs::Notifier > notifier_register(
       create_notification_stream() );
+
+  register_object_creators();
 
   the::time::Clock clock;
   yarrrs::NetworkService network_service( clock );
