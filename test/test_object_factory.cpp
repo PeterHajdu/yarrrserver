@@ -11,12 +11,23 @@ Describe( an_object_factory )
     object_factory.reset( new yarrrs::ObjectFactory() );
   }
 
+  It( allows_factory_function_registration_by_type )
+  {
+    object_factory->register_creator( key,
+        []()
+        {
+          return yarrr::Object::Pointer( nullptr );
+        } );
+  }
+
   It( creates_an_object_by_key )
   {
-    yarrr::Object::Pointer object( object_factory->create_a( "duck" ) );
-    (void)object;
+
+
+    yarrr::Object::Pointer object( object_factory->create_a( key ) );
   }
 
   std::unique_ptr< yarrrs::ObjectFactory > object_factory;
+  const std::string key{ "duck" };
 };
 

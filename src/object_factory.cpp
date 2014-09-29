@@ -9,5 +9,12 @@ ObjectFactory::create_a( const std::string& key )
   return nullptr;
 }
 
+void
+ObjectFactory::register_creator(
+    const std::string& key,
+    Creator creator )
+{
+}
+
 }
 
