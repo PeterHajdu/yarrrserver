@@ -59,17 +59,17 @@ yarrr::Object::Pointer create_duck( const the::time::Time& now )
   duck->add_behavior( ObjectBehavior::Pointer( shape ) );
 
   duck->add_behavior( ObjectBehavior::Pointer( new Thruster(
-          Command::main_thruster,
+          ShipControl::main_thruster,
           { -1, 0 },
           180_degrees ) ) );
 
   duck->add_behavior( ObjectBehavior::Pointer( new Thruster(
-          Command::port_thruster,
+          ShipControl::port_thruster,
           { 2, 0 },
           90_degrees ) ) );
 
   duck->add_behavior( ObjectBehavior::Pointer( new Thruster(
-          Command::starboard_thruster,
+          ShipControl::starboard_thruster,
           { 2, 0 },
           -90_degrees ) ) );
 

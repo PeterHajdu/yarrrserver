@@ -74,9 +74,9 @@ export_yarrr_stuff()
   lua.new_userdata< yarrr::ShapeBehavior, yarrr::Shape >( "ShapeBehavior", "shape", &yarrr::ShapeBehavior::shape );
   lua.new_userdata< yarrr::ShapeGraphics >( "ShapeGraphics" );
 
-  lua[ "main_thruster" ] = int( yarrr::Command::main_thruster );
-  lua[ "port_thruster" ] = int( yarrr::Command::port_thruster );
-  lua[ "starboard_thruster" ] = int( yarrr::Command::starboard_thruster );
+  lua[ "main_thruster" ] = int( yarrr::ShipControl::main_thruster );
+  lua[ "port_thruster" ] = int( yarrr::ShipControl::port_thruster );
+  lua[ "starboard_thruster" ] = int( yarrr::ShipControl::starboard_thruster );
   lua.new_userdata< yarrr::Thruster, int, yarrr::Tile::Coordinate, yarrr::Angle >( "Thruster" );
   lua.new_userdata< yarrr::Canon, yarrr::Tile::Coordinate >( "Canon" );
 
