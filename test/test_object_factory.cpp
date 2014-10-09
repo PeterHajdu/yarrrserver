@@ -10,11 +10,11 @@ namespace
 {
 
 bool factory_method_was_called{ false };
-yarrr::Object an_object;
-yarrr::Object& dogfood()
+yarrr::Object temporary_global_object;
+yarrr::Object* dogfood()
 {
   factory_method_was_called = true;
-  return an_object;
+  return &temporary_global_object;
 }
 
 }
