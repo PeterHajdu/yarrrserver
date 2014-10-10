@@ -19,7 +19,7 @@ namespace yarrrs
 {
 
 Player::Player(
-    World& world,
+    const World& world,
     int network_id,
     const std::string& name,
     ConnectionWrapper& connection_wrapper )
@@ -27,7 +27,7 @@ Player::Player(
   , m_network_id( network_id )
   , m_world( world )
   , m_connection_wrapper( connection_wrapper )
-  , m_last_ship( nullptr )
+  , m_current_object( nullptr )
 {
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
@@ -48,43 +48,30 @@ Player::handle_chat_message( const yarrr::ChatMessage& message )
 }
 
 yarrr::Object::Id
-Player::object_id()
+Player::object_id() const
 {
-  return m_last_ship->id;
+  return m_current_object->id;
 }
 
+/*
 yarrr::Object::Pointer
 Player::create_new_ship()
 {
-  if ( m_last_ship )
+  if ( m_current_object )
   {
-    m_connection_wrapper.remove_dispatcher( m_last_ship->dispatcher );
+    m_connection_wrapper.remove_dispatcher( m_current_object->dispatcher );
   }
 
   yarrr::Object::Pointer new_object( the::ctci::service< yarrrs::ObjectFactory >().create_a( "ship" ) );
-  m_last_ship = new_object.get();
+  m_current_object = new_object.get();
   m_connection_wrapper.register_dispatcher( new_object->dispatcher );
   send( yarrr::ObjectAssigned( new_object->id ).serialize() );
   return new_object;
 }
 
-/*
 Players::Players( yarrr::ObjectContainer& object_container )
   : m_object_container( object_container )
 {
-  the::ctci::Dispatcher& local_event_dispatcher(
-      the::ctci::service< LocalEventDispatcher >().dispatcher );
-  local_event_dispatcher.register_listener< PlayerLoggedIn >(
-      std::bind( &Players::handle_player_login, this, std::placeholders::_1 ) );
-  local_event_dispatcher.register_listener< PlayerLoggedOut >(
-      std::bind( &Players::handle_player_logout, this, std::placeholders::_1 ) );
-
-  the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::ObjectCreated >(
-      std::bind( &Players::handle_add_object, this, std::placeholders::_1 ) );
-
-  the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::DeleteObject >(
-      std::bind( &Players::handle_delete_object, this, std::placeholders::_1 ) );
-
   the::ctci::service< yarrr::EngineDispatcher >().register_listener< yarrr::PlayerKilled >(
       std::bind( &Players::handle_player_killed, this, std::placeholders::_1 ) );
 }

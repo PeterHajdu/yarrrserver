@@ -87,7 +87,8 @@ int main( int argc, char ** argv )
   the::time::Clock clock;
   yarrrs::NetworkService network_service( clock );
   yarrr::ObjectContainer object_container;
-  yarrrs::World world;
+  yarrrs::Player::Container players;
+  yarrrs::World world( players, object_container );
   yarrrs::DuckHunt duck_hunt( object_container, clock );
 
   the::time::FrequencyStabilizer< 10, the::time::Clock > frequency_stabilizer( clock );

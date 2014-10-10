@@ -2,13 +2,14 @@
 #include "../src/notifier.hpp"
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/dummy_graphical_engine.hpp>
+#include <yarrr/main_thread_callback_queue.hpp>
 #include <thectci/service_registry.hpp>
 
 #include <sstream>
 
 namespace test
 {
-  std::ostream&
+  std::stringstream&
   get_notification_stream()
   {
     static std::stringstream notification_stream;
@@ -29,5 +30,9 @@ namespace
 
   the::ctci::AutoServiceRegister< yarrrs::Notifier, yarrrs::Notifier > notifier_register(
       test::get_notification_stream() );
+
+  the::ctci::AutoServiceRegister< yarrr::MainThreadCallbackQueue, yarrr::MainThreadCallbackQueue >
+    main_thread_callback_queue_register;
+
 }
 

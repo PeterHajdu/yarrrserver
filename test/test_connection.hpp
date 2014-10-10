@@ -1,36 +1,35 @@
 #pragma once
 
-#include <thenet/socket.hpp>
+#include <thenet/test_socket.hpp>
 #include <thenet/connection.hpp>
 
 namespace test
 {
 
-class Socket : public the::net::Socket
-{
-  public:
-    Socket()
-      : the::net::Socket( 0 )
-    {
-    }
-
-    virtual void drop() override {}
-    virtual void handle_event() override {}
-    virtual ~Socket() = default;
-};
-
 class Connection
 {
   public:
     Connection()
-      : socket()
-      , connection( socket )
+      : socket( test::Socket::create() )
+      , connection( *socket )
       , wrapper( connection )
     {
     }
 
-    Socket socket;
-    the::net::Connection connection;
+    bool has_no_data() const
+    {
+      connection.wake_up_on_network_thread();
+      return socket->has_no_messages();
+    }
+
+    void flush_connection() const
+    {
+      connection.wake_up_on_network_thread();
+      socket->sent_message();
+    }
+
+    std::unique_ptr< test::Socket > socket;
+    mutable the::net::Connection connection;
     yarrrs::ConnectionWrapper wrapper;
 };
 

@@ -24,9 +24,10 @@ class Player
 {
   public:
     typedef std::unique_ptr< Player > Pointer;
+    typedef std::unordered_map< int, Pointer > Container;
 
     Player(
-        World&,
+        const World&,
         int network_id,
         const std::string& name,
         ConnectionWrapper& connection_wrapper );
@@ -35,17 +36,19 @@ class Player
 
     const std::string name;
 
-    //todo: rewrite this whole mess
-    yarrr::Object::Id object_id();
-    yarrr::Object::Pointer create_new_ship();
+    yarrr::Object::Id object_id() const;
+    void assign_object( yarrr::Object& object )
+    {
+      m_current_object = &object;
+    }
 
   private:
     void handle_chat_message( const yarrr::ChatMessage& );
 
     const int m_network_id;
-    World& m_world;
+    const World& m_world;
     ConnectionWrapper& m_connection_wrapper;
-    yarrr::Object* m_last_ship;
+    yarrr::Object* m_current_object;
 };
 
 }
