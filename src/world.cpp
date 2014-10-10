@@ -136,8 +136,7 @@ World::handle_player_logged_in( const PlayerLoggedIn& login ) const
   m_players.emplace( std::make_pair(
         login.id,
         Player::Pointer( new Player(
-            *this,
-            login.id,
+            m_players,
             login.name,
             login.connection_wrapper ) ) ) );
   m_players[ login.id ]->assign_object( *new_object );

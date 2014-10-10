@@ -27,26 +27,20 @@ class Player
     typedef std::unordered_map< int, Pointer > Container;
 
     Player(
-        const World&,
-        int network_id,
+        const Container&,
         const std::string& name,
         ConnectionWrapper& connection_wrapper );
 
     bool send( yarrr::Data&& message ) const;
 
     const std::string name;
-
     yarrr::Object::Id object_id() const;
-    void assign_object( yarrr::Object& object )
-    {
-      m_current_object = &object;
-    }
+    void assign_object( yarrr::Object& object );
 
   private:
     void handle_chat_message( const yarrr::ChatMessage& );
 
-    const int m_network_id;
-    const World& m_world;
+    const Container& m_players;
     ConnectionWrapper& m_connection_wrapper;
     yarrr::Object* m_current_object;
 };

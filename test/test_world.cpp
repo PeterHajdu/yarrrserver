@@ -14,7 +14,7 @@
 
 using namespace igloo;
 
-Describe_Only( a_world )
+Describe( a_world )
 {
   void cleanup()
   {

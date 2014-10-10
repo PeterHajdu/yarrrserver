@@ -11,6 +11,7 @@ set(TEST_SOURCE_FILES
     test_lua_engine.cpp
     test_lua_setup.cpp
     test_world.cpp
+    test_player.cpp
     )
 
 
