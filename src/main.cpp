@@ -21,19 +21,24 @@
 
 namespace
 {
-std::vector< yarrr::Data >
-collect_update_messages_from( const yarrr::ObjectContainer& objects )
+
+void
+send_update_messages_from(
+    const yarrr::ObjectContainer& objects,
+    yarrrs::Player::Container& players )
 {
   std::vector< yarrr::ObjectUpdate::Pointer > object_updates( objects.generate_object_updates() );
   std::vector< yarrr::Data > update_messages;
-  std::transform(
-      std::begin( object_updates ), std::end( object_updates ),
-      std::back_inserter( update_messages ),
-      []( const yarrr::ObjectUpdate::Pointer& update )
-      {
-        return update->serialize();
-      } );
-  return update_messages;
+  for ( const auto& update : object_updates )
+  {
+    const yarrr::Data message( update->serialize() );
+
+    for ( const auto& player : players )
+    {
+      player.second->send( yarrr::Data( message ) );
+    }
+
+  }
 }
 
 
@@ -97,8 +102,7 @@ int main( int argc, char ** argv )
     network_service.process_network_events();
     object_container.dispatch( yarrr::TimerUpdate( clock.now() ) );
     object_container.check_collision();
-    (void)world;
-    collect_update_messages_from( object_container );
+    send_update_messages_from( object_container, players );
     frequency_stabilizer.stabilize();
 
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
