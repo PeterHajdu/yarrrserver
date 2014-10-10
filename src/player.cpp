@@ -19,13 +19,13 @@ namespace yarrrs
 {
 
 Player::Player(
-    Players& players,
+    World& world,
     int network_id,
     const std::string& name,
     ConnectionWrapper& connection_wrapper )
   : name( name )
   , m_network_id( network_id )
-  , m_players( players )
+  , m_world( world )
   , m_connection_wrapper( connection_wrapper )
   , m_last_ship( nullptr )
 {
@@ -42,7 +42,9 @@ Player::send( yarrr::Data&& message ) const
 void
 Player::handle_chat_message( const yarrr::ChatMessage& message )
 {
-  m_players.handle_chat_message_from( message, m_network_id );
+  (void)m_world;
+  (void)m_network_id;
+  //m_players.handle_chat_message_from( message, m_network_id );
 }
 
 yarrr::Object::Id
@@ -66,6 +68,7 @@ Player::create_new_ship()
   return new_object;
 }
 
+/*
 Players::Players( yarrr::ObjectContainer& object_container )
   : m_object_container( object_container )
 {
@@ -225,6 +228,7 @@ Players::player_from_object_id( yarrr::Object::Id id )
 
   return nullptr;
 }
+*/
 
 }
 

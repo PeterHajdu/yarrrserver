@@ -1,6 +1,7 @@
 #include "network_service.hpp"
 #include "duck_hunt.hpp"
 #include "player.hpp"
+#include "world.hpp"
 #include "notifier.hpp"
 #include "object_factory.hpp"
 #include "lua_setup.hpp"
@@ -86,7 +87,7 @@ int main( int argc, char ** argv )
   the::time::Clock clock;
   yarrrs::NetworkService network_service( clock );
   yarrr::ObjectContainer object_container;
-  yarrrs::Players players( object_container );
+  yarrrs::World world;
   yarrrs::DuckHunt duck_hunt( object_container, clock );
 
   the::time::FrequencyStabilizer< 10, the::time::Clock > frequency_stabilizer( clock );
@@ -95,7 +96,8 @@ int main( int argc, char ** argv )
     network_service.process_network_events();
     object_container.dispatch( yarrr::TimerUpdate( clock.now() ) );
     object_container.check_collision();
-    players.broadcast( collect_update_messages_from( object_container ) );
+    (void)world;
+    collect_update_messages_from( object_container );
     frequency_stabilizer.stabilize();
 
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();

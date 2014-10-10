@@ -6,7 +6,7 @@
 
 using namespace igloo;
 
-Describe( a_resource_finder )
+Describe( a_players )
 {
   void SetUp()
   {
