@@ -9,6 +9,7 @@
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/delete_object.hpp>
 #include <yarrr/destruction_handlers.hpp>
+#include <yarrr/chat_message.hpp>
 #include <thectci/service_registry.hpp>
 #include <igloo/igloo_alt.h>
 
@@ -95,10 +96,15 @@ Describe( a_world )
 
   It ( deletes_the_player_and_the_object_assigned_when_player_logged_out_arrives )
   {
+    const yarrr::Object::Id deleted_ship( last_object_id_created );
+    another_connection.reset( new test::Connection() );
+    log_in_for_connection( *another_connection );
+
     local_dispatch( yarrrs::PlayerLoggedOut( connection_id ) );
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
-    AssertThat( players, IsEmpty() );
-    AssertThat( *objects, IsEmpty() );
+    AssertThat( players.find( connection_id ) == players.end(), Equals( true ) );
+    AssertThat( another_connection->get_entity< yarrr::DeleteObject >()->object_id(), Equals( deleted_ship ) );
+    AssertThat( objects->has_object_with_id( deleted_ship ), Equals( false ) );
   }
 
   It ( handles_invalid_logged_out_events )
@@ -115,6 +121,8 @@ Describe( a_world )
     AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
     AssertThat( objects->has_object_with_id( old_ship_id ), Equals( false ) );
+
+    AssertThat( connection->has_entity< yarrr::DeleteObject >(), Equals( true ) );
   }
 
   It ( assignes_a_new_object_to_a_killed_player )
@@ -169,6 +177,8 @@ Describe( a_world )
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
     AssertThat( connection->has_no_data(), Equals( false ) );
     AssertThat( another_connection->has_no_data(), Equals( false ) );
+
+    AssertThat( connection->get_entity< yarrr::DeleteObject >()->object_id(), Equals( last_object_id_created ) );
   }
 
 
@@ -176,10 +186,12 @@ Describe( a_world )
   {
     another_connection.reset( new test::Connection() );
     log_in_for_connection( *another_connection );
-    connection->process_messages();
-    another_connection->process_messages();
-    AssertThat( connection->sent_messages, !IsEmpty() );
-    AssertThat( another_connection->sent_messages, !IsEmpty() );
+
+    AssertThat( connection->has_no_data(), Equals( false ) );
+    AssertThat( another_connection->has_no_data(), Equals( false ) );
+
+    auto chat_message( connection->get_entity< yarrr::ChatMessage >() );
+    AssertThat( chat_message->message(), Contains( player_name ) );
   }
 
   It ( sends_notification_when_someone_logs_in )

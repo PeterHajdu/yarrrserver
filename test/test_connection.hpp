@@ -1,5 +1,7 @@
 #pragma once
 
+#include <yarrr/entity_factory.hpp>
+
 #include <thenet/test_socket.hpp>
 #include <thenet/connection.hpp>
 #include <thenet/packetizer.hpp>
@@ -31,6 +33,31 @@ class Connection
       return sent_messages.empty();
     }
 
+    template < typename EntityType >
+    std::unique_ptr< EntityType > get_entity()
+    {
+      process_messages();
+      for ( const auto& message : sent_messages )
+      {
+        yarrr::Entity::Pointer entity( yarrr::EntityFactory::create( message ) );
+        if ( EntityType::ctci != entity->polymorphic_ctci() )
+        {
+          continue;
+        }
+
+        return std::unique_ptr<EntityType>(
+            static_cast< EntityType* >( entity.release() ) );
+      }
+
+      return nullptr;
+    }
+
+    template < typename EntityType >
+    bool has_entity()
+    {
+      return get_entity< EntityType >().get();
+    }
+
     std::vector< yarrr::Data > sent_messages;
     void message_from_network( yarrr::Data&& message )
     {
@@ -41,10 +68,10 @@ class Connection
     {
     }
 
-    void flush_connection() const
+    void flush_connection()
     {
-      connection.wake_up_on_network_thread();
-      socket->sent_message();
+      process_messages();
+      sent_messages.clear();
     }
 
     std::unique_ptr< test::Socket > socket;
