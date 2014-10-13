@@ -142,7 +142,7 @@ World::handle_player_logged_in( const PlayerLoggedIn& login ) const
   m_players[ login.id ]->assign_object( *new_object );
   m_objects.add_object( std::move( new_object ) );
 
-  const std::string notification( std::string( "Player logged in." ) + login.name );
+  const std::string notification( std::string( "Player logged in: " ) + login.name );
   thelog( yarrr::log::info )( notification );
   broadcast( yarrr::ChatMessage( notification, "server" ).serialize() );
   the::ctci::service< yarrrs::Notifier >().send( notification );
