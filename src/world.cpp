@@ -160,6 +160,7 @@ World::handle_player_logged_out( const PlayerLoggedOut& logout ) const
     return;
   }
   thelog( yarrr::log::warning )( "Deleting player and object.", player->second->object_id(), player->second->name );
+  broadcast( yarrr::ChatMessage( "Player logged out: " + player->second->name, "server" ).serialize() );
 
   delete_object( player->second->object_id() );
   m_players.erase( logout.id );
