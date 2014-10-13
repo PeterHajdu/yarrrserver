@@ -14,6 +14,7 @@
 #include <thectci/service_registry.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <theconf/configuration.hpp>
+#include <yarrr/log.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -58,6 +59,14 @@ parse_and_handle_configuration( const the::conf::ParameterVector& parameters )
   {
     print_help_and_exit();
   }
+
+  const int loglevel(
+      the::conf::has( "loglevel" ) ?
+      the::conf::get<int>( "loglevel" ) :
+      yarrr::log::info );
+
+  the::log::Logger::set_loglevel( loglevel );
+  thelog( yarrr::log::info )( "Loglevel is set to", loglevel );
 }
 
 std::ostream&

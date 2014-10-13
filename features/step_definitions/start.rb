@@ -7,6 +7,10 @@ When(/^I start the server with command line parameter (.*)$/) do | parameter |
   @yarrr_server.start
 end
 
+When(/^I start the server with a port and command line parameter (.*)$/) do | parameter |
+  step "I start the server with command line parameter --port 21345 #{ parameter }"
+end
+
 When(/^I start the server without any command line parameter$/) do
   step "I start the server with command line parameter "
 end
