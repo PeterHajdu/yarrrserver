@@ -7,6 +7,7 @@ set(LIBRARY_SOURCE_FILES
   object_factory.cpp
   lua_engine.cpp
   lua_setup.cpp
+  command_handler.cpp
   )
 
 set(EXECUTABLE_SOURCE_FILES

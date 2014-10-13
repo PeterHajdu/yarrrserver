@@ -1,25 +1,21 @@
 #pragma once
 
 #include "network_service.hpp"
-#include <yarrr/types.hpp>
-#include <yarrr/object_container.hpp>
-#include <yarrr/basic_behaviors.hpp>
-#include <thectci/dispatcher.hpp>
 #include <memory>
+#include <unordered_map>
 
 namespace yarrr
 {
 
 class ChatMessage;
-class DeleteObject;
-class PlayerKilled;
+class Command;
 
 }
 
 namespace yarrrs
 {
 
-class World;
+class CommandHandler;
 class Player
 {
   public:
@@ -29,7 +25,8 @@ class Player
     Player(
         const Container&,
         const std::string& name,
-        ConnectionWrapper& connection_wrapper );
+        ConnectionWrapper& connection_wrapper,
+        const CommandHandler& );
 
     bool send( yarrr::Data&& message ) const;
 

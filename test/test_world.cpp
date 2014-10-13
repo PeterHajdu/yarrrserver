@@ -4,6 +4,7 @@
 #include "../src/local_event_dispatcher.hpp"
 #include "test_connection.hpp"
 #include "test_services.hpp"
+#include <yarrr/basic_behaviors.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>

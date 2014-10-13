@@ -5,11 +5,13 @@
 #include "notifier.hpp"
 #include <thectci/service_registry.hpp>
 #include <yarrr/log.hpp>
+#include <yarrr/object_container.hpp>
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/delete_object.hpp>
 #include <yarrr/destruction_handlers.hpp>
 #include <yarrr/chat_message.hpp>
+#include <yarrr/basic_behaviors.hpp>
 
 namespace
 {
@@ -138,7 +140,8 @@ World::handle_player_logged_in( const PlayerLoggedIn& login ) const
         Player::Pointer( new Player(
             m_players,
             login.name,
-            login.connection_wrapper ) ) ) );
+            login.connection_wrapper,
+            m_command_handler ) ) ) );
   m_players[ login.id ]->assign_object( *new_object );
   m_objects.add_object( std::move( new_object ) );
 

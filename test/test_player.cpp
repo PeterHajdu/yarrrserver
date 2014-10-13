@@ -1,5 +1,6 @@
 #include "../src/player.hpp"
 #include "../src/world.hpp"
+#include "../src/command_handler.hpp"
 #include "test_connection.hpp"
 #include <yarrr/object_container.hpp>
 #include <yarrr/chat_message.hpp>
@@ -18,13 +19,15 @@ Describe( a_player )
     player.reset( new yarrrs::Player(
           players,
           player_name,
-          connection->wrapper ) );
+          connection->wrapper,
+          command_handler ) );
 
     another_connection.reset( new test::Connection() );
     another_player = new yarrrs::Player(
           players,
           player_name,
-          another_connection->wrapper );
+          another_connection->wrapper,
+          command_handler );
     players[ another_connection->connection.id ] = yarrrs::Player::Pointer( another_player );
 
     ship.reset( new yarrr::Object() );
@@ -65,6 +68,16 @@ Describe( a_player )
     AssertThat( was_command_dispatched, Equals( false ) );
   }
 
+  It ( executes_commands_with_the_command_handler )
+  {
+    bool was_handler_called{ false };
+    command_handler.register_handler( "test",
+        [ &was_handler_called ]( const yarrr::Command&, yarrrs::Player& )
+        { was_handler_called = true; } );
+    connection->wrapper.dispatch( yarrr::Command( { "test", "parameter" } ) );
+    AssertThat( was_handler_called, Equals( true ) );
+  }
+
   std::unique_ptr< test::Connection > connection;
   yarrrs::Player::Pointer player;
 
@@ -77,5 +90,7 @@ Describe( a_player )
   yarrr::Object::Pointer ship;
 
   const std::string player_name{ "Kilgor Trout" };
+
+  yarrrs::CommandHandler command_handler;
 };
 

@@ -1,10 +1,14 @@
 #pragma once
 
 #include "player.hpp"
+#include "command_handler.hpp"
 
 namespace yarrr
 {
   class ObjectContainer;
+  class DeleteObject;
+  class PlayerKilled;
+  class ObjectCreated;
 }
 
 namespace yarrrs
@@ -29,6 +33,7 @@ class World
 
     Player::Container& m_players;
     yarrr::ObjectContainer& m_objects;
+    yarrrs::CommandHandler m_command_handler;
 };
 
 }

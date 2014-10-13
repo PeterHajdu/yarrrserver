@@ -1,10 +1,13 @@
 #include "player.hpp"
-#include "world.hpp"
+#include "command_handler.hpp"
+#include "network_service.hpp"
 
 #include <yarrr/object.hpp>
 #include <yarrr/chat_message.hpp>
 #include <yarrr/log.hpp>
 #include <yarrr/login.hpp>
+
+#include <yarrr/command.hpp>
 
 #include <thectci/service_registry.hpp>
 
@@ -14,7 +17,8 @@ namespace yarrrs
 Player::Player(
     const Container& players,
     const std::string& name,
-    ConnectionWrapper& connection_wrapper )
+    ConnectionWrapper& connection_wrapper,
+    const CommandHandler& command_handler )
   : name( name )
   , m_players( players )
   , m_connection_wrapper( connection_wrapper )
