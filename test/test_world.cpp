@@ -176,8 +176,10 @@ Describe( a_world )
   {
     another_connection.reset( new test::Connection() );
     log_in_for_connection( *another_connection );
-    AssertThat( connection->has_no_data(), Equals( false ) );
-    AssertThat( another_connection->has_no_data(), Equals( false ) );
+    connection->process_messages();
+    another_connection->process_messages();
+    AssertThat( connection->sent_messages, !IsEmpty() );
+    AssertThat( another_connection->sent_messages, !IsEmpty() );
   }
 
   It ( sends_notification_when_someone_logs_in )

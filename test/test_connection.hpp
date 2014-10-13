@@ -2,6 +2,7 @@
 
 #include <thenet/test_socket.hpp>
 #include <thenet/connection.hpp>
+#include <thenet/packetizer.hpp>
 
 namespace test
 {
@@ -13,13 +14,31 @@ class Connection
       : socket( test::Socket::create() )
       , connection( *socket )
       , wrapper( connection )
+      , m_packetizer( *this )
     {
     }
 
-    bool has_no_data() const
+    void process_messages()
     {
       connection.wake_up_on_network_thread();
-      return socket->has_no_messages();
+      const yarrr::Data buffer( socket->sent_message() );
+      m_packetizer.receive( &buffer[0], buffer.size() );
+    }
+
+    bool has_no_data()
+    {
+      process_messages();
+      return sent_messages.empty();
+    }
+
+    std::vector< yarrr::Data > sent_messages;
+    void message_from_network( yarrr::Data&& message )
+    {
+      sent_messages.push_back( message );
+    }
+
+    void drop()
+    {
     }
 
     void flush_connection() const
@@ -31,6 +50,9 @@ class Connection
     std::unique_ptr< test::Socket > socket;
     mutable the::net::Connection connection;
     yarrrs::ConnectionWrapper wrapper;
+
+  private:
+    the::net::packetizer::Incoming< Connection > m_packetizer;
 };
 
 }
