@@ -46,6 +46,7 @@ Describe( a_player )
     player->assign_object( *ship );
     AssertThat( player->object_id(), Equals( ship->id ) );
     AssertThat( connection->has_no_data(), Equals( false ) );
+    AssertThat( connection->get_entity< yarrr::ObjectAssigned >()->object_id(), Equals( ship->id ) );
   }
 
   It ( forwards_commands_from_the_network_to_the_object )
