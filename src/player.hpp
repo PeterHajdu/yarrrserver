@@ -28,11 +28,15 @@ class Player
         ConnectionWrapper& connection_wrapper,
         const CommandHandler& );
 
+    Player( const Player& ) = delete;
+    Player& operator=( const Player& ) = delete;
+
     bool send( yarrr::Data&& message ) const;
 
     const std::string name;
     yarrr::Object::Id object_id() const;
     void assign_object( yarrr::Object& object );
+
 
   private:
     void handle_chat_message( const yarrr::ChatMessage& );

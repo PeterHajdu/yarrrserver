@@ -70,12 +70,21 @@ Describe( a_player )
 
   It ( executes_commands_with_the_command_handler )
   {
-    bool was_handler_called{ false };
-    command_handler.register_handler( "test",
-        [ &was_handler_called ]( const yarrr::Command&, yarrrs::Player& )
-        { was_handler_called = true; } );
-    connection->wrapper.dispatch( yarrr::Command( { "test", "parameter" } ) );
-    AssertThat( was_handler_called, Equals( true ) );
+    const std::string command_name( "some strange command" );
+    yarrrs::Player* dispatched_player{ nullptr };
+    const yarrr::Command* dispatched_command{ nullptr };
+    command_handler.register_handler( command_name,
+        [ &dispatched_player, &dispatched_command ]
+        ( const yarrr::Command& command, yarrrs::Player& player )
+        {
+          dispatched_command = &command;
+          dispatched_player = &player;
+          } );
+
+    const yarrr::Command command( { command_name } );
+    connection->wrapper.dispatch( command );
+    AssertThat( dispatched_command, Equals( &command ) );
+    AssertThat( dispatched_player, Equals( player.get() ) );
   }
 
   std::unique_ptr< test::Connection > connection;

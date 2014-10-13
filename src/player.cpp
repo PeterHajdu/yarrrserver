@@ -26,6 +26,10 @@ Player::Player(
 {
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
+
+  thelog( yarrr::log::debug )( "registering command callback for", this );
+  connection_wrapper.register_listener< yarrr::Command >(
+      std::bind( &CommandHandler::execute, &command_handler, std::placeholders::_1, std::ref( *this ) ) );
 }
 
 bool

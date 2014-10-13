@@ -53,6 +53,11 @@ Describe( a_command_handler )
     AssertThat( passed_player, Equals( &player ) );
   }
 
+  It ( handles_unknown_commands )
+  {
+    command_handler->execute( yarrr::Command( { "unknown" } ), player );
+  }
+
   std::unique_ptr< yarrrs::CommandHandler > command_handler;
   const yarrr::Command* passed_command;
   bool was_a_command_handler_executed;
