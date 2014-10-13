@@ -56,6 +56,7 @@ Player::assign_object( yarrr::Object& object )
 
   m_current_object = &object;
   send( yarrr::ObjectAssigned( object.id ).serialize() );
+  thelog( yarrr::log::debug )( "Assigning object to user.", object.id, name );
   m_connection_wrapper.register_dispatcher( object.dispatcher );
 }
 

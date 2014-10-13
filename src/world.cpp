@@ -156,10 +156,12 @@ World::handle_player_logged_out( const PlayerLoggedOut& logout ) const
   const auto player( m_players.find( logout.id ) );
   if ( player == std::end( m_players ) )
   {
+    thelog( yarrr::log::warning )( "Unknown player logged out." );
     return;
   }
+  thelog( yarrr::log::warning )( "Deleting player and object.", player->second->object_id(), player->second->name );
 
-  m_objects.delete_object( player->second->object_id() );
+  delete_object( player->second->object_id() );
   m_players.erase( logout.id );
 }
 

@@ -96,6 +96,7 @@ Describe( a_world )
   It ( deletes_the_player_and_the_object_assigned_when_player_logged_out_arrives )
   {
     local_dispatch( yarrrs::PlayerLoggedOut( connection_id ) );
+    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
     AssertThat( players, IsEmpty() );
     AssertThat( *objects, IsEmpty() );
   }
