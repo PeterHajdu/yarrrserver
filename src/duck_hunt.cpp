@@ -1,7 +1,8 @@
 #include "duck_hunt.hpp"
-#include <thectci/service_registry.hpp>
+#include "object_factory.hpp"
 #include "local_event_dispatcher.hpp"
 #include "network_service.hpp"
+#include <thectci/service_registry.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/object_creator.hpp>
 #include <yarrr/object.hpp>
@@ -28,58 +29,30 @@ std::default_random_engine random_engine( random_device() );
 std::uniform_int_distribution<int> velocity_distribution{ -75_metres, 75_metres };
 std::uniform_int_distribution<int> angular_velocity_distribution{ -500_degrees, +500_degrees };
 
-ObjectBehavior::Pointer random_physical_behavior( const the::time::Time& now )
+void randomize_physical_behavior( const the::time::Time& now, yarrr::PhysicalBehavior& behavior )
 {
-  PhysicalBehavior* behavior( new PhysicalBehavior() );
-
-  behavior->physical_parameters.coordinate = yarrr::Coordinate( 0, 0 );
-
-  behavior->physical_parameters.velocity += yarrr::Coordinate(
+  behavior.physical_parameters.coordinate = yarrr::Coordinate( 0, 0 );
+  behavior.physical_parameters.velocity += yarrr::Coordinate(
       velocity_distribution( random_engine ),
       velocity_distribution( random_engine ) );
 
-  behavior->physical_parameters.angular_velocity +=
+  behavior.physical_parameters.angular_velocity +=
     angular_velocity_distribution( random_engine );
 
-  behavior->physical_parameters.timestamp = now;
-
-  return ObjectBehavior::Pointer( behavior );
+  behavior.physical_parameters.timestamp = now;
 }
 
 yarrr::Object::Pointer create_duck( const the::time::Time& now )
 {
-  yarrr::Object::Pointer duck( new Object() );
-  duck->add_behavior( random_physical_behavior( now ) );
-  duck->add_behavior( ObjectBehavior::Pointer( new yarrr::Inventory() ) );
+  yarrr::Object::Pointer duck( the::ctci::service< yarrrs::ObjectFactory >().create_a( "duck" ) );
 
-  ShapeBehavior* shape( new ShapeBehavior() );
-  shape->shape.add_tile( Tile{ { -1, 0 }, { 2, 0 } } );
-  shape->shape.add_tile( Tile{ { 0, 1 }, { 0, 1 } } );
-  shape->shape.add_tile( Tile{ { 0, -1 }, { 0, -1 } } );
-  duck->add_behavior( ObjectBehavior::Pointer( shape ) );
+  if ( !duck )
+  {
+    duck = the::ctci::service< yarrrs::ObjectFactory >().create_a( "ship" );
+  }
 
-  duck->add_behavior( ObjectBehavior::Pointer( new Thruster(
-          ShipControl::main_thruster,
-          { -1, 0 },
-          180_degrees ) ) );
-
-  duck->add_behavior( ObjectBehavior::Pointer( new Thruster(
-          ShipControl::port_thruster,
-          { 2, 0 },
-          90_degrees ) ) );
-
-  duck->add_behavior( ObjectBehavior::Pointer( new Thruster(
-          ShipControl::starboard_thruster,
-          { 2, 0 },
-          -90_degrees ) ) );
-
-  duck->add_behavior( ObjectBehavior::Pointer( new Canon() ) );
-  duck->add_behavior( ObjectBehavior::Pointer( new Collider( Collider::ship_layer ) ) );
-  duck->add_behavior( ObjectBehavior::Pointer( new DamageCauser( 100 ) ) );
-  duck->add_behavior( ObjectBehavior::Pointer( new LootDropper() ) );
-  duck->add_behavior( ObjectBehavior::Pointer( new ShapeGraphics() ) );
-  duck->add_behavior( ObjectBehavior::Pointer( new DeleteWhenDestroyed() ) );
   duck->add_behavior( ObjectBehavior::Pointer( new SelfDestructor( duck->id, 360000000u ) ) );
+  randomize_physical_behavior( now, yarrr::component_of< yarrr::PhysicalBehavior>( *duck ) );
 
   return duck;
 }
