@@ -124,7 +124,7 @@ World::handle_player_killed( const yarrr::PlayerKilled& player_killed ) const
 
   thelog( yarrr::log::debug )( "Player killed.", player->name );
 
-  yarrr::Object::Pointer new_object( the::ctci::service< yarrrs::ObjectFactory >().create_a( "ship" ) );
+  yarrr::Object::Pointer new_object( create_player_ship( "ship" ) );
   if ( !new_object )
   {
     thelog( yarrr::log::error )( "Unable to create ship." );
