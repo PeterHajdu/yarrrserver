@@ -70,6 +70,7 @@ export_yarrr_stuff()
   lua.new_userdata< yarrr::DamageCauser, int >( "DamageCauser" );
   lua.new_userdata< yarrr::LootDropper >( "LootDropper" );
   lua.new_userdata< yarrr::DeleteWhenDestroyed >( "DeleteWhenDestroyed" );
+  lua.new_userdata< yarrr::RespawnWhenDestroyed >( "RespawnWhenDestroyed" );
   lua.new_userdata< yarrr::Shape >( "Shape", "add_tile", &yarrr::Shape::add_tile );
   lua.new_userdata< yarrr::ShapeBehavior, yarrr::Shape >( "ShapeBehavior", "shape", &yarrr::ShapeBehavior::shape );
   lua.new_userdata< yarrr::ShapeGraphics >( "ShapeGraphics" );

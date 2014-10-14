@@ -23,6 +23,7 @@ Collider.new( ship_layer )
 DamageCauser.new( 100 )
 LootDropper.new()
 DeleteWhenDestroyed.new()
+RespawnWhenDestroyed.new()
 
 assert( main_thruster )
 Thruster.new( main_thruster, Coordinate.new( 0, 0 ), 180 )
