@@ -17,6 +17,20 @@
 namespace
 {
 
+yarrr::Object::Pointer
+create_player_ship( const std::string& type )
+{
+  yarrr::Object::Pointer new_ship( the::ctci::service< yarrrs::ObjectFactory >().create_a( type ) );
+  if ( !new_ship )
+  {
+    return nullptr;
+  }
+
+  new_ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::RespawnWhenDestroyed() ) );
+  return new_ship;
+}
+
+
 void
 add_command_handlers_to(
     yarrrs::CommandHandler& command_handler,
@@ -34,8 +48,7 @@ add_command_handlers_to(
 
         const std::string requested_ship_type( *std::begin( command.parameters() ) );
         thelog( yarrr::log::info )( "Ship type requested", requested_ship_type, "by", player.name );
-        yarrr::Object::Pointer new_ship(
-            the::ctci::service< yarrrs::ObjectFactory >().create_a( requested_ship_type ) );
+        yarrr::Object::Pointer new_ship( create_player_ship( requested_ship_type ) );
 
         if ( !new_ship )
         {
@@ -63,19 +76,6 @@ player_with_object_id( yarrrs::Player::Container& players, yarrr::Object::Id id 
   }
 
   return nullptr;
-}
-
-yarrr::Object::Pointer
-create_player_ship()
-{
-  yarrr::Object::Pointer new_ship( the::ctci::service< yarrrs::ObjectFactory >().create_a( "ship" ) );
-  if ( !new_ship )
-  {
-    return nullptr;
-  }
-
-  new_ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::RespawnWhenDestroyed() ) );
-  return new_ship;
 }
 
 }
@@ -182,7 +182,7 @@ World::handle_player_logged_in( const PlayerLoggedIn& login ) const
 {
   thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
 
-  yarrr::Object::Pointer new_object( create_player_ship() );
+  yarrr::Object::Pointer new_object( create_player_ship( "ship" ) );
   if ( !new_object )
   {
     thelog( yarrr::log::error )( "Unable to create ship for new user:", login.name );

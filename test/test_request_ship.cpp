@@ -4,6 +4,7 @@
 #include "../src/local_event_dispatcher.hpp"
 #include "test_connection.hpp"
 #include <yarrr/command.hpp>
+#include <yarrr/destruction_handlers.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/delete_object.hpp>
@@ -93,6 +94,15 @@ Describe( a_ship_request )
     connection->wrapper.dispatch( giant_request );
     AssertThat( objects->has_object_with_id( last_objects_id ), Equals( true ) );
   }
+
+  It ( creates_a_ship_with_respawn_capabilities )
+  {
+    connection->wrapper.dispatch( giant_request );
+    AssertThat(
+        yarrr::has_component< yarrr::RespawnWhenDestroyed>( objects->object_with_id( last_objects_id ) ),
+        Equals( true ) );
+  }
+
 
   It ( deletes_the_old_ship_from_the_container )
   {
