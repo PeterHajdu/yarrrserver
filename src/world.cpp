@@ -144,7 +144,7 @@ World::delete_object( yarrr::Object::Id id ) const
   the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
       [ this, id ]()
       {
-        broadcast( yarrr::DeleteObject( id ).serialize() );
+        yarrrs::broadcast( m_players, yarrr::DeleteObject( id ) );
         m_objects.delete_object( id );
       } );
 }
@@ -184,7 +184,7 @@ World::handle_player_logged_in( const PlayerLoggedIn& login ) const
 
   const std::string notification( std::string( "Player logged in: " ) + login.name );
   thelog( yarrr::log::info )( notification );
-  broadcast( yarrr::ChatMessage( notification, "server" ).serialize() );
+  yarrrs::broadcast( m_players, yarrr::ChatMessage( notification, "server" ) );
   the::ctci::service< yarrrs::Notifier >().send( notification );
 }
 
@@ -200,21 +200,12 @@ World::handle_player_logged_out( const PlayerLoggedOut& logout ) const
     return;
   }
   thelog( yarrr::log::warning )( "Deleting player and object.", player->second->object_id(), player->second->name );
-  broadcast( yarrr::ChatMessage( "Player logged out: " + player->second->name, "server" ).serialize() );
+  yarrrs::broadcast( m_players, yarrr::ChatMessage( "Player logged out: " + player->second->name, "server" ) );
 
   delete_object( player->second->object_id() );
   m_players.erase( logout.id );
 }
 
-
-void
-World::broadcast( const yarrr::Data& message ) const
-{
-  for ( const auto& player : m_players )
-  {
-    player.second->send( yarrr::Data( message ) );
-  }
-}
 
 }
 

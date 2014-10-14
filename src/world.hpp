@@ -29,8 +29,6 @@ class World
     void delete_object( yarrr::Object::Id id ) const;
     void add_object( yarrr::Object::Pointer&& object ) const;
 
-    void broadcast( const yarrr::Data& message ) const;
-
     Player::Container& m_players;
     yarrr::ObjectContainer& m_objects;
     yarrrs::CommandHandler m_command_handler;
