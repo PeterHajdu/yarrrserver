@@ -65,6 +65,19 @@ player_with_object_id( yarrrs::Player::Container& players, yarrr::Object::Id id 
   return nullptr;
 }
 
+yarrr::Object::Pointer
+create_player_ship()
+{
+  yarrr::Object::Pointer new_ship( the::ctci::service< yarrrs::ObjectFactory >().create_a( "ship" ) );
+  if ( !new_ship )
+  {
+    return nullptr;
+  }
+
+  new_ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::RespawnWhenDestroyed() ) );
+  return new_ship;
+}
+
 }
 
 namespace yarrrs
@@ -169,7 +182,7 @@ World::handle_player_logged_in( const PlayerLoggedIn& login ) const
 {
   thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
 
-  yarrr::Object::Pointer new_object( the::ctci::service< yarrrs::ObjectFactory >().create_a( "ship" ) );
+  yarrr::Object::Pointer new_object( create_player_ship() );
   if ( !new_object )
   {
     thelog( yarrr::log::error )( "Unable to create ship for new user:", login.name );

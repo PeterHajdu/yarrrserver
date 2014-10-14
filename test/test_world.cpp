@@ -95,6 +95,13 @@ Describe( a_world )
     AssertThat( objects->has_object_with_id( player->object_id() ), Equals( true ) );
   }
 
+  It ( creates_a_new_object_for_player_with_respawn_capabilities )
+  {
+    AssertThat(
+        yarrr::has_component< yarrr::RespawnWhenDestroyed>( objects->object_with_id( player->object_id() ) ),
+        Equals( true ) );
+  }
+
   It ( deletes_the_player_and_the_object_assigned_when_player_logged_out_arrives )
   {
     const yarrr::Object::Id deleted_ship( last_object_id_created );
