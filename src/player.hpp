@@ -46,5 +46,7 @@ class Player
     yarrr::Object* m_current_object;
 };
 
+void broadcast( const Player::Container& players, const yarrr::Entity& entity );
+
 }
 

@@ -11,10 +11,45 @@
 #include <yarrr/delete_object.hpp>
 #include <yarrr/destruction_handlers.hpp>
 #include <yarrr/chat_message.hpp>
+#include <yarrr/command.hpp>
 #include <yarrr/basic_behaviors.hpp>
 
 namespace
 {
+
+void
+add_command_handlers_to(
+    yarrrs::CommandHandler& command_handler,
+    yarrr::ObjectContainer& objects,
+    const yarrrs::Player::Container& players )
+{
+  command_handler.register_handler( "request_ship",
+      [ &objects, &players ]( const yarrr::Command& command, yarrrs::Player& player )
+      {
+        if ( command.parameters().empty() )
+        {
+          thelog( yarrr::log::warning )( "Invalid ship request from", player.name );
+          return;
+        }
+
+        const std::string requested_ship_type( *std::begin( command.parameters() ) );
+        thelog( yarrr::log::info )( "Ship type requested", requested_ship_type, "by", player.name );
+        yarrr::Object::Pointer new_ship(
+            the::ctci::service< yarrrs::ObjectFactory >().create_a( requested_ship_type ) );
+
+        if ( !new_ship )
+        {
+          thelog( yarrr::log::info )( "Unanle to create ship", requested_ship_type, "for", player.name );
+          return;
+        }
+
+        yarrrs::broadcast( players, yarrr::DeleteObject( player.object_id() ) );
+        objects.delete_object( player.object_id() );
+        player.assign_object( *new_ship );
+        objects.add_object( std::move( new_ship ) );
+      } );
+}
+
 
 yarrrs::Player*
 player_with_object_id( yarrrs::Player::Container& players, yarrr::Object::Id id )
@@ -60,6 +95,8 @@ World::World( Player::Container& players, yarrr::ObjectContainer& objects )
 
   engine_dispatcher.register_listener< yarrr::PlayerKilled >(
       std::bind( &World::handle_player_killed, this, std::placeholders::_1 ) );
+
+  add_command_handlers_to( m_command_handler, m_objects, m_players );
 }
 
 void

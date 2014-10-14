@@ -68,5 +68,15 @@ Player::assign_object( yarrr::Object& object )
   m_connection_wrapper.register_dispatcher( object.dispatcher );
 }
 
+void
+broadcast( const Player::Container& players, const yarrr::Entity& entity )
+{
+  const yarrr::Data message( entity.serialize() );
+  for ( const auto& player : players )
+  {
+    player.second->send( yarrr::Data( message ) );
+  }
+}
+
 }
 

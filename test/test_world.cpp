@@ -130,11 +130,11 @@ Describe( a_world )
   {
     yarrr::Object::Id old_ship_id{ last_object_id_created };
     engine_dispatch( yarrr::PlayerKilled( old_ship_id ) );
-    AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
 
     yarrr::Object::Id new_ship_id{ last_object_id_created };
     AssertThat( new_ship_id, !Equals( old_ship_id ) );
     AssertThat( player->object_id(), Equals( new_ship_id ) );
+    AssertThat( connection->has_entity< yarrr::ObjectAssigned >(), Equals( true ) );
   }
 
   It ( adds_the_new_object_of_a_killed_player_postponed )

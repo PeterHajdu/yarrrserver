@@ -13,6 +13,7 @@ set(TEST_SOURCE_FILES
     test_world.cpp
     test_player.cpp
     test_command_handler.cpp
+    test_request_ship.cpp
     )
 
 
