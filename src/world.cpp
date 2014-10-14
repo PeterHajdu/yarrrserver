@@ -109,6 +109,8 @@ World::handle_player_killed( const yarrr::PlayerKilled& player_killed ) const
     return;
   }
 
+  thelog( yarrr::log::debug )( "Player killed.", player->name );
+
   yarrr::Object::Pointer new_object( the::ctci::service< yarrrs::ObjectFactory >().create_a( "ship" ) );
   if ( !new_object )
   {
@@ -124,6 +126,7 @@ World::handle_player_killed( const yarrr::PlayerKilled& player_killed ) const
 void
 World::handle_delete_object( const yarrr::DeleteObject& del_object ) const
 {
+  thelog( yarrr::log::debug )( __PRETTY_FUNCTION__, del_object.object_id() );
   delete_object( del_object.object_id() );
 }
 
@@ -141,6 +144,7 @@ World::add_object( yarrr::Object::Pointer&& object_ptr ) const
 void
 World::delete_object( yarrr::Object::Id id ) const
 {
+  thelog( yarrr::log::debug )( "Deleting object", id );
   the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
       [ this, id ]()
       {
