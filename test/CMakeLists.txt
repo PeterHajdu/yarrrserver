@@ -5,10 +5,7 @@ set(TEST_SOURCE_FILES
     test_runner.cpp
     test_services.cpp
     test_notifier.cpp
-    test_object_factory.cpp
     test_shape_creation.cpp
-    test_lua_engine.cpp
-    test_lua_setup.cpp
     test_world.cpp
     test_player.cpp
     test_command_handler.cpp

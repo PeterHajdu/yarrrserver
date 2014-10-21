@@ -1,8 +1,8 @@
 #include "duck_hunt.hpp"
-#include "object_factory.hpp"
 #include "local_event_dispatcher.hpp"
 #include "network_service.hpp"
 #include <thectci/service_registry.hpp>
+#include <yarrr/object_factory.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/object_creator.hpp>
 #include <yarrr/object.hpp>
@@ -44,11 +44,11 @@ void randomize_physical_behavior( const the::time::Time& now, yarrr::PhysicalBeh
 
 yarrr::Object::Pointer create_duck( const the::time::Time& now )
 {
-  yarrr::Object::Pointer duck( the::ctci::service< yarrrs::ObjectFactory >().create_a( "duck" ) );
+  yarrr::Object::Pointer duck( the::ctci::service< yarrr::ObjectFactory >().create_a( "duck" ) );
 
   if ( !duck )
   {
-    duck = the::ctci::service< yarrrs::ObjectFactory >().create_a( "ship" );
+    duck = the::ctci::service< yarrr::ObjectFactory >().create_a( "ship" );
   }
 
   duck->add_behavior( ObjectBehavior::Pointer( new yarrr::SelfDestructor( duck->id, 360000000u ) ) );

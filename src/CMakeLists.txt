@@ -4,9 +4,6 @@ set(LIBRARY_SOURCE_FILES
   world.cpp
   notifier.cpp
   duck_hunt.cpp
-  object_factory.cpp
-  lua_engine.cpp
-  lua_setup.cpp
   command_handler.cpp
   )
 

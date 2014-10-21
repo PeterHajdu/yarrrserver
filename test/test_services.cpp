@@ -1,5 +1,6 @@
 #include "../src/local_event_dispatcher.hpp"
 #include "../src/notifier.hpp"
+#include <yarrr/object_factory.hpp>
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/dummy_graphical_engine.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
@@ -34,5 +35,7 @@ namespace
   the::ctci::AutoServiceRegister< yarrr::MainThreadCallbackQueue, yarrr::MainThreadCallbackQueue >
     main_thread_callback_queue_register;
 
+  the::ctci::AutoServiceRegister< yarrr::ObjectFactory, yarrr::ObjectFactory >
+    object_factory_register;
 }
 

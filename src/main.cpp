@@ -3,9 +3,8 @@
 #include "player.hpp"
 #include "world.hpp"
 #include "notifier.hpp"
-#include "object_factory.hpp"
-#include "lua_setup.hpp"
 
+#include <yarrr/lua_setup.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/basic_behaviors.hpp>
 #include <thetime/frequency_stabilizer.hpp>

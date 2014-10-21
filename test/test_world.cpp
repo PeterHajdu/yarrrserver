@@ -1,9 +1,9 @@
 #include "../src/world.hpp"
 #include "../src/player.hpp"
-#include "../src/object_factory.hpp"
 #include "../src/local_event_dispatcher.hpp"
 #include "test_connection.hpp"
 #include "test_services.hpp"
+#include <yarrr/object_factory.hpp>
 #include <yarrr/basic_behaviors.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/engine_dispatcher.hpp>
@@ -40,7 +40,7 @@ Describe( a_world )
   void SetUp()
   {
     cleanup();
-    the::ctci::service< yarrrs::ObjectFactory >().register_creator(
+    the::ctci::service< yarrr::ObjectFactory >().register_creator(
         "ship",
         [ this ]()
         {
@@ -76,7 +76,7 @@ Describe( a_world )
   It ( does_not_create_anything_if_ship_can_not_be_created )
   {
     cleanup();
-    the::ctci::service< yarrrs::ObjectFactory >().register_creator(
+    the::ctci::service< yarrr::ObjectFactory >().register_creator(
         "ship", [ this ]() { return yarrr::Object::Pointer( nullptr ); });
 
     local_dispatch( yarrrs::PlayerLoggedIn( connection->wrapper, connection->connection.id, player_name ) );

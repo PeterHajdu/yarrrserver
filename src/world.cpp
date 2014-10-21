@@ -1,9 +1,10 @@
 #include "world.hpp"
 #include "player.hpp"
 #include "local_event_dispatcher.hpp"
-#include "object_factory.hpp"
 #include "notifier.hpp"
 #include <thectci/service_registry.hpp>
+
+#include <yarrr/object_factory.hpp>
 #include <yarrr/log.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/engine_dispatcher.hpp>
@@ -20,7 +21,7 @@ namespace
 yarrr::Object::Pointer
 create_player_ship( const std::string& type )
 {
-  yarrr::Object::Pointer new_ship( the::ctci::service< yarrrs::ObjectFactory >().create_a( type ) );
+  yarrr::Object::Pointer new_ship( the::ctci::service< yarrr::ObjectFactory >().create_a( type ) );
   if ( !new_ship )
   {
     return nullptr;

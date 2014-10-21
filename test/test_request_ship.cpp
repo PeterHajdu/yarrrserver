@@ -1,8 +1,9 @@
 #include "../src/world.hpp"
 #include "../src/player.hpp"
-#include "../src/object_factory.hpp"
 #include "../src/local_event_dispatcher.hpp"
 #include "test_connection.hpp"
+
+#include <yarrr/object_factory.hpp>
 #include <yarrr/command.hpp>
 #include <yarrr/destruction_handlers.hpp>
 #include <yarrr/object_container.hpp>
@@ -49,7 +50,7 @@ Describe( a_ship_request )
 
   void add_ship_factory( const std::string& type )
   {
-    the::ctci::service< yarrrs::ObjectFactory >().register_creator(
+    the::ctci::service< yarrr::ObjectFactory >().register_creator(
         type,
         DummyShipCreator( type, last_objects_type, last_objects_id ) );
   }
