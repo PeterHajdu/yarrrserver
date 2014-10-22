@@ -34,7 +34,7 @@ class DummyShipCreator
     {
       yarrr::Object::Pointer new_object( new yarrr::Object() );
       *type_spy = type;
-      *id_spy = new_object->id;
+      *id_spy = new_object->id();
       return new_object;
     }
 

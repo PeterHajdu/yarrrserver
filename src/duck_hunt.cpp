@@ -51,7 +51,7 @@ yarrr::Object::Pointer create_duck( const the::time::Time& now )
     duck = the::ctci::service< yarrr::ObjectFactory >().create_a( "ship" );
   }
 
-  duck->add_behavior( ObjectBehavior::Pointer( new yarrr::SelfDestructor( duck->id, 360000000u ) ) );
+  duck->add_behavior( ObjectBehavior::Pointer( new yarrr::SelfDestructor( duck->id(), 360000000u ) ) );
   duck->add_behavior( ObjectBehavior::Pointer( new yarrr::DeleteWhenDestroyed() ) );
   randomize_physical_behavior( now, yarrr::component_of< yarrr::PhysicalBehavior>( *duck ) );
 

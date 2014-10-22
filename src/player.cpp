@@ -51,7 +51,7 @@ Player::handle_chat_message( const yarrr::ChatMessage& chat_message )
 yarrr::Object::Id
 Player::object_id() const
 {
-  return m_current_object->id;
+  return m_current_object->id();
 }
 
 void
@@ -63,8 +63,8 @@ Player::assign_object( yarrr::Object& object )
   }
 
   m_current_object = &object;
-  send( yarrr::ObjectAssigned( object.id ).serialize() );
-  thelog( yarrr::log::debug )( "Assigning object to user.", object.id, name );
+  send( yarrr::ObjectAssigned( object.id() ).serialize() );
+  thelog( yarrr::log::debug )( "Assigning object to user.", object.id(), name );
   m_connection_wrapper.register_dispatcher( object.dispatcher );
 }
 

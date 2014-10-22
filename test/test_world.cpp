@@ -45,7 +45,7 @@ Describe( a_world )
         [ this ]()
         {
           yarrr::Object* new_ship( new yarrr::Object() );
-          last_object_id_created = new_ship->id;
+          last_object_id_created = new_ship->id();
           return yarrr::Object::Pointer( new_ship );
         });
 
@@ -170,9 +170,9 @@ Describe( a_world )
   {
     yarrr::Object* new_object( new yarrr::Object() );
     engine_dispatch( yarrr::ObjectCreated( yarrr::Object::Pointer( new_object ) ) );
-    AssertThat( objects->has_object_with_id( new_object->id ), Equals( false ) );
+    AssertThat( objects->has_object_with_id( new_object->id() ), Equals( false ) );
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
-    AssertThat( objects->has_object_with_id( new_object->id ), Equals( true ) );
+    AssertThat( objects->has_object_with_id( new_object->id() ), Equals( true ) );
   }
 
   It ( handles_delete_object_requested_by_the_engine )
