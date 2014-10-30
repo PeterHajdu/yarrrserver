@@ -2,7 +2,7 @@
 When(/^I start the server with command line parameter (.*)$/) do | parameter |
   home_folder = ENV['HOME']
   @yarrr_server = ProcessRunner.new(
-    {"LUA_PATH" => "#{home_folder}/.luarocks/share/lua/5.2/?.lua"},
+    {},
     "yarrrserver #{parameter}" )
   @yarrr_server.start
 end
