@@ -16,7 +16,7 @@ set(TEST_SOURCE_FILES
 add_executable(test_runner EXCLUDE_FROM_ALL ${TEST_SOURCE_FILES})
 
 set(LIB_YARRR "-Wl,--whole-archive -lyarrr -Wl,--no-whole-archive")
-target_link_libraries(test_runner yarrrserverlib thelog theconf thenet thectci ${LIB_YARRR} ${LIBS} theconf lua)
+target_link_libraries(test_runner yarrrserverlib thelog thenet thectci ${LIB_YARRR} ${LIBS} theconf themodel thetime lua)
 
 get_target_property(TEST_RUNNER_BIN test_runner LOCATION)
 
