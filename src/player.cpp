@@ -6,6 +6,7 @@
 #include <yarrr/chat_message.hpp>
 #include <yarrr/log.hpp>
 #include <yarrr/login.hpp>
+#include <yarrr/mission_exporter.hpp>
 
 #include <yarrr/command.hpp>
 
@@ -23,6 +24,8 @@ Player::Player(
   , m_players( players )
   , m_connection_wrapper( connection_wrapper )
   , m_current_object( nullptr )
+  , m_missions_model( "missions", yarrr::LuaEngine::model() )
+  , m_missions( std::bind( &Player::handle_mission_finished, this, std::placeholders::_1 ) )
 {
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
@@ -66,6 +69,53 @@ Player::assign_object( yarrr::Object& object )
   send( yarrr::ObjectAssigned( object.id() ).serialize() );
   thelog( yarrr::log::debug )( "Assigning object to user.", object.id(), name );
   m_connection_wrapper.register_dispatcher( object.dispatcher );
+  refresh_mission_models();
+}
+
+
+void
+Player::refresh_mission_models()
+{
+  m_missions_model.clear();
+  const yarrr::Object::Id current_object( object_id() );
+  for ( const auto& mission : m_missions.missions() )
+  {
+    add_mission_model_of( *mission, current_object );
+  }
+}
+
+
+void
+Player::start_mission( yarrr::Mission::Pointer&& mission )
+{
+  add_mission_model_of( *mission, object_id() );
+  m_missions.add_mission( std::move( mission ) );
+}
+
+void
+Player::add_mission_model_of( const yarrr::Mission& mission, const yarrr::Object::Id& current_object )
+{
+  m_missions_model.add_node( the::model::NodeBase::Pointer( new yarrr::MissionModel(
+          std::to_string( mission.id() ),
+          std::to_string( current_object ),
+          m_missions_model ) ) );
+}
+
+void
+Player::update_missions()
+{
+  m_missions.update();
+  for ( const auto& mission : m_missions.missions() )
+  {
+    send( mission->serialize() );
+  }
+}
+
+void
+Player::handle_mission_finished( const yarrr::Mission& mission )
+{
+  send( mission.serialize() );
+  m_missions_model.delete_node( std::to_string( mission.id() ) );
 }
 
 void

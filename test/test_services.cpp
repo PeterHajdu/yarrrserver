@@ -4,7 +4,9 @@
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/dummy_graphical_engine.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
+#include <yarrr/lua_engine.hpp>
 #include <thectci/service_registry.hpp>
+#include <themodel/node_list.hpp>
 
 #include <sstream>
 
@@ -37,5 +39,7 @@ namespace
 
   the::ctci::AutoServiceRegister< yarrr::ObjectFactory, yarrr::ObjectFactory >
     object_factory_register;
+
+  the::model::OwningNodeList missions_owner( "missions", yarrr::LuaEngine::model() );
 }
 
