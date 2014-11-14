@@ -14,6 +14,7 @@
 
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
+#include <thetime/once_in.hpp>
 #include <thectci/service_registry.hpp>
 #include <theconf/configuration.hpp>
 #include <themodel/node_list.hpp>
@@ -42,11 +43,6 @@ send_update_messages_from(
       player.second->send( yarrr::Data( message ) );
     }
 
-  }
-
-  for ( const auto& player : players )
-  {
-    player.second->update_missions();
   }
 }
 
@@ -116,6 +112,7 @@ int main( int argc, char ** argv )
   yarrrs::DuckHunt duck_hunt( object_container, clock );
 
   the::time::FrequencyStabilizer< 10, the::time::Clock > frequency_stabilizer( clock );
+  the::time::OnceIn< the::time::Clock > once_in_a_second( clock, the::time::Clock::ticks_per_second );
   while ( true )
   {
     network_service.process_network_events();
@@ -123,8 +120,16 @@ int main( int argc, char ** argv )
     object_container.check_collision();
     object_exporter.refresh();
     send_update_messages_from( object_container, players );
+    //todo: should not trash the main cicle, add oncein that takes the function in the constructor
+    once_in_a_second.run(
+        [ &players ]()
+        {
+          for ( auto& player : players )
+          {
+            player.second->update_missions();
+          }
+        } );
     frequency_stabilizer.stabilize();
-
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
   }
 
