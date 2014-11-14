@@ -44,7 +44,7 @@ add_command_handlers_to(
         if ( command.parameters().empty() )
         {
           thelog( yarrr::log::warning )( "Invalid ship request from", player.name );
-          return yarrrs::CommandHandler::Result();
+          return yarrrs::CommandHandler::Result( false, "Invalid ship request. Please define ship type." );
         }
 
         const std::string requested_ship_type( *std::begin( command.parameters() ) );
@@ -53,15 +53,15 @@ add_command_handlers_to(
 
         if ( !new_ship )
         {
-          thelog( yarrr::log::info )( "Unanle to create ship", requested_ship_type, "for", player.name );
-          return yarrrs::CommandHandler::Result();
+          thelog( yarrr::log::info )( "Unable to create ship", requested_ship_type, "for", player.name );
+          return yarrrs::CommandHandler::Result( false, "Unknown ship type: " + requested_ship_type );
         }
 
         yarrrs::broadcast( players, yarrr::DeleteObject( player.object_id() ) );
         objects.delete_object( player.object_id() );
         player.assign_object( *new_ship );
         objects.add_object( std::move( new_ship ) );
-        return yarrrs::CommandHandler::Result();
+        return yarrrs::CommandHandler::Result( true, "" );
       } );
 }
 

@@ -9,6 +9,7 @@
 #include <yarrr/object_container.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/delete_object.hpp>
+#include <yarrr/chat_message.hpp>
 #include <thectci/service_registry.hpp>
 #include <igloo/igloo_alt.h>
 
@@ -125,9 +126,12 @@ Describe( a_ship_request )
   It ( does_not_change_anything_if_requested_ship_type_is_unknown )
   {
     const yarrr::Object::Id old_ship_id( player->object_id() );
+    connection->flush_connection();
     connection->wrapper.dispatch( unknown_ship_request );
     AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
     AssertThat( player->object_id(), Equals( old_ship_id ) );
+    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Unknown ship type" ) );
+    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( unknown_ship_name ) );
   }
 
   It ( does_not_change_anything_if_theres_no_ship_type )
@@ -136,6 +140,7 @@ Describe( a_ship_request )
     connection->wrapper.dispatch( invalid_request );
     AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
     AssertThat( player->object_id(), Equals( old_ship_id ) );
+    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Invalid ship request." ) );
   }
 
   std::unique_ptr< yarrrs::World > world;
@@ -152,7 +157,8 @@ Describe( a_ship_request )
   const std::string giant_ship{ "giant" };
 
   const yarrr::Command giant_request{ { "request_ship", giant_ship } };
-  const yarrr::Command unknown_ship_request{ { "request_ship", "blabla unknown ship type" } };
+  const std::string unknown_ship_name{ "blabla unknown ship type" };
+  const yarrr::Command unknown_ship_request{ { "request_ship", unknown_ship_name } };
   const yarrr::Command invalid_request{ { "request_ship" } };
 };
 
