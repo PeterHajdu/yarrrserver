@@ -5,6 +5,7 @@
 #include <thectci/service_registry.hpp>
 
 #include <yarrr/object_factory.hpp>
+#include <yarrr/mission_factory.hpp>
 #include <yarrr/log.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/engine_dispatcher.hpp>
@@ -61,6 +62,32 @@ add_command_handlers_to(
         objects.delete_object( player.object_id() );
         player.assign_object( *new_ship );
         objects.add_object( std::move( new_ship ) );
+        return yarrrs::CommandHandler::Result( true, "" );
+      } );
+
+  command_handler.register_handler( "mission",
+      [ &objects, &players ]( const yarrr::Command& command, yarrrs::Player& player ) -> yarrrs::CommandHandler::Result
+      {
+        const auto& parameters( command.parameters() );
+        if ( parameters.size() < 2 )
+        {
+          return yarrrs::CommandHandler::Result( false, "Invalid mission request." );
+        }
+
+        const auto sub_command( command.parameters()[ 0 ] );
+        if ( "request" != sub_command )
+        {
+          return yarrrs::CommandHandler::Result( false, "Unknown subcommand." );
+        }
+
+        const auto requested_mission( command.parameters()[ 1 ] );
+        auto new_mission( the::ctci::service< yarrr::MissionFactory >().create_a( requested_mission ) );
+        if ( !new_mission )
+        {
+          return yarrrs::CommandHandler::Result( false, "Unknown mission type: " + requested_mission );
+        }
+
+        player.start_mission( std::move( new_mission ) );
         return yarrrs::CommandHandler::Result( true, "" );
       } );
 }

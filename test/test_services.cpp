@@ -1,6 +1,7 @@
 #include "../src/local_event_dispatcher.hpp"
 #include "../src/notifier.hpp"
 #include <yarrr/object_factory.hpp>
+#include <yarrr/mission_factory.hpp>
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/dummy_graphical_engine.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
@@ -39,6 +40,9 @@ namespace
 
   the::ctci::AutoServiceRegister< yarrr::ObjectFactory, yarrr::ObjectFactory >
     object_factory_register;
+
+  the::ctci::AutoServiceRegister< yarrr::MissionFactory, yarrr::MissionFactory >
+    mission_factory_register;
 
   the::model::OwningNodeList missions_owner( "missions", yarrr::LuaEngine::model() );
 }

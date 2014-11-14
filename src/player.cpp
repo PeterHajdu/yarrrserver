@@ -46,7 +46,7 @@ Player::handle_command( const yarrr::Command& command )
     return;
   }
 
-  const std::string error_message( "Command failed: " + command.command() + "\n" + std::get< 1 >( result ) );
+  const std::string error_message( "Command failed: " + command.command() + " | " + std::get< 1 >( result ) );
   send( yarrr::ChatMessage( error_message, "server" ).serialize() );
 }
 
