@@ -42,6 +42,11 @@ send_update_messages_from(
     }
 
   }
+
+  for ( const auto& player : players )
+  {
+    player.second->update_missions();
+  }
 }
 
 
