@@ -26,13 +26,28 @@ Player::Player(
   , m_current_object( nullptr )
   , m_missions_model( "missions", yarrr::LuaEngine::model() )
   , m_missions( std::bind( &Player::handle_mission_finished, this, std::placeholders::_1 ) )
+  , m_command_handler( command_handler )
 {
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
 
   thelog( yarrr::log::debug )( "registering command callback for", this );
   connection_wrapper.register_listener< yarrr::Command >(
-      std::bind( &CommandHandler::execute, &command_handler, std::placeholders::_1, std::ref( *this ) ) );
+      std::bind( &Player::handle_command, this, std::placeholders::_1 ) );
+}
+
+void
+Player::handle_command( const yarrr::Command& command )
+{
+  const auto result( m_command_handler.execute( command, *this ) );
+  const bool did_succeed( std::get< 0 >( result ) );
+  if ( did_succeed )
+  {
+    return;
+  }
+
+  const std::string error_message( "Command failed: " + command.command() + "\n" + std::get< 1 >( result ) );
+  send( yarrr::ChatMessage( error_message, "server" ).serialize() );
 }
 
 bool

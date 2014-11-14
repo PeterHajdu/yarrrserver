@@ -31,6 +31,7 @@ Describe( a_player )
 
   void SetUp()
   {
+    set_up_command_handler();
     lua = &yarrr::LuaEngine::model();
     players.clear();
     connection.reset( new test::Connection() );
@@ -38,14 +39,14 @@ Describe( a_player )
           players,
           player_name,
           connection->wrapper,
-          command_handler ) );
+          *command_handler ) );
 
     another_connection.reset( new test::Connection() );
     another_player = new yarrrs::Player(
           players,
           player_name,
           another_connection->wrapper,
-          command_handler );
+          *command_handler );
     players[ another_connection->connection.id ] = yarrrs::Player::Pointer( another_player );
 
     ship.reset( new yarrr::Object() );
@@ -137,24 +138,53 @@ Describe( a_player )
           "object_id" } ), std::to_string( new_ship.id() ) ), Equals( true ) );
   }
 
-  It ( executes_commands_with_the_command_handler )
+  void set_up_command_handler()
   {
-    const std::string command_name( "some strange command" );
-    yarrrs::Player* dispatched_player{ nullptr };
-    const yarrr::Command* dispatched_command{ nullptr };
-    command_handler.register_handler( command_name,
-        [ &dispatched_player, &dispatched_command ]
-        ( const yarrr::Command& command, yarrrs::Player& player )
+    command_result = std::make_tuple( true, "success" );
+    dispatched_player = nullptr;
+    dispatched_command = nullptr;
+    command_handler.reset( new yarrrs::CommandHandler() );
+    command_handler->register_handler( command_name,
+        [ this ]
+        ( const yarrr::Command& command, yarrrs::Player& player ) -> yarrrs::CommandHandler::Result
         {
           dispatched_command = &command;
           dispatched_player = &player;
+          return command_result;
         } );
+  }
 
-    const yarrr::Command command( { command_name } );
+  It ( executes_commands_with_the_command_handler )
+  {
     connection->wrapper.dispatch( command );
     AssertThat( dispatched_command, Equals( &command ) );
     AssertThat( dispatched_player, Equals( player.get() ) );
   }
+
+  It ( sends_no_chat_message_for_a_successfull_command_execution )
+  {
+    connection->flush_connection();
+    connection->wrapper.dispatch( command );
+    AssertThat( connection->has_entity< yarrr::ChatMessage >(), Equals( false ) );
+  }
+
+  It ( sends_a_chat_message_for_a_failed_command_containing_the_error_message )
+  {
+    const std::string the_error_message( "an error message" );
+    command_result = std::make_tuple( false, the_error_message );
+    connection->flush_connection();
+    connection->wrapper.dispatch( command );
+    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "failed" ) );
+    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( command_name ) );
+    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( the_error_message ) );
+  }
+
+  const std::string command_name{ "some strange command" };
+  const yarrr::Command command{ { command_name } };
+  yarrrs::Player* dispatched_player{ nullptr };
+  const yarrr::Command* dispatched_command{ nullptr };
+  std::unique_ptr< yarrrs::CommandHandler > command_handler;
+  yarrrs::CommandHandler::Result command_result;
 
   std::unique_ptr< test::Connection > connection;
   yarrrs::Player::Pointer player;
@@ -169,7 +199,6 @@ Describe( a_player )
 
   const std::string player_name{ "Kilgor Trout" };
 
-  yarrrs::CommandHandler command_handler;
 
   the::model::Lua* lua;
 

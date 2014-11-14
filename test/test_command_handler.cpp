@@ -17,18 +17,22 @@ Describe( a_command_handler )
 
     was_a_command_handler_executed = false;
     command_handler->register_handler( a_command.command(),
-        [ this ]( const yarrr::Command& command, yarrrs::Player& player )
+        [ this ]( const yarrr::Command& command, yarrrs::Player& player ) -> yarrrs::CommandHandler::Result
         {
           was_a_command_handler_executed = true;
           passed_command = &command;
           passed_player = &player;
+          return yarrrs::CommandHandler::Result( command_result, command_result_message );
         } );
 
 
     was_another_command_handler_executed = false;
     command_handler->register_handler( another_command.command(),
-        [ this ]( const yarrr::Command&, yarrrs::Player& )
-        { was_another_command_handler_executed = true; } );
+        [ this ]( const yarrr::Command&, yarrrs::Player& ) -> yarrrs::CommandHandler::Result
+        {
+          was_another_command_handler_executed = true;
+          return yarrrs::CommandHandler::Result( command_result, command_result_message );
+        } );
 
     player.reset( new yarrrs::Player( players, "a player", connection.wrapper, dummy ) );
   }
@@ -55,9 +59,20 @@ Describe( a_command_handler )
     AssertThat( passed_player, Equals( player.get() ) );
   }
 
-  It ( handles_unknown_commands )
+  It ( returns_the_handlers_result )
   {
-    command_handler->execute( yarrr::Command( { "unknown" } ), *player );
+    const auto result( command_handler->execute( a_command, *player ) );
+    AssertThat( std::get<0>( result ), Equals( command_result ) );
+    AssertThat( std::get<1>( result ), Equals( command_result_message ) );
+  }
+
+  It ( returns_failed_result_for_an_unknown_command )
+  {
+    const std::string command_name( "an unknown command" );
+    const auto result( command_handler->execute( yarrr::Command( { command_name } ), *player ) );
+    AssertThat( std::get< 0 >( result ), Equals( false ) );
+    AssertThat( std::get< 1 >( result ), Contains( "Unknown command" ) );
+    AssertThat( std::get< 1 >( result ), Contains( command_name ) );
   }
 
   std::unique_ptr< yarrrs::CommandHandler > command_handler;
@@ -72,5 +87,7 @@ Describe( a_command_handler )
   yarrrs::CommandHandler dummy;
   std::unique_ptr< yarrrs::Player > player;
   yarrrs::Player* passed_player;
+  const bool command_result{ true };
+  const std::string command_result_message{ "command result message" };
 };
 

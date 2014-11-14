@@ -6,7 +6,7 @@
 namespace yarrrs
 {
 
-void
+CommandHandler::Result
 CommandHandler::execute( const yarrr::Command& command, Player& player ) const
 {
   thelog( yarrr::log::debug )( "Looking for command executor for", command.command(), &player );
@@ -14,10 +14,10 @@ CommandHandler::execute( const yarrr::Command& command, Player& player ) const
   const auto handler( m_handlers.find( command.command() ) );
   if ( handler == m_handlers.end() )
   {
-    return;
+    return Result( false, "Unknown command:" + command.command() );
   }
 
-  handler->second( command, player );
+  return handler->second( command, player );
 }
 
 void

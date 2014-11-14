@@ -46,6 +46,7 @@ class Player
   private:
     void refresh_mission_models();
     void add_mission_model_of( const yarrr::Mission&, const yarrr::Object::Id& );
+    void handle_command( const yarrr::Command& );
     void handle_chat_message( const yarrr::ChatMessage& );
     void handle_mission_finished( const yarrr::Mission& );
 
@@ -54,6 +55,7 @@ class Player
     yarrr::Object* m_current_object;
     the::model::NodeList< the::model::Reference > m_missions_model;
     yarrr::MissionContainer m_missions;
+    const CommandHandler& m_command_handler;
 };
 
 void broadcast( const Player::Container& players, const yarrr::Entity& entity );

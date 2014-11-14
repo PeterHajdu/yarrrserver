@@ -39,12 +39,12 @@ add_command_handlers_to(
     const yarrrs::Player::Container& players )
 {
   command_handler.register_handler( "request_ship",
-      [ &objects, &players ]( const yarrr::Command& command, yarrrs::Player& player )
+      [ &objects, &players ]( const yarrr::Command& command, yarrrs::Player& player ) -> yarrrs::CommandHandler::Result
       {
         if ( command.parameters().empty() )
         {
           thelog( yarrr::log::warning )( "Invalid ship request from", player.name );
-          return;
+          return yarrrs::CommandHandler::Result();
         }
 
         const std::string requested_ship_type( *std::begin( command.parameters() ) );
@@ -54,13 +54,14 @@ add_command_handlers_to(
         if ( !new_ship )
         {
           thelog( yarrr::log::info )( "Unanle to create ship", requested_ship_type, "for", player.name );
-          return;
+          return yarrrs::CommandHandler::Result();
         }
 
         yarrrs::broadcast( players, yarrr::DeleteObject( player.object_id() ) );
         objects.delete_object( player.object_id() );
         player.assign_object( *new_ship );
         objects.add_object( std::move( new_ship ) );
+        return yarrrs::CommandHandler::Result();
       } );
 }
 
