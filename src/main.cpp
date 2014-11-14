@@ -7,13 +7,16 @@
 #include <yarrr/lua_setup.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/basic_behaviors.hpp>
+#include <yarrr/resources.hpp>
+#include <yarrr/main_thread_callback_queue.hpp>
+#include <yarrr/log.hpp>
+
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
-#include <yarrr/resources.hpp>
 #include <thectci/service_registry.hpp>
-#include <yarrr/main_thread_callback_queue.hpp>
 #include <theconf/configuration.hpp>
-#include <yarrr/log.hpp>
+#include <themodel/node_list.hpp>
+
 #include <iostream>
 #include <fstream>
 
@@ -82,6 +85,7 @@ create_notification_stream()
 
 int main( int argc, char ** argv )
 {
+  the::model::OwningNodeList missions_model( "missions", yarrr::LuaEngine::model() );
   parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );
   const std::string home_folder( std::string( getenv( "HOME" ) ) + "/.yarrrserver/" );
   the::conf::set( "lua_configuration_path", home_folder );
