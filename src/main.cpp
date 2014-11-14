@@ -10,6 +10,7 @@
 #include <yarrr/resources.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/log.hpp>
+#include <yarrr/object_exporter.hpp>
 
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
@@ -109,6 +110,7 @@ int main( int argc, char ** argv )
   the::time::Clock clock;
   yarrrs::NetworkService network_service( clock );
   yarrr::ObjectContainer object_container;
+  yarrr::ObjectExporter object_exporter( object_container, yarrr::LuaEngine::model() );
   yarrrs::Player::Container players;
   yarrrs::World world( players, object_container );
   yarrrs::DuckHunt duck_hunt( object_container, clock );
@@ -119,6 +121,7 @@ int main( int argc, char ** argv )
     network_service.process_network_events();
     object_container.dispatch( yarrr::TimerUpdate( clock.now() ) );
     object_container.check_collision();
+    object_exporter.refresh();
     send_update_messages_from( object_container, players );
     frequency_stabilizer.stabilize();
 
