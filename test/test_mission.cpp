@@ -109,9 +109,19 @@ Describe( a_mission_command_handler )
 
   It ( sends_error_message_to_mission_subcommand )
   {
-    connection->wrapper.dispatch( mission_command_without_request_subcommand );
+    connection->wrapper.dispatch( mission_command_without_subcommand );
     AssertThat( connection->has_entity< yarrr::ChatMessage >(), Equals( true ) );
-    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Invalid mission request." ) );
+    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Invalid mission command." ) );
+  }
+
+  It ( can_send_the_list_of_registered_missions )
+  {
+    connection->wrapper.dispatch( mission_list_command );
+    AssertThat( connection->has_entity< yarrr::ChatMessage >(), Equals( true ) );
+
+    const auto& message( connection->get_entity< yarrr::ChatMessage >()->message() );
+    AssertThat( message, Contains( "Registered missions:" ) );
+    AssertThat( message, Contains( mission_name ) );
   }
 
   std::unique_ptr< yarrrs::World > world;
@@ -129,7 +139,9 @@ Describe( a_mission_command_handler )
   const yarrr::Command mission_request_with_unknown_mission_name{ { "mission", "request", unknown_mission_name } };
   const yarrr::Command mission_request_without_mission_name{ { "mission", "request" } };
   const yarrr::Command mission_command_with_unknown_subcommand{ { "mission", "unknown subcommand", "sldkfj" } };
-  const yarrr::Command mission_command_without_request_subcommand{ { "mission", } };
+  const yarrr::Command mission_command_without_subcommand{ { "mission", } };
+
+  const yarrr::Command mission_list_command{ { "mission", "list" } };
 
   std::string last_mission_id;
   bool was_mission_created;

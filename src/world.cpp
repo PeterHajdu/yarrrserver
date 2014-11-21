@@ -32,6 +32,17 @@ create_player_ship( const std::string& type )
   return new_ship;
 }
 
+std::string
+prepare_mission_list( const yarrr::MissionFactory::MissionList& list )
+{
+  std::string missions( "Registered missions: " );
+  for ( const auto& mission : list )
+  {
+    missions += mission;
+    missions += ", ";
+  }
+  return missions;
+}
 
 void
 add_command_handlers_to(
@@ -39,6 +50,7 @@ add_command_handlers_to(
     yarrr::ObjectContainer& objects,
     const yarrrs::Player::Container& players )
 {
+  //todo: clean up command handlers
   command_handler.register_handler( "request_ship",
       [ &objects, &players ]( const yarrr::Command& command, yarrrs::Player& player ) -> yarrrs::CommandHandler::Result
       {
@@ -69,19 +81,32 @@ add_command_handlers_to(
       [ &objects, &players ]( const yarrr::Command& command, yarrrs::Player& player ) -> yarrrs::CommandHandler::Result
       {
         const auto& parameters( command.parameters() );
-        if ( parameters.size() < 2 )
+        if ( parameters.size() < 1 )
         {
-          return yarrrs::CommandHandler::Result( false, "Invalid mission request." );
+          return yarrrs::CommandHandler::Result( false, "Invalid mission command." );
         }
 
         const auto sub_command( command.parameters()[ 0 ] );
+        yarrr::MissionFactory& mission_factory{ the::ctci::service< yarrr::MissionFactory >() };
+
+        if ( sub_command == "list" )
+        {
+          player.send( yarrr::ChatMessage( prepare_mission_list( mission_factory.missions() ), "server" ).serialize() );
+          return yarrrs::CommandHandler::Result( true, "" );
+        }
+
         if ( "request" != sub_command )
         {
           return yarrrs::CommandHandler::Result( false, "Unknown subcommand." );
         }
 
+        if ( parameters.size() < 2 )
+        {
+          return yarrrs::CommandHandler::Result( false, "Invalid mission request." );
+        }
+
         const auto requested_mission( command.parameters()[ 1 ] );
-        auto new_mission( the::ctci::service< yarrr::MissionFactory >().create_a( requested_mission ) );
+        auto new_mission( mission_factory.create_a( requested_mission ) );
         if ( !new_mission )
         {
           return yarrrs::CommandHandler::Result( false, "Unknown mission type: " + requested_mission );
