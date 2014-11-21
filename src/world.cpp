@@ -49,6 +49,14 @@ void send_help_message_to( yarrrs::Player& player )
   player.send( yarrr::ChatMessage(
         "commands: /mission list, /mission request <mission name>, /ship list, /ship request <object type>",
         "server" ).serialize() );
+
+  player.send( yarrr::ChatMessage(
+        "Welcome to yarrr. If this is the first time you log in to yarrr type in the following command: /mission request tutorial",
+        "server" ).serialize() );
+
+  player.send( yarrr::ChatMessage(
+        "You can always roll back to this text with the page up key. Fair winds and following seas.",
+        "server" ).serialize() );
 }
 
 void
