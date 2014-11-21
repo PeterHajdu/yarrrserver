@@ -11,6 +11,7 @@
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/log.hpp>
 #include <yarrr/object_exporter.hpp>
+#include <yarrr/clock_exporter.hpp>
 
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
@@ -104,6 +105,7 @@ int main( int argc, char ** argv )
   yarrr::initialize_lua_engine();
 
   the::time::Clock clock;
+  yarrr::ClockExporter clock_exporter( clock, yarrr::LuaEngine::model() );
   yarrrs::NetworkService network_service( clock );
   yarrr::ObjectContainer object_container;
   yarrr::ObjectExporter object_exporter( object_container, yarrr::LuaEngine::model() );

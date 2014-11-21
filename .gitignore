@@ -1,6 +1,7 @@
 src/yarrrserver
 src/*.a
 
+*~
 *log*
 dummy_notification_file
 notifications
