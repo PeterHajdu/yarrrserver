@@ -137,10 +137,28 @@ Describe( a_ship_request )
   It ( does_not_change_anything_if_theres_no_ship_type )
   {
     const yarrr::Object::Id old_ship_id( player->object_id() );
-    connection->wrapper.dispatch( invalid_request );
+    connection->wrapper.dispatch( ship_request_without_type );
     AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
     AssertThat( player->object_id(), Equals( old_ship_id ) );
-    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Invalid ship request." ) );
+    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Please define ship type." ) );
+  }
+
+  It ( does_not_change_anything_if_theres_no_subcommand )
+  {
+    const yarrr::Object::Id old_ship_id( player->object_id() );
+    connection->wrapper.dispatch( ship_command_without_subcommand );
+    AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
+    AssertThat( player->object_id(), Equals( old_ship_id ) );
+    AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Invalid ship command." ) );
+  }
+
+  It ( can_send_a_list_of_the_registered_object_types )
+  {
+    connection->wrapper.dispatch( list_command );
+    const std::string& message{ connection->get_entity< yarrr::ChatMessage >()->message() };
+    AssertThat( message, Contains( "Registered object types:" ) );
+    AssertThat( message, Contains( giant_ship ) );
+    AssertThat( message, Contains( basic_ship ) );
   }
 
   std::unique_ptr< yarrrs::World > world;
@@ -156,9 +174,12 @@ Describe( a_ship_request )
   const std::string basic_ship{ "ship" };
   const std::string giant_ship{ "giant" };
 
-  const yarrr::Command giant_request{ { "request_ship", giant_ship } };
+  const yarrr::Command giant_request{ { "ship", "request", giant_ship } };
   const std::string unknown_ship_name{ "blabla unknown ship type" };
-  const yarrr::Command unknown_ship_request{ { "request_ship", unknown_ship_name } };
-  const yarrr::Command invalid_request{ { "request_ship" } };
+  const yarrr::Command unknown_ship_request{ { "ship", "request", unknown_ship_name } };
+  const yarrr::Command ship_request_without_type{ { "ship", "request" } };
+  const yarrr::Command ship_command_without_subcommand{ { "ship" } };
+
+  const yarrr::Command list_command{ { "ship", "list" } };
 };
 

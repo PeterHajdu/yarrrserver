@@ -33,9 +33,9 @@ create_player_ship( const std::string& type )
 }
 
 std::string
-prepare_mission_list( const yarrr::MissionFactory::MissionList& list )
+concatenate_list( const std::string& start, const yarrr::MissionFactory::MissionList& list )
 {
-  std::string missions( "Registered missions: " );
+  std::string missions( start );
   for ( const auto& mission : list )
   {
     missions += mission;
@@ -51,16 +51,40 @@ add_command_handlers_to(
     const yarrrs::Player::Container& players )
 {
   //todo: clean up command handlers
-  command_handler.register_handler( "request_ship",
+  command_handler.register_handler( "ship",
       [ &objects, &players ]( const yarrr::Command& command, yarrrs::Player& player ) -> yarrrs::CommandHandler::Result
       {
-        if ( command.parameters().empty() )
+        const auto& parameters( command.parameters() );
+        if ( parameters.size() < 1 )
+        {
+          thelog( yarrr::log::warning )( "Invalid ship command from", player.name );
+          return yarrrs::CommandHandler::Result( false, "Invalid ship command." );
+        }
+
+        const auto sub_command( command.parameters().at( 0 ) );
+
+        if ( sub_command == "list" )
+        {
+          const auto& object_list( the::ctci::service< yarrr::ObjectFactory >().objects() );
+          player.send( yarrr::ChatMessage(
+                concatenate_list( "Registered object types:", object_list ), "server" ).serialize() );
+          return yarrrs::CommandHandler::Result( true, "" );
+        }
+
+
+        if ( sub_command != "request" )
+        {
+          thelog( yarrr::log::warning )( "Invalid ship command from", player.name );
+          return yarrrs::CommandHandler::Result( false, "Unknown subcommand: " + sub_command );
+        }
+
+        if ( command.parameters().size() < 2 )
         {
           thelog( yarrr::log::warning )( "Invalid ship request from", player.name );
           return yarrrs::CommandHandler::Result( false, "Invalid ship request. Please define ship type." );
         }
 
-        const std::string requested_ship_type( *std::begin( command.parameters() ) );
+        const std::string requested_ship_type( command.parameters().at( 1 ) );
         thelog( yarrr::log::info )( "Ship type requested", requested_ship_type, "by", player.name );
         yarrr::Object::Pointer new_ship( create_player_ship( requested_ship_type ) );
 
@@ -91,7 +115,8 @@ add_command_handlers_to(
 
         if ( sub_command == "list" )
         {
-          player.send( yarrr::ChatMessage( prepare_mission_list( mission_factory.missions() ), "server" ).serialize() );
+          player.send( yarrr::ChatMessage(
+                concatenate_list( "Registered missions: ", mission_factory.missions() ), "server" ).serialize() );
           return yarrrs::CommandHandler::Result( true, "" );
         }
 
