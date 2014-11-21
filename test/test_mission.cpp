@@ -36,11 +36,21 @@ Describe( a_mission_command_handler )
     world.reset( new yarrrs::World( players, *objects ) );
   }
 
+
+  void check_help_message()
+  {
+    AssertThat( connection->has_entity< yarrr::ChatMessage >(), Equals( true ) );
+    const auto& message( connection->get_entity< yarrr::ChatMessage >()->message() );
+    AssertThat( message, Contains( "/mission list" ) );
+    AssertThat( message, Contains( "/mission request <mission name>" ) );
+  }
+
   void log_in_player()
   {
     the::ctci::service< LocalEventDispatcher >().dispatcher.dispatch( yarrrs::PlayerLoggedIn(
           connection->wrapper, connection->connection.id, player_name ) );
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
+    check_help_message();
     connection->flush_connection();
     player = std::begin( players )->second.get();
   }

@@ -56,6 +56,14 @@ Describe( a_ship_request )
         DummyShipCreator( type, last_objects_type, last_objects_id ) );
   }
 
+  void check_help_message()
+  {
+    AssertThat( connection->has_entity< yarrr::ChatMessage >(), Equals( true ) );
+    const auto& message( connection->get_entity< yarrr::ChatMessage >()->message() );
+    AssertThat( message, Contains( "/ship list" ) );
+    AssertThat( message, Contains( "/ship request <object type>" ) );
+  }
+
   void SetUp()
   {
     the::ctci::service< LocalEventDispatcher >().dispatcher.clear();
@@ -74,6 +82,8 @@ Describe( a_ship_request )
           connection->wrapper, connection->connection.id, player_name ) );
 
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
+    check_help_message();
+
     connection->flush_connection();
 
     player = std::begin( players )->second.get();

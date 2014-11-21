@@ -44,6 +44,13 @@ concatenate_list( const std::string& start, const yarrr::MissionFactory::Mission
   return missions;
 }
 
+void send_help_message_to( yarrrs::Player& player )
+{
+  player.send( yarrr::ChatMessage(
+        "commands: /mission list, /mission request <mission name>, /ship list, /ship request <object type>",
+        "server" ).serialize() );
+}
+
 void
 add_command_handlers_to(
     yarrrs::CommandHandler& command_handler,
@@ -275,7 +282,10 @@ World::handle_player_logged_in( const PlayerLoggedIn& login ) const
             login.name,
             login.connection_wrapper,
             m_command_handler ) ) ) );
-  m_players[ login.id ]->assign_object( *new_object );
+
+  Player& new_player( *m_players[ login.id ] );
+  send_help_message_to( new_player );
+  new_player.assign_object( *new_object );
   m_objects.add_object( std::move( new_object ) );
 
   const std::string notification( std::string( "Player logged in: " ) + login.name );
