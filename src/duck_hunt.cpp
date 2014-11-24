@@ -70,7 +70,7 @@ DuckHunt::DuckHunt( yarrr::ObjectContainer& objects, const the::time::Clock& clo
   the::ctci::Dispatcher& local_event_dispatcher(
       the::ctci::service< LocalEventDispatcher >().dispatcher );
   local_event_dispatcher.register_listener< PlayerLoggedIn >(
-      std::bind( &DuckHunt::handle_player_login, this, std::placeholders::_1 ) );
+      [ this ]( const PlayerLoggedIn& logged_in ){ handle_player_login( logged_in ); } );
 }
 
 

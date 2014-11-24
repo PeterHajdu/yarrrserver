@@ -186,22 +186,22 @@ World::World( Player::Container& players, yarrr::ObjectContainer& objects )
       the::ctci::service< LocalEventDispatcher >().dispatcher );
 
   local_event_dispatcher.register_listener< PlayerLoggedIn >(
-      std::bind( &World::handle_player_logged_in, this, std::placeholders::_1 ) );
+      [ this ]( const PlayerLoggedIn& logged_in ){ handle_player_logged_in( logged_in ); } );
 
   local_event_dispatcher.register_listener< PlayerLoggedOut >(
-      std::bind( &World::handle_player_logged_out, this, std::placeholders::_1 ) );
+      [ this ]( const PlayerLoggedOut& logged_out ){ handle_player_logged_out( logged_out ); } );
 
   the::ctci::Dispatcher& engine_dispatcher(
       the::ctci::service< yarrr::EngineDispatcher >() );
 
   engine_dispatcher.register_listener< yarrr::ObjectCreated >(
-      std::bind( &World::handle_object_created, this, std::placeholders::_1 ) );
+      [ this ]( const yarrr::ObjectCreated& created ){ handle_object_created( created ); } );
 
   engine_dispatcher.register_listener< yarrr::DeleteObject >(
-      std::bind( &World::handle_delete_object, this, std::placeholders::_1 ) );
+      [ this ]( const yarrr::DeleteObject& deleted ){ handle_delete_object( deleted ); } );
 
   engine_dispatcher.register_listener< yarrr::PlayerKilled >(
-      std::bind( &World::handle_player_killed, this, std::placeholders::_1 ) );
+      [ this ]( const yarrr::PlayerKilled& killed ){ handle_player_killed( killed ); } );
 
   add_command_handlers_to( m_command_handler, m_objects, m_players );
 }
