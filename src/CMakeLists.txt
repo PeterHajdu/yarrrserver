@@ -3,7 +3,6 @@ set(LIBRARY_SOURCE_FILES
   player.cpp
   world.cpp
   notifier.cpp
-  duck_hunt.cpp
   command_handler.cpp
   )
 

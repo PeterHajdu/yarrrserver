@@ -1,5 +1,4 @@
 #include "network_service.hpp"
-#include "duck_hunt.hpp"
 #include "player.hpp"
 #include "world.hpp"
 #include "notifier.hpp"
@@ -111,7 +110,6 @@ int main( int argc, char ** argv )
   yarrr::ObjectExporter object_exporter( object_container, yarrr::LuaEngine::model() );
   yarrrs::Player::Container players;
   yarrrs::World world( players, object_container );
-  yarrrs::DuckHunt duck_hunt( object_container, clock );
 
   the::time::FrequencyStabilizer< 10, the::time::Clock > frequency_stabilizer( clock );
   the::time::OnceIn< the::time::Clock > once_in_a_second( clock, the::time::Clock::ticks_per_second );
