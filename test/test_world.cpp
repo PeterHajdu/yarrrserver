@@ -9,6 +9,7 @@
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/delete_object.hpp>
+#include <yarrr/object_created.hpp>
 #include <yarrr/destruction_handlers.hpp>
 #include <yarrr/chat_message.hpp>
 #include <thectci/service_registry.hpp>

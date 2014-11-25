@@ -5,6 +5,7 @@
 #include <thectci/service_registry.hpp>
 
 #include <yarrr/object_factory.hpp>
+#include <yarrr/object_created.hpp>
 #include <yarrr/mission_factory.hpp>
 #include <yarrr/log.hpp>
 #include <yarrr/object_container.hpp>
