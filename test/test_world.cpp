@@ -96,13 +96,6 @@ Describe( a_world )
     AssertThat( objects->has_object_with_id( player->object_id() ), Equals( true ) );
   }
 
-  It ( creates_a_new_object_for_player_with_respawn_capabilities )
-  {
-    AssertThat(
-        yarrr::has_component< yarrr::RespawnWhenDestroyed>( objects->object_with_id( player->object_id() ) ),
-        Equals( true ) );
-  }
-
   It ( deletes_the_player_and_the_object_assigned_when_player_logged_out_arrives )
   {
     const yarrr::Object::Id deleted_ship( last_object_id_created );
@@ -153,18 +146,6 @@ Describe( a_world )
     AssertThat( objects->has_object_with_id( new_ship_id ), Equals( false ) );
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
     AssertThat( objects->has_object_with_id( new_ship_id ), Equals( true ) );
-  }
-
-  It ( adds_respawn_to_the_new_ship_of_a_killed_player )
-  {
-    engine_dispatch( yarrr::PlayerKilled( last_object_id_created ) );
-    yarrr::Object::Id new_ship_id{ last_object_id_created };
-
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
-
-    AssertThat(
-        yarrr::has_component< yarrr::RespawnWhenDestroyed>( objects->object_with_id( new_ship_id ) ),
-        Equals( true ) );
   }
 
   It ( handles_objects_created_by_the_engine )

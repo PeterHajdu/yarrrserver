@@ -29,7 +29,7 @@ create_player_ship( const std::string& type )
     return nullptr;
   }
 
-  new_ship->add_behavior( yarrr::ObjectBehavior::Pointer( new yarrr::RespawnWhenDestroyed() ) );
+  new_ship->add_behavior( yarrr::kill_player_when_destroyed() );
   return new_ship;
 }
 
