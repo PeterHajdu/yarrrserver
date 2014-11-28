@@ -19,7 +19,7 @@ Describe( a_player )
     finish_mission = false;
     mission.reset( new yarrr::Mission() );
     mission->add_objective( yarrr::Mission::Objective( "",
-          [ this ]( const std::string& ) -> yarrr::TaskState
+          [ this ]( yarrr::Mission& ) -> yarrr::TaskState
           {
               return finish_mission ?
                 yarrr::succeeded :
