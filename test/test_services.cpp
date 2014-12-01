@@ -44,6 +44,6 @@ namespace
   the::ctci::AutoServiceRegister< yarrr::MissionFactory, yarrr::MissionFactory >
     mission_factory_register;
 
-  the::model::OwningNodeList missions_owner( "missions", yarrr::LuaEngine::model() );
+  the::model::OwningNodeList missions_owner( "mission_contexts", yarrr::LuaEngine::model() );
 }
 

@@ -24,7 +24,7 @@ Player::Player(
   , m_players( players )
   , m_connection_wrapper( connection_wrapper )
   , m_current_object( nullptr )
-  , m_missions_model( "missions", yarrr::LuaEngine::model() )
+  , m_missions_model( "mission_contexts", yarrr::LuaEngine::model() )
   , m_missions( std::bind( &Player::handle_mission_finished, this, std::placeholders::_1 ) )
   , m_command_handler( command_handler )
 {

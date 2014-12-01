@@ -91,7 +91,7 @@ Describe( a_mission_command_handler )
   {
     connection->wrapper.dispatch( mission_request );
     AssertThat( yarrr::LuaEngine::model().assert_that(
-        the::model::index_lua_table( "missions", last_mission_id ) ),
+        the::model::index_lua_table( "mission_contexts", last_mission_id ) ),
         Equals( true ) );
   }
 

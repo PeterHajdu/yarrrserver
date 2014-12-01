@@ -92,13 +92,13 @@ Describe( a_player )
 
   It( stores_and_exports_started_missions )
   {
-    AssertThat( lua->assert_that( the::model::index_lua_table( "missions", std::to_string( mission_id ) )  ), Equals( true ) );
+    AssertThat( lua->assert_that( the::model::index_lua_table( mission_contexts, std::to_string( mission_id ) )  ), Equals( true ) );
   }
 
   It( exports_the_current_object_id )
   {
     AssertThat( lua->assert_equals( the::model::path_from( {
-          the::model::index_lua_table( "missions", std::to_string( mission_id ) ),
+          the::model::index_lua_table( mission_contexts, std::to_string( mission_id ) ),
           "character",
           "object_id" } ), std::to_string( ship->id() ) ), Equals( true ) );
   }
@@ -108,7 +108,7 @@ Describe( a_player )
     finish_mission = true;
     player->update_missions();
     AssertThat( lua->assert_that(
-          the::model::index_lua_table( "missions", std::to_string( mission_id ) ) ),
+          the::model::index_lua_table( mission_contexts, std::to_string( mission_id ) ) ),
           Equals( false ) );
   }
 
@@ -133,7 +133,7 @@ Describe( a_player )
     player->assign_object( new_ship );
     player->update_missions();
     AssertThat( lua->assert_equals( the::model::path_from( {
-          the::model::index_lua_table( "missions", std::to_string( mission_id ) ),
+          the::model::index_lua_table( mission_contexts, std::to_string( mission_id ) ),
           "character",
           "object_id" } ), std::to_string( new_ship.id() ) ), Equals( true ) );
   }
@@ -206,5 +206,6 @@ Describe( a_player )
   yarrr::Mission::Id mission_id;
 
   bool finish_mission;
+  const std::string mission_contexts{ "mission_contexts" };
 };
 
