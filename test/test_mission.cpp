@@ -5,6 +5,7 @@
 
 #include <yarrr/object_factory.hpp>
 #include <yarrr/mission_factory.hpp>
+#include <yarrr/mission_exporter.hpp>
 #include <yarrr/command.hpp>
 #include <yarrr/destruction_handlers.hpp>
 #include <yarrr/object_container.hpp>
@@ -91,7 +92,7 @@ Describe( a_mission_command_handler )
   {
     connection->wrapper.dispatch( mission_request );
     AssertThat( yarrr::LuaEngine::model().assert_that(
-        the::model::index_lua_table( "mission_contexts", last_mission_id ) ),
+        the::model::index_lua_table( yarrr::mission_contexts, last_mission_id ) ),
         Equals( true ) );
   }
 

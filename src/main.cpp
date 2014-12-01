@@ -10,6 +10,7 @@
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/log.hpp>
 #include <yarrr/object_exporter.hpp>
+#include <yarrr/mission_exporter.hpp>
 #include <yarrr/clock_exporter.hpp>
 
 #include <thetime/frequency_stabilizer.hpp>
@@ -87,7 +88,7 @@ create_notification_stream()
 
 int main( int argc, char ** argv )
 {
-  the::model::OwningNodeList missions_model( "mission_contexts", yarrr::LuaEngine::model() );
+  the::model::OwningNodeList missions_model( yarrr::mission_contexts, yarrr::LuaEngine::model() );
   parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );
   const std::string home_folder( std::string( getenv( "HOME" ) ) + "/.yarrrserver/" );
   the::conf::set( "lua_configuration_path", home_folder );
