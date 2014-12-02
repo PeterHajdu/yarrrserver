@@ -6,6 +6,7 @@
 
 #include <yarrr/object_factory.hpp>
 #include <yarrr/object_created.hpp>
+#include <yarrr/object_identity.hpp>
 #include <yarrr/mission_factory.hpp>
 #include <yarrr/log.hpp>
 #include <yarrr/object_container.hpp>
@@ -21,7 +22,7 @@ namespace
 {
 
 yarrr::Object::Pointer
-create_player_ship( const std::string& type )
+create_player_ship( const std::string& type, const std::string& player_name_as_captain )
 {
   yarrr::Object::Pointer new_ship( the::ctci::service< yarrr::ObjectFactory >().create_a( type ) );
   if ( !new_ship )
@@ -30,6 +31,7 @@ create_player_ship( const std::string& type )
   }
 
   new_ship->add_behavior( yarrr::kill_player_when_destroyed() );
+  new_ship->add_behavior( std::make_unique< yarrr::ObjectIdentity >( player_name_as_captain ) );
   return new_ship;
 }
 
@@ -102,7 +104,7 @@ add_command_handlers_to(
 
         const std::string requested_ship_type( command.parameters().at( 1 ) );
         thelog( yarrr::log::info )( "Ship type requested", requested_ship_type, "by", player.name );
-        yarrr::Object::Pointer new_ship( create_player_ship( requested_ship_type ) );
+        yarrr::Object::Pointer new_ship( create_player_ship( requested_ship_type, player.name ) );
 
         if ( !new_ship )
         {
@@ -219,7 +221,7 @@ World::handle_player_killed( const yarrr::PlayerKilled& player_killed ) const
 
   thelog( yarrr::log::debug )( "Player killed.", player->name );
 
-  yarrr::Object::Pointer new_object( create_player_ship( "ship" ) );
+  yarrr::Object::Pointer new_object( create_player_ship( "ship", player->name ) );
   if ( !new_object )
   {
     thelog( yarrr::log::error )( "Unable to create ship." );
@@ -277,7 +279,7 @@ World::handle_player_logged_in( const PlayerLoggedIn& login ) const
 {
   thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
 
-  yarrr::Object::Pointer new_object( create_player_ship( "ship" ) );
+  yarrr::Object::Pointer new_object( create_player_ship( "ship", login.name ) );
   if ( !new_object )
   {
     thelog( yarrr::log::error )( "Unable to create ship for new user:", login.name );

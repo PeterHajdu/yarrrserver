@@ -4,6 +4,7 @@
 #include "test_connection.hpp"
 #include "test_services.hpp"
 #include <yarrr/object_factory.hpp>
+#include <yarrr/object_identity.hpp>
 #include <yarrr/basic_behaviors.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/engine_dispatcher.hpp>
@@ -96,6 +97,13 @@ Describe( a_world )
     AssertThat( objects->has_object_with_id( player->object_id() ), Equals( true ) );
   }
 
+  It ( creates_objects_with_the_player_as_the_captain )
+  {
+    const yarrr::Object& object( objects->object_with_id( last_object_id_created ) );
+    AssertThat( yarrr::has_component< yarrr::ObjectIdentity >( object ), Equals( true ) );
+    AssertThat( yarrr::component_of< yarrr::ObjectIdentity >( object ).captain(), Equals( player_name ) );
+  }
+
   It ( deletes_the_player_and_the_object_assigned_when_player_logged_out_arrives )
   {
     const yarrr::Object::Id deleted_ship( last_object_id_created );
@@ -127,7 +135,7 @@ Describe( a_world )
     AssertThat( connection->has_entity< yarrr::DeleteObject >(), Equals( true ) );
   }
 
-  It ( assignes_a_new_object_to_a_killed_player )
+  It ( assigns_a_new_object_to_a_killed_player )
   {
     yarrr::Object::Id old_ship_id{ last_object_id_created };
     engine_dispatch( yarrr::PlayerKilled( old_ship_id ) );
