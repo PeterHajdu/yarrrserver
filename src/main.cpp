@@ -5,7 +5,7 @@
 
 #include <yarrr/lua_setup.hpp>
 #include <yarrr/object_container.hpp>
-#include <yarrr/basic_behaviors.hpp>
+#include <yarrr/timer_update.hpp>
 #include <yarrr/resources.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
 #include <yarrr/log.hpp>
