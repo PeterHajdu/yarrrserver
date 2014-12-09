@@ -91,10 +91,12 @@ Player::assign_object( yarrr::Object& object )
 void
 Player::refresh_mission_models()
 {
+  thelog( yarrr::log::debug )( "Refreshing mission models." );
   m_missions_model.clear();
   const yarrr::Object::Id current_object( object_id() );
   for ( const auto& mission : m_missions.missions() )
   {
+    thelog( yarrr::log::debug )( "Refreshing mission model:", mission->id() );
     add_mission_model_of( *mission, current_object );
   }
 }
@@ -141,6 +143,13 @@ broadcast( const Player::Container& players, const yarrr::Entity& entity )
   {
     player.second->send( yarrr::Data( message ) );
   }
+}
+
+
+void
+Player::player_killed()
+{
+  m_missions.fail_missions();
 }
 
 }

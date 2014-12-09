@@ -1,3 +1,4 @@
+#include <yarrr/log.hpp>
 #include <igloo/igloo.h>
 
 using namespace igloo;
@@ -40,6 +41,7 @@ bool hasArg(const T& argv, const std::string & needle)
 
 int main(int argc, const char* argv[])
 {
+  the::log::Logger::set_loglevel( yarrr::log::insane );
   DefaultTestResultsOutput output;
   TestRunner runner(output);
 

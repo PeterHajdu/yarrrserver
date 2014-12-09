@@ -42,6 +42,7 @@ class Player
 
     void start_mission( yarrr::Mission::Pointer&& );
     void update_missions();
+    void player_killed();
 
   private:
     void refresh_mission_models();

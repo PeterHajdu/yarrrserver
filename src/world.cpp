@@ -228,6 +228,7 @@ World::handle_player_killed( const yarrr::PlayerKilled& player_killed ) const
     return;
   }
 
+  player->player_killed();
   player->assign_object( *new_object );
   add_object( std::move( new_object ) );
   delete_object( player_killed.object_id );

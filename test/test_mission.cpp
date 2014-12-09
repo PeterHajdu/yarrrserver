@@ -4,6 +4,7 @@
 #include "test_connection.hpp"
 
 #include <yarrr/object_factory.hpp>
+#include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/mission_factory.hpp>
 #include <yarrr/mission_exporter.hpp>
 #include <yarrr/command.hpp>
@@ -23,11 +24,18 @@ Describe( a_mission_command_handler )
   void add_ship_factory()
   {
     the::ctci::service< yarrr::ObjectFactory >().register_creator(
-        "ship", [](){ return yarrr::Object::create(); } );
+        "ship", [ this ]()
+        {
+          auto new_ship( yarrr::Object::create() );
+          player_ship_id = new_ship->id();
+          return new_ship;
+        } );
   }
 
   void create_world()
   {
+    engine_dispatcher = &the::ctci::service< yarrr::EngineDispatcher >();
+    engine_dispatcher->clear();
     add_ship_factory();
     the::ctci::service< LocalEventDispatcher >().dispatcher.clear();
     players.clear();
@@ -96,6 +104,15 @@ Describe( a_mission_command_handler )
         Equals( true ) );
   }
 
+  It ( marks_killed_players_missions_failed )
+  {
+    connection->wrapper.dispatch( mission_request );
+    engine_dispatcher->dispatch( yarrr::PlayerKilled( player_ship_id ) );
+    AssertThat( yarrr::LuaEngine::model().assert_that(
+        the::model::index_lua_table( yarrr::mission_contexts, last_mission_id ) ),
+        Equals( false ) );
+  }
+
   It ( sends_error_message_if_the_mission_is_unknown )
   {
     connection->wrapper.dispatch( mission_request_with_unknown_mission_name );
@@ -156,5 +173,7 @@ Describe( a_mission_command_handler )
 
   std::string last_mission_id;
   bool was_mission_created;
+  yarrr::Object::Id player_ship_id;
+  the::ctci::Dispatcher* engine_dispatcher;
 };
 
