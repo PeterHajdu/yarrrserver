@@ -49,7 +49,7 @@ Describe( a_mission_command_handler )
   void check_help_message()
   {
     AssertThat( connection->has_entity< yarrr::ChatMessage >(), Equals( true ) );
-    const auto& message( connection->get_entity< yarrr::ChatMessage >()->message() );
+    const auto message( connection->get_entity< yarrr::ChatMessage >()->message() );
     AssertThat( message, Contains( "/mission list" ) );
     AssertThat( message, Contains( "/mission request <mission name>" ) );
   }
@@ -147,7 +147,7 @@ Describe( a_mission_command_handler )
     connection->wrapper.dispatch( mission_list_command );
     AssertThat( connection->has_entity< yarrr::ChatMessage >(), Equals( true ) );
 
-    const auto& message( connection->get_entity< yarrr::ChatMessage >()->message() );
+    const auto message( connection->get_entity< yarrr::ChatMessage >()->message() );
     AssertThat( message, Contains( "Registered missions:" ) );
     AssertThat( message, Contains( mission_name ) );
   }
