@@ -59,7 +59,7 @@ Describe( a_ship_request )
   void check_help_message()
   {
     AssertThat( connection->has_entity< yarrr::ChatMessage >(), Equals( true ) );
-    const auto& message( connection->get_entity< yarrr::ChatMessage >()->message() );
+    const auto message( connection->get_entity< yarrr::ChatMessage >()->message() );
     AssertThat( message, Contains( "/ship list" ) );
     AssertThat( message, Contains( "/ship request <object type>" ) );
   }
@@ -157,7 +157,7 @@ Describe( a_ship_request )
   It ( can_send_a_list_of_the_registered_object_types )
   {
     connection->wrapper.dispatch( list_command );
-    const std::string& message{ connection->get_entity< yarrr::ChatMessage >()->message() };
+    const std::string message{ connection->get_entity< yarrr::ChatMessage >()->message() };
     AssertThat( message, Contains( "Registered object types:" ) );
     AssertThat( message, Contains( giant_ship ) );
     AssertThat( message, Contains( basic_ship ) );
