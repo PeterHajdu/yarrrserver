@@ -1,7 +1,6 @@
-#include "../src/world.hpp"
 #include "../src/player.hpp"
 #include "../src/local_event_dispatcher.hpp"
-#include "test_connection.hpp"
+#include "test_services.hpp"
 
 #include <yarrr/object_factory.hpp>
 #include <yarrr/engine_dispatcher.hpp>
@@ -34,15 +33,7 @@ Describe( a_mission_command_handler )
 
   void create_world()
   {
-    engine_dispatcher = &the::ctci::service< yarrr::EngineDispatcher >();
-    engine_dispatcher->clear();
     add_ship_factory();
-    the::ctci::service< LocalEventDispatcher >().dispatcher.clear();
-    players.clear();
-    objects.reset( new yarrr::ObjectContainer() );
-    connection.reset( new test::Connection() );
-    connection_id = connection->connection.id;
-    world.reset( new yarrrs::World( players, *objects ) );
   }
 
 
@@ -56,12 +47,10 @@ Describe( a_mission_command_handler )
 
   void log_in_player()
   {
-    the::ctci::service< LocalEventDispatcher >().dispatcher.dispatch( yarrrs::PlayerLoggedIn(
-          connection->wrapper, connection->connection.id, player_name ) );
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
+    player_bundle = services->log_in_player( "Kilgore Trout" );
+    connection = &player_bundle->connection;
     check_help_message();
     connection->flush_connection();
-    player = std::begin( players )->second.get();
   }
 
   void set_up_mission_factory()
@@ -80,14 +69,10 @@ Describe( a_mission_command_handler )
 
   void SetUp()
   {
+    services = std::make_unique< test::Services >();
     create_world();
     log_in_player();
     set_up_mission_factory();
-  }
-
-  void TearDown()
-  {
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
   }
 
   It ( creates_the_requested_mission )
@@ -99,7 +84,7 @@ Describe( a_mission_command_handler )
   It ( starts_the_created_mission )
   {
     connection->wrapper.dispatch( mission_request );
-    AssertThat( yarrr::LuaEngine::model().assert_that(
+    AssertThat( services->lua.assert_that(
         the::model::index_lua_table( yarrr::mission_contexts, last_mission_id ) ),
         Equals( true ) );
   }
@@ -107,8 +92,8 @@ Describe( a_mission_command_handler )
   It ( marks_killed_players_missions_failed )
   {
     connection->wrapper.dispatch( mission_request );
-    engine_dispatcher->dispatch( yarrr::PlayerKilled( player_ship_id ) );
-    AssertThat( yarrr::LuaEngine::model().assert_that(
+    services->engine_dispatcher.dispatch( yarrr::PlayerKilled( player_ship_id ) );
+    AssertThat( services->lua.assert_that(
         the::model::index_lua_table( yarrr::mission_contexts, last_mission_id ) ),
         Equals( false ) );
   }
@@ -152,13 +137,8 @@ Describe( a_mission_command_handler )
     AssertThat( message, Contains( mission_name ) );
   }
 
-  std::unique_ptr< yarrrs::World > world;
-  std::unique_ptr< yarrr::ObjectContainer > objects;
-  std::unique_ptr< test::Connection > connection;
-  yarrrs::Player::Container players;
-  const std::string player_name{ "Kilgor Trout" };
-  int connection_id;
-  yarrrs::Player* player;
+  std::unique_ptr< test::Services::PlayerBundle > player_bundle;
+  test::Connection* connection;
 
   const std::string mission_name{ "test_mission" };
   const yarrr::Command mission_request{ { "mission", "request", mission_name } };
@@ -168,12 +148,11 @@ Describe( a_mission_command_handler )
   const yarrr::Command mission_request_without_mission_name{ { "mission", "request" } };
   const yarrr::Command mission_command_with_unknown_subcommand{ { "mission", "unknown subcommand", "sldkfj" } };
   const yarrr::Command mission_command_without_subcommand{ { "mission", } };
-
   const yarrr::Command mission_list_command{ { "mission", "list" } };
 
   std::string last_mission_id;
   bool was_mission_created;
   yarrr::Object::Id player_ship_id;
-  the::ctci::Dispatcher* engine_dispatcher;
+  std::unique_ptr< test::Services > services;
 };
 

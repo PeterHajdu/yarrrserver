@@ -2,6 +2,7 @@
 #include "../src/player.hpp"
 #include "../src/local_event_dispatcher.hpp"
 #include "test_connection.hpp"
+#include "test_services.hpp"
 
 #include <yarrr/object_factory.hpp>
 #include <yarrr/command.hpp>
@@ -64,35 +65,23 @@ Describe( a_ship_request )
     AssertThat( message, Contains( "/ship request <object type>" ) );
   }
 
+
   void SetUp()
   {
-    the::ctci::service< LocalEventDispatcher >().dispatcher.clear();
-    players.clear();
-    objects.reset( new yarrr::ObjectContainer() );
-    connection.reset( new test::Connection() );
-    connection_id = connection->connection.id;
-
-    world.reset( new yarrrs::World( players, *objects ) );
-    last_objects_id = 0;
-    last_objects_type = "";
+    services = std::make_unique< test::Services >();
     add_ship_factory( basic_ship );
     add_ship_factory( giant_ship );
 
-    the::ctci::service< LocalEventDispatcher >().dispatcher.dispatch( yarrrs::PlayerLoggedIn(
-          connection->wrapper, connection->connection.id, player_name ) );
-
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
+    last_objects_id = 0;
+    last_objects_type = "";
+    player_bundle = services->log_in_player( "Kilgore Trout" );
+    connection = &player_bundle->connection;
+    connection_id = connection->connection.id;
     check_help_message();
-
     connection->flush_connection();
+    player = &player_bundle->player;
 
-    player = std::begin( players )->second.get();
     AssertThat( last_objects_id, Equals( player->object_id() ) );
-  }
-
-  void TearDown()
-  {
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
   }
 
   It ( creates_a_ship_of_the_requested_type )
@@ -104,7 +93,7 @@ Describe( a_ship_request )
   It ( adds_the_new_object_to_the_container )
   {
     connection->wrapper.dispatch( giant_request );
-    AssertThat( objects->has_object_with_id( last_objects_id ), Equals( true ) );
+    AssertThat( services->objects.has_object_with_id( last_objects_id ), Equals( true ) );
   }
 
 
@@ -112,7 +101,7 @@ Describe( a_ship_request )
   {
     const yarrr::Object::Id old_ship_id( player->object_id() );
     connection->wrapper.dispatch( giant_request );
-    AssertThat( objects->has_object_with_id( old_ship_id ), Equals( false ) );
+    AssertThat( services->objects.has_object_with_id( old_ship_id ), Equals( false ) );
     AssertThat( connection->has_entity< yarrr::DeleteObject >(), Equals( true ) );
     AssertThat( connection->get_entity< yarrr::DeleteObject >()->object_id(), Equals( old_ship_id ) );
   }
@@ -130,7 +119,7 @@ Describe( a_ship_request )
     const yarrr::Object::Id old_ship_id( player->object_id() );
     connection->flush_connection();
     connection->wrapper.dispatch( unknown_ship_request );
-    AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
+    AssertThat( services->objects.has_object_with_id( old_ship_id ), Equals( true ) );
     AssertThat( player->object_id(), Equals( old_ship_id ) );
     AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Unknown ship type" ) );
     AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( unknown_ship_name ) );
@@ -140,7 +129,7 @@ Describe( a_ship_request )
   {
     const yarrr::Object::Id old_ship_id( player->object_id() );
     connection->wrapper.dispatch( ship_request_without_type );
-    AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
+    AssertThat( services->objects.has_object_with_id( old_ship_id ), Equals( true ) );
     AssertThat( player->object_id(), Equals( old_ship_id ) );
     AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Please define ship type." ) );
   }
@@ -149,7 +138,7 @@ Describe( a_ship_request )
   {
     const yarrr::Object::Id old_ship_id( player->object_id() );
     connection->wrapper.dispatch( ship_command_without_subcommand );
-    AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
+    AssertThat( services->objects.has_object_with_id( old_ship_id ), Equals( true ) );
     AssertThat( player->object_id(), Equals( old_ship_id ) );
     AssertThat( connection->get_entity< yarrr::ChatMessage >()->message(), Contains( "Invalid ship command." ) );
   }
@@ -163,11 +152,8 @@ Describe( a_ship_request )
     AssertThat( message, Contains( basic_ship ) );
   }
 
-  std::unique_ptr< yarrrs::World > world;
-  std::unique_ptr< yarrr::ObjectContainer > objects;
-  std::unique_ptr< test::Connection > connection;
-  yarrrs::Player::Container players;
-  const std::string player_name{ "Kilgor Trout" };
+  std::unique_ptr< test::Services::PlayerBundle > player_bundle;
+  test::Connection* connection;
   int connection_id;
   yarrrs::Player* player;
 
@@ -183,5 +169,6 @@ Describe( a_ship_request )
   const yarrr::Command ship_command_without_subcommand{ { "ship" } };
 
   const yarrr::Command list_command{ { "ship", "list" } };
+  std::unique_ptr< test::Services > services;
 };
 

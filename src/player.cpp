@@ -24,7 +24,7 @@ Player::Player(
   , m_players( players )
   , m_connection_wrapper( connection_wrapper )
   , m_current_object( nullptr )
-  , m_missions_model( yarrr::mission_contexts, yarrr::LuaEngine::model() )
+  , m_mission_contexts( the::ctci::service< yarrrs::Models >().mission_contexts )
   , m_missions( std::bind( &Player::handle_mission_finished, this, std::placeholders::_1 ) )
   , m_command_handler( command_handler )
 {
@@ -92,7 +92,7 @@ void
 Player::refresh_mission_models()
 {
   thelog( yarrr::log::debug )( "Refreshing mission models." );
-  m_missions_model.clear();
+  m_own_mission_contexts.clear();
   const yarrr::Object::Id current_object( object_id() );
   for ( const auto& mission : m_missions.missions() )
   {
@@ -112,10 +112,10 @@ Player::start_mission( yarrr::Mission::Pointer&& mission )
 void
 Player::add_mission_model_of( const yarrr::Mission& mission, const yarrr::Object::Id& current_object )
 {
-  m_missions_model.add_node( the::model::NodeBase::Pointer( new yarrr::MissionModel(
+  m_own_mission_contexts[ mission.id() ] = std::make_unique< yarrr::MissionModel >(
           std::to_string( mission.id() ),
           std::to_string( current_object ),
-          m_missions_model ) ) );
+          m_mission_contexts );
 }
 
 void
@@ -132,7 +132,7 @@ void
 Player::handle_mission_finished( const yarrr::Mission& mission )
 {
   send( mission.serialize() );
-  m_missions_model.delete_node( std::to_string( mission.id() ) );
+  m_own_mission_contexts.erase( mission.id() );
 }
 
 void

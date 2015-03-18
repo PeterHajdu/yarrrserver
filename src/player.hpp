@@ -1,10 +1,12 @@
 #pragma once
 
 #include "network_service.hpp"
+#include "models.hpp"
 #include <memory>
 #include <unordered_map>
 #include <yarrr/mission.hpp>
 #include <yarrr/mission_container.hpp>
+#include <yarrr/mission_exporter.hpp>
 #include <themodel/node_list.hpp>
 
 namespace yarrr
@@ -54,9 +56,12 @@ class Player
     const Container& m_players;
     ConnectionWrapper& m_connection_wrapper;
     yarrr::Object* m_current_object;
-    the::model::NodeList< the::model::Reference > m_missions_model;
+    Models::MissionContexts& m_mission_contexts;
     yarrr::MissionContainer m_missions;
     const CommandHandler& m_command_handler;
+
+    using MissionModelContainer = std::unordered_map< yarrr::Mission::Id, std::unique_ptr< yarrr::MissionModel > >;
+    MissionModelContainer m_own_mission_contexts;
 };
 
 void broadcast( const Player::Container& players, const yarrr::Entity& entity );

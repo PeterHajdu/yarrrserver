@@ -4,6 +4,7 @@ set(LIBRARY_SOURCE_FILES
   world.cpp
   notifier.cpp
   command_handler.cpp
+  models.cpp
   )
 
 set(EXECUTABLE_SOURCE_FILES

@@ -2,6 +2,7 @@
 #include "player.hpp"
 #include "world.hpp"
 #include "notifier.hpp"
+#include "models.hpp"
 
 #include <yarrr/lua_setup.hpp>
 #include <yarrr/object_container.hpp>
@@ -88,7 +89,8 @@ create_notification_stream()
 
 int main( int argc, char ** argv )
 {
-  the::model::OwningNodeList missions_model( yarrr::mission_contexts, yarrr::LuaEngine::model() );
+  the::ctci::AutoServiceRegister< yarrrs::Models, yarrrs::Models > models( yarrr::LuaEngine::model() );
+
   parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );
   const std::string home_folder( std::string( getenv( "HOME" ) ) + "/.yarrrserver/" );
   the::conf::set( "lua_configuration_path", home_folder );

@@ -22,21 +22,7 @@ Describe( a_world )
 {
   void cleanup()
   {
-    engine_dispatcher = &the::ctci::service< yarrr::EngineDispatcher >();
-    engine_dispatcher->clear();
-    local_event_dispatcher = &the::ctci::service< LocalEventDispatcher >().dispatcher;
-    local_event_dispatcher->clear();
-
-    players.clear();
-    objects.reset( new yarrr::ObjectContainer() );
-    connection.reset( new test::Connection() );
-    connection_id = connection->connection.id;
-    world.reset( new yarrrs::World( players, *objects ) );
-  }
-
-  void log_in_for_connection( test::Connection& connection )
-  {
-    local_dispatch( yarrrs::PlayerLoggedIn( connection.wrapper, connection.connection.id, player_name ) );
+    services = std::make_unique< test::Services >();
   }
 
   void SetUp()
@@ -51,28 +37,25 @@ Describe( a_world )
           return yarrr::Object::Pointer( new_ship );
         });
 
-    log_in_for_connection( *connection );
+    player_bundle = services->log_in_player( player_name );
+    connection = &player_bundle->connection;
     connection->flush_connection();
+    connection_id = connection->connection.id;
 
-    AssertThat( players.find( connection_id )!=std::end( players ), Equals( true ) );
-    player = players[ connection_id ].get();
-  }
-
-  void TearDown()
-  {
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
+    AssertThat( services->players.find( connection_id )!=std::end( services->players ), Equals( true ) );
+    player = services->players[ connection_id ].get();
   }
 
   template < typename Event >
   void local_dispatch( const Event& event )
   {
-    local_event_dispatcher->dispatch( event );
+    services->local_event_dispatcher.dispatcher.dispatch( event );
   }
 
   template < typename Event >
   void engine_dispatch( const Event& event )
   {
-    engine_dispatcher->dispatch( event );
+    services->engine_dispatcher.dispatch( event );
   }
 
   It ( does_not_create_anything_if_ship_can_not_be_created )
@@ -82,24 +65,24 @@ Describe( a_world )
         "ship", [ this ]() { return yarrr::Object::Pointer( nullptr ); });
 
     local_dispatch( yarrrs::PlayerLoggedIn( connection->wrapper, connection->connection.id, player_name ) );
-    AssertThat( players, IsEmpty() );
-    AssertThat( *objects, IsEmpty() );
+    AssertThat( services->players, IsEmpty() );
+    AssertThat( services->objects, IsEmpty() );
   }
 
   It ( creates_a_new_player_with_the_given_id_and_name_if_player_logged_in_event_arrives )
   {
-    AssertThat( players[ connection_id ]->name, Equals( player_name ) );
+    AssertThat( services->players[ connection_id ]->name, Equals( player_name ) );
   }
 
   It ( creates_a_new_object_and_assigns_it_if_player_logged_in_event_arrives )
   {
     AssertThat( player->object_id(), Equals( last_object_id_created ) );
-    AssertThat( objects->has_object_with_id( player->object_id() ), Equals( true ) );
+    AssertThat( services->objects.has_object_with_id( player->object_id() ), Equals( true ) );
   }
 
   It ( creates_objects_with_the_player_as_the_captain )
   {
-    const yarrr::Object& object( objects->object_with_id( last_object_id_created ) );
+    const yarrr::Object& object( services->objects.object_with_id( last_object_id_created ) );
     AssertThat( yarrr::has_component< yarrr::ObjectIdentity >( object ), Equals( true ) );
     AssertThat( yarrr::component_of< yarrr::ObjectIdentity >( object ).captain(), Equals( player_name ) );
   }
@@ -107,30 +90,31 @@ Describe( a_world )
   It ( deletes_the_player_and_the_object_assigned_when_player_logged_out_arrives )
   {
     const yarrr::Object::Id deleted_ship( last_object_id_created );
-    another_connection.reset( new test::Connection() );
-    log_in_for_connection( *another_connection );
+
+    auto another_player( services->log_in_player( "asdf" ) );
+    test::Connection& another_connection( another_player->connection );
 
     local_dispatch( yarrrs::PlayerLoggedOut( connection_id ) );
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
-    AssertThat( players.find( connection_id ) == players.end(), Equals( true ) );
-    AssertThat( another_connection->get_entity< yarrr::DeleteObject >()->object_id(), Equals( deleted_ship ) );
-    AssertThat( objects->has_object_with_id( deleted_ship ), Equals( false ) );
+    services->main_thread_callback_queue.process_callbacks();
+    AssertThat( services->players.find( connection_id ) == services->players.end(), Equals( true ) );
+    AssertThat( another_connection.get_entity< yarrr::DeleteObject >()->object_id(), Equals( deleted_ship ) );
+    AssertThat( services->objects.has_object_with_id( deleted_ship ), Equals( false ) );
   }
 
   It ( handles_invalid_logged_out_events )
   {
     local_dispatch( yarrrs::PlayerLoggedOut( last_object_id_created + 1 ) );
-    AssertThat( players, HasLength( 1 ) );
-    AssertThat( *objects, HasLength( 1 ) );
+    AssertThat( services->players, HasLength( 1 ) );
+    AssertThat( services->objects, HasLength( 1 ) );
   }
 
   It ( deletes_the_old_ship_of_a_killed_player )
   {
     yarrr::Object::Id old_ship_id{ last_object_id_created };
     engine_dispatch( yarrr::PlayerKilled( old_ship_id ) );
-    AssertThat( objects->has_object_with_id( old_ship_id ), Equals( true ) );
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
-    AssertThat( objects->has_object_with_id( old_ship_id ), Equals( false ) );
+    AssertThat( services->objects.has_object_with_id( old_ship_id ), Equals( true ) );
+    services->main_thread_callback_queue.process_callbacks();
+    AssertThat( services->objects.has_object_with_id( old_ship_id ), Equals( false ) );
 
     AssertThat( connection->has_entity< yarrr::DeleteObject >(), Equals( true ) );
   }
@@ -151,42 +135,43 @@ Describe( a_world )
     engine_dispatch( yarrr::PlayerKilled( last_object_id_created ) );
     yarrr::Object::Id new_ship_id{ last_object_id_created };
 
-    AssertThat( objects->has_object_with_id( new_ship_id ), Equals( false ) );
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
-    AssertThat( objects->has_object_with_id( new_ship_id ), Equals( true ) );
+    AssertThat( services->objects.has_object_with_id( new_ship_id ), Equals( false ) );
+    services->main_thread_callback_queue.process_callbacks();
+    AssertThat( services->objects.has_object_with_id( new_ship_id ), Equals( true ) );
   }
 
   It ( handles_objects_created_by_the_engine )
   {
     yarrr::Object* new_object( new yarrr::Object() );
     engine_dispatch( yarrr::ObjectCreated( yarrr::Object::Pointer( new_object ) ) );
-    AssertThat( objects->has_object_with_id( new_object->id() ), Equals( false ) );
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
-    AssertThat( objects->has_object_with_id( new_object->id() ), Equals( true ) );
+    AssertThat( services->objects.has_object_with_id( new_object->id() ), Equals( false ) );
+    services->main_thread_callback_queue.process_callbacks();
+    AssertThat( services->objects.has_object_with_id( new_object->id() ), Equals( true ) );
   }
 
   It ( handles_delete_object_requested_by_the_engine )
   {
     engine_dispatch( yarrr::DeleteObject( last_object_id_created ) );
-    AssertThat( objects->has_object_with_id( last_object_id_created ), Equals( true ) );
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
-    AssertThat( objects->has_object_with_id( last_object_id_created ), Equals( false ) );
+    AssertThat( services->objects.has_object_with_id( last_object_id_created ), Equals( true ) );
+    services->main_thread_callback_queue.process_callbacks();
+    AssertThat( services->objects.has_object_with_id( last_object_id_created ), Equals( false ) );
   }
 
   It ( sends_delete_object_to_all_registered_players )
   {
-    another_connection.reset( new test::Connection() );
-    log_in_for_connection( *another_connection );
+    auto another_player( services->log_in_player( "asdf" ) );
+    test::Connection& another_connection( another_player->connection );
+
     connection->flush_connection();
-    another_connection->flush_connection();
+    another_connection.flush_connection();
 
     engine_dispatch( yarrr::DeleteObject( last_object_id_created ) );
 
     AssertThat( connection->has_no_data(), Equals( true ) );
-    AssertThat( another_connection->has_no_data(), Equals( true ) );
-    the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
+    AssertThat( another_connection.has_no_data(), Equals( true ) );
+    services->main_thread_callback_queue.process_callbacks();
     AssertThat( connection->has_no_data(), Equals( false ) );
-    AssertThat( another_connection->has_no_data(), Equals( false ) );
+    AssertThat( another_connection.has_no_data(), Equals( false ) );
 
     AssertThat( connection->get_entity< yarrr::DeleteObject >()->object_id(), Equals( last_object_id_created ) );
   }
@@ -194,36 +179,24 @@ Describe( a_world )
 
   It ( notifies_players_when_someone_logs_in )
   {
-    another_connection.reset( new test::Connection() );
-    log_in_for_connection( *another_connection );
+    const std::string new_player_name( "asdf" );
+    auto another_player( services->log_in_player( new_player_name ) );
+    test::Connection& another_connection( another_player->connection );
 
     AssertThat( connection->has_no_data(), Equals( false ) );
-    AssertThat( another_connection->has_no_data(), Equals( false ) );
+    AssertThat( another_connection.has_no_data(), Equals( false ) );
 
     auto chat_message( connection->get_entity< yarrr::ChatMessage >() );
-    AssertThat( chat_message->message(), Contains( player_name ) );
+    AssertThat( chat_message->message(), Contains( new_player_name ) );
   }
 
-  It ( sends_notification_when_someone_logs_in )
-  {
-    auto& stream( test::get_notification_stream() );
-    stream.str( "" );
-    another_connection.reset( new test::Connection() );
-    log_in_for_connection( *another_connection );
-    AssertThat( stream.str(), !IsEmpty() );
-    AssertThat( stream.str(), Contains( player_name ) );
-  }
+  std::unique_ptr< test::Services::PlayerBundle > player_bundle;
+  test::Connection* connection;
 
-  std::unique_ptr< yarrrs::World > world;
-  std::unique_ptr< yarrr::ObjectContainer > objects;
-  std::unique_ptr< test::Connection > connection;
-  std::unique_ptr< test::Connection > another_connection;
-  yarrrs::Player::Container players;
   const std::string player_name{ "Kilgor Trout" };
   int connection_id;
   yarrrs::Player* player;
-  the::ctci::Dispatcher* local_event_dispatcher;
-  the::ctci::Dispatcher* engine_dispatcher;
   yarrr::Object::Id last_object_id_created;
+  std::unique_ptr< test::Services > services;
 };
 
