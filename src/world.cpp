@@ -244,6 +244,7 @@ World::handle_delete_object( const yarrr::DeleteObject& del_object ) const
 void
 World::add_object( yarrr::Object::Pointer&& object_ptr ) const
 {
+  //todo: fix this abomination
   yarrr::Object* object( object_ptr.release() );
   the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
       [ this, object ]()
@@ -267,6 +268,7 @@ World::delete_object( yarrr::Object::Id id ) const
 void
 World::handle_object_created( const yarrr::ObjectCreated& object_created ) const
 {
+  //todo: fix this abomination
   yarrr::Object* object( object_created.object.release() );
   the::ctci::service< yarrr::MainThreadCallbackQueue >().push_back(
       [ this, object ]()

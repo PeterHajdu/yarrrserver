@@ -34,6 +34,11 @@ class Services
     yarrrs::CommandHandler command_handler;
     yarrrs::World world;
 
+    ~Services()
+    {
+      main_thread_callback_queue.process_callbacks();
+    }
+
     class PlayerBundle
     {
       public:
