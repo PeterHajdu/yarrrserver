@@ -30,3 +30,8 @@ Feature: Malicious traffic robustness
     When I stop the client
     Then the server should be running
 
+  Scenario: more user logs in
+    Given a running server
+    When I start 2 clients
+    Then the server should be running
+

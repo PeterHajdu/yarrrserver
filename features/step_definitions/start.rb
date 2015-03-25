@@ -55,6 +55,14 @@ Given(/^a running client$/) do
   step "I start a client"
 end
 
+When(/^I start (\d+) clients$/) do | number_of_clients |
+  @yarrr_clients = []
+  number_of_clients.to_i.times do
+    step "I start a client"
+    @yarrr_clients << @yarrr_client
+  end
+end
+
 Then(/^I should receive a notification containing "(.*?)"$/) do | notification_message |
   @notification_message = @notification_file.gets
   expect( @notification_message ).to match( /#{notification_message}/ )
