@@ -19,7 +19,8 @@
 #include <thetime/once_in.hpp>
 #include <thectci/service_registry.hpp>
 #include <theconf/configuration.hpp>
-#include <themodel/node_list.hpp>
+#include <themodel/zmq_remote.hpp>
+#include <themodel/json_exporter.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -28,6 +29,21 @@
 
 namespace
 {
+
+std::unique_ptr< the::model::ZmqRemote >
+create_remote_model_endpoint_if_needed()
+{
+  const auto remote_model_endpoint_key( "remote-model-endpoint" );
+  if ( !the::conf::has( remote_model_endpoint_key ) )
+  {
+    return nullptr;
+  }
+
+  return std::make_unique< the::model::ZmqRemote >(
+    the::conf::get<std::string>( remote_model_endpoint_key ).c_str(),
+    yarrr::LuaEngine::model(),
+    the::model::export_json );
+}
 
 void
 send_update_messages_from(
@@ -124,6 +140,8 @@ int main( int argc, char ** argv )
         }
       } );
 
+  std::unique_ptr< the::model::ZmqRemote > remote_model_access( create_remote_model_endpoint_if_needed() );
+
   while ( true )
   {
     network_service.process_network_events();
@@ -134,6 +152,10 @@ int main( int argc, char ** argv )
     update_missions_once_per_second.tick();
     frequency_stabilizer.stabilize();
     the::ctci::service< yarrr::MainThreadCallbackQueue >().process_callbacks();
+    if ( remote_model_access )
+    {
+      remote_model_access->handle_requests();
+    }
   }
 
   return 0;
