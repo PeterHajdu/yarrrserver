@@ -24,3 +24,9 @@ Feature: Malicious traffic robustness
     Then the connection should be closed
     And the server should be running
 
+  Scenario: user logs in and out
+    Given a running server
+    And a running client
+    When I stop the client
+    Then the server should be running
+

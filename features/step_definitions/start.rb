@@ -1,3 +1,4 @@
+DEFAULT_PORT = 21346
 
 When(/^I start the server with command line parameter (.*)$/) do | parameter |
   home_folder = ENV['HOME']
@@ -16,7 +17,7 @@ When(/^I start the server without any command line parameter$/) do
 end
 
 Given(/^a running server$/) do
-  @server_port = 21346
+  @server_port = DEFAULT_PORT
   step "I start the server with command line parameter --port #{@server_port} --notify #{@notification_file_path}"
 end
 
@@ -42,6 +43,16 @@ When(/^I start a client$/) do
     "yarrrclient --text --server localhost:#{@server_port}" )
   @yarrr_client.start
   sleep 1.0
+  expect( @yarrr_client.is_running ).to be true
+end
+
+When(/^I stop the client$/) do
+  @yarrr_client.kill
+  sleep 1.0
+end
+
+Given(/^a running client$/) do
+  step "I start a client"
 end
 
 Then(/^I should receive a notification containing "(.*?)"$/) do | notification_message |
