@@ -319,11 +319,14 @@ World::handle_player_logged_out( const PlayerLoggedOut& logout ) const
     thelog( yarrr::log::warning )( "Unknown player logged out." );
     return;
   }
-  thelog( yarrr::log::warning )( "Deleting player and object.", player->second->object_id(), player->second->name );
-  yarrrs::broadcast( m_players, yarrr::ChatMessage( "Player logged out: " + player->second->name, "server" ) );
 
-  delete_object( player->second->object_id() );
+  const auto player_name( player->second->name );
+  const auto object_id( player->second->object_id() );
   m_players.erase( logout.id );
+
+  thelog( yarrr::log::warning )( "Deleting player and object.", object_id, player_name );
+  yarrrs::broadcast( m_players, yarrr::ChatMessage( "Player logged out: " + player_name, "server" ) );
+  delete_object( object_id );
 }
 
 
