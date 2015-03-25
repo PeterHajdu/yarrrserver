@@ -1,3 +1,5 @@
+require 'json'
+
 class ModelExtractor
 
   def initialize( endpoint )
@@ -10,7 +12,7 @@ class ModelExtractor
       raise "Unable to extract model."
     end
 
-    return response
+    return JSON.parse( response )
   end
 
 end
