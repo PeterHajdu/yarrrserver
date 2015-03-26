@@ -1,8 +1,9 @@
 #include "network_service.hpp"
 #include "local_event_dispatcher.hpp"
+#include "db.hpp"
 
 #include <yarrr/connection_wrapper.hpp>
-#include <yarrr/login.hpp>
+#include <yarrr/command.hpp>
 #include <yarrr/callback_queue.hpp>
 #include <yarrr/clock_synchronizer.hpp>
 #include <yarrr/log.hpp>
@@ -15,31 +16,6 @@
 namespace yarrrs
 {
 
-LoginHandler::LoginHandler( ConnectionWrapper& connection_wrapper )
-  : m_dispatcher()
-  , m_connection_wrapper( connection_wrapper )
-  , m_connection( connection_wrapper.connection )
-  , m_id( m_connection.id )
-{
-  m_dispatcher.register_listener<yarrr::LoginRequest>(
-      std::bind( &LoginHandler::handle_login_request, this, std::placeholders::_1 ) );
-  connection_wrapper.register_dispatcher( m_dispatcher );
-}
-
-void
-LoginHandler::handle_login_request( const yarrr::LoginRequest& request )
-{
-  the::ctci::service< LocalEventDispatcher >().dispatcher.dispatch(
-      PlayerLoggedIn( m_connection_wrapper, m_id, request.login_id() ) );
-}
-
-LoginHandler::~LoginHandler()
-{
-  the::ctci::service< LocalEventDispatcher >().dispatcher.dispatch(
-      PlayerLoggedOut( m_id ) );
-}
-
-
 NetworkService::NetworkService( the::time::Clock& clock )
   : m_clock( clock )
   , m_network_service(
@@ -51,36 +27,36 @@ NetworkService::NetworkService( the::time::Clock& clock )
 }
 
 void
-NetworkService::handle_new_connection( the::net::Connection& connection )
+NetworkService::handle_new_connection( the::net::Connection::Pointer connection )
 {
   thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
-  connection.register_task( the::net::NetworkTask::Pointer(
+  connection->register_task( the::net::NetworkTask::Pointer(
         new yarrr::clock_sync::Server< the::time::Clock, the::net::Connection >(
           m_clock,
-          connection ) ) );
+          *connection ) ) );
 
   //todo: connection might be deleted before it gets added on the main thread
   //todo: should we lock?
   m_callback_queue.push_back( std::bind(
-        &NetworkService::handle_new_connection_on_main_thread, this, &connection ) );
+        &NetworkService::handle_new_connection_on_main_thread, this, connection ) );
 }
 
 void
-NetworkService::handle_new_connection_on_main_thread( the::net::Connection* connection )
+NetworkService::handle_new_connection_on_main_thread( the::net::Connection::Pointer connection )
 {
   thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
-  ConnectionBundle::Pointer new_connection_bundle( new ConnectionBundle( *connection ) );
+  ConnectionBundle::Pointer new_connection_bundle( new ConnectionBundle( connection ) );
   m_connection_bundles.emplace(
       connection->id,
       std::move( new_connection_bundle ) );
 }
 
 void
-NetworkService::handle_connection_lost( the::net::Connection& connection )
+NetworkService::handle_connection_lost( the::net::Connection::Pointer connection )
 {
   thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
   m_callback_queue.push_back( std::bind(
-        &NetworkService::handle_connection_lost_on_main_thread, this, connection.id ) );
+        &NetworkService::handle_connection_lost_on_main_thread, this, connection->id ) );
 }
 
 void

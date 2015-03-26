@@ -175,6 +175,20 @@ player_with_object_id( yarrrs::Player::Container& players, yarrr::Object::Id id 
   return nullptr;
 }
 
+yarrrs::Player*
+player_with_name( yarrrs::Player::Container& players, const std::string& name )
+{
+  for ( const auto& player : players )
+  {
+    if ( player.second->name == name )
+    {
+      return player.second.get();
+    }
+  }
+
+  return nullptr;
+}
+
 }
 
 namespace yarrrs
@@ -281,6 +295,12 @@ void
 World::handle_player_logged_in( const PlayerLoggedIn& login ) const
 {
   thelog_trace( yarrr::log::info, __PRETTY_FUNCTION__ );
+
+  if ( player_with_name( m_players, login.name ) != nullptr )
+  {
+    thelog( yarrr::log::warning )( "User is already logged in:", login.name );
+    return;
+  }
 
   yarrr::Object::Pointer new_object( create_player_ship( "ship", login.name ) );
   if ( !new_object )

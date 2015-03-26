@@ -3,9 +3,10 @@
 #include "network_service.hpp"
 
 #include <yarrr/object.hpp>
+#include <yarrr/protocol.hpp>
 #include <yarrr/chat_message.hpp>
 #include <yarrr/log.hpp>
-#include <yarrr/login.hpp>
+#include <yarrr/command.hpp>
 #include <yarrr/mission_exporter.hpp>
 
 #include <yarrr/command.hpp>
@@ -27,6 +28,8 @@ Player::Player(
   , m_mission_contexts( the::ctci::service< yarrrs::Models >().mission_contexts )
   , m_missions( std::bind( &Player::handle_mission_finished, this, std::placeholders::_1 ) )
   , m_command_handler( command_handler )
+  , m_players_model( the::ctci::service< yarrrs::Models >().players )
+  , m_player_model( std::string( name ), std::string( name ), m_players_model )
 {
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
@@ -53,7 +56,7 @@ Player::handle_command( const yarrr::Command& command )
 bool
 Player::send( yarrr::Data&& message ) const
 {
-  return m_connection_wrapper.connection.send( std::move( message ) );
+  return m_connection_wrapper.connection->send( std::move( message ) );
 }
 
 void
@@ -81,7 +84,7 @@ Player::assign_object( yarrr::Object& object )
   }
 
   m_current_object = &object;
-  send( yarrr::ObjectAssigned( object.id() ).serialize() );
+  send( yarrr::Command( { yarrr::Protocol::object_assigned, std::to_string( object.id() ) } ).serialize() );
   thelog( yarrr::log::debug )( "Assigning object to user.", object.id(), name );
   m_connection_wrapper.register_dispatcher( object.dispatcher );
   refresh_mission_models();

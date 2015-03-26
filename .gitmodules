@@ -1,6 +1,12 @@
 [submodule "igloo"]
 	path = thirdparty/igloo
 	url = https://github.com/joakimkarlsson/igloo.git
+	ignore = dirty
 [submodule "sol"]
 	path = thirdparty/sol
 	url = https://github.com/Rapptz/sol.git
+	ignore = dirty
+[submodule "features"]
+	path = features
+	url = git@hajdu.im:yarrrtest.git
+	ignore = dirty

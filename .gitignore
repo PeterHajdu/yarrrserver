@@ -3,7 +3,7 @@ src/*.a
 
 *tags
 *~
-*log*
+*log
 dummy_notification_file
 notifications
 package_version

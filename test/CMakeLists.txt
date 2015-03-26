@@ -10,13 +10,15 @@ set(TEST_SOURCE_FILES
     test_command_handler.cpp
     test_request_ship.cpp
     test_mission.cpp
+    test_login_handler.cpp
+    test_db.cpp
     )
 
 
 add_executable(test_runner EXCLUDE_FROM_ALL ${TEST_SOURCE_FILES})
 
 set(LIB_YARRR "-Wl,--whole-archive -lyarrr -Wl,--no-whole-archive")
-target_link_libraries(test_runner yarrrserverlib thelog thenet thectci ${LIB_YARRR} ${LIBS} theconf themodel thetime lua)
+target_link_libraries(test_runner yarrrserverlib thelog thenet thectci ${LIB_YARRR} ${LIBS} theconf themodel thetime lua hiredis)
 
 get_target_property(TEST_RUNNER_BIN test_runner LOCATION)
 

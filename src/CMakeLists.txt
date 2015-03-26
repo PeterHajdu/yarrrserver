@@ -5,6 +5,8 @@ set(LIBRARY_SOURCE_FILES
   notifier.cpp
   command_handler.cpp
   models.cpp
+  db.cpp
+  login_handler.cpp
   )
 
 set(EXECUTABLE_SOURCE_FILES
@@ -16,7 +18,7 @@ add_library(yarrrserverlib STATIC ${LIBRARY_SOURCE_FILES})
 add_executable(yarrrserver ${EXECUTABLE_SOURCE_FILES})
 
 set(LIB_YARRR "-Wl,--whole-archive -lyarrr -Wl,--no-whole-archive")
-target_link_libraries(yarrrserver yarrrserverlib thelog thenet thetime thectci pthread ${LIB_YARRR} ${LIBS} theconf themodel lua zmq)
+target_link_libraries(yarrrserver yarrrserverlib thelog thenet thetime thectci pthread ${LIB_YARRR} ${LIBS} theconf themodel lua zmq hiredis)
 
 install(TARGETS yarrrserver DESTINATION bin)
 

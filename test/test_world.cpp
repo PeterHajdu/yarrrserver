@@ -1,8 +1,6 @@
 #include "../src/world.hpp"
 #include "../src/player.hpp"
 #include "../src/local_event_dispatcher.hpp"
-#include "test_connection.hpp"
-#include "test_services.hpp"
 #include <yarrr/object_factory.hpp>
 #include <yarrr/object_identity.hpp>
 #include <yarrr/basic_behaviors.hpp>
@@ -14,7 +12,11 @@
 #include <yarrr/destruction_handlers.hpp>
 #include <yarrr/chat_message.hpp>
 #include <thectci/service_registry.hpp>
+
 #include <igloo/igloo_alt.h>
+#include <yarrr/test_connection.hpp>
+#include "test_services.hpp"
+#include "test_protocol.hpp"
 
 using namespace igloo;
 
@@ -40,7 +42,7 @@ Describe( a_world )
     player_bundle = services->log_in_player( player_name );
     connection = &player_bundle->connection;
     connection->flush_connection();
-    connection_id = connection->connection.id;
+    connection_id = connection->connection->id;
 
     AssertThat( services->players.find( connection_id )!=std::end( services->players ), Equals( true ) );
     player = services->players[ connection_id ].get();
@@ -58,13 +60,20 @@ Describe( a_world )
     services->engine_dispatcher.dispatch( event );
   }
 
+  It ( does_not_create_new_ship_if_the_user_is_already_logged_in )
+  {
+    auto first_players_ship_id( last_object_id_created );
+    auto player_bundle = services->log_in_player( player_name );
+    AssertThat( first_players_ship_id, Equals( last_object_id_created ) );
+  }
+
   It ( does_not_create_anything_if_ship_can_not_be_created )
   {
     cleanup();
     the::ctci::service< yarrr::ObjectFactory >().register_creator(
         "ship", [ this ]() { return yarrr::Object::Pointer( nullptr ); });
 
-    local_dispatch( yarrrs::PlayerLoggedIn( connection->wrapper, connection->connection.id, player_name ) );
+    local_dispatch( yarrrs::PlayerLoggedIn( connection->wrapper, connection->connection->id, player_name ) );
     AssertThat( services->players, IsEmpty() );
     AssertThat( services->objects, IsEmpty() );
   }
@@ -127,7 +136,8 @@ Describe( a_world )
     yarrr::Object::Id new_ship_id{ last_object_id_created };
     AssertThat( new_ship_id, !Equals( old_ship_id ) );
     AssertThat( player->object_id(), Equals( new_ship_id ) );
-    AssertThat( connection->has_entity< yarrr::ObjectAssigned >(), Equals( true ) );
+
+    test::assert_object_assigned( *connection, new_ship_id );
   }
 
   It ( adds_the_new_object_of_a_killed_player_postponed )

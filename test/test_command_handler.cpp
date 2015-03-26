@@ -1,16 +1,19 @@
 #include "../src/command_handler.hpp"
 #include "../src/player.hpp"
-#include "test_connection.hpp"
+#include <yarrr/test_connection.hpp>
+#include "test_services.hpp"
 #include <yarrr/command.hpp>
 #include <igloo/igloo_alt.h>
 
 using namespace igloo;
 
+//todo: rewrite to use test services
 Describe( a_command_handler )
 {
   void SetUp()
   {
-    command_handler.reset( new yarrrs::CommandHandler() );
+    services = std::make_unique< test::Services >();
+    command_handler = &services->command_handler;
 
     passed_command = nullptr;
     passed_player = nullptr;
@@ -75,7 +78,9 @@ Describe( a_command_handler )
     AssertThat( std::get< 1 >( result ), Contains( command_name ) );
   }
 
-  std::unique_ptr< yarrrs::CommandHandler > command_handler;
+  std::unique_ptr< test::Services > services;
+
+  yarrrs::CommandHandler* command_handler;
   const yarrr::Command* passed_command;
   bool was_a_command_handler_executed;
   yarrr::Command a_command{ { "a command", "parameter of command" } };

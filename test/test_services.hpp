@@ -10,7 +10,7 @@
 #include "../src/command_handler.hpp"
 #include "../src/local_event_dispatcher.hpp"
 #include "../src/world.hpp"
-#include "test_connection.hpp"
+#include <yarrr/test_connection.hpp>
 #include <sstream>
 
 namespace test
@@ -93,7 +93,7 @@ class Services
       local_event_dispatcher.dispatcher.dispatch(
           yarrrs::PlayerLoggedIn(
             connection->wrapper,
-            connection->connection.id,
+            connection->connection->id,
             std::move( player_name ) ) );
       main_thread_callback_queue.process_callbacks();
       assert( !players.empty() );

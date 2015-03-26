@@ -1,14 +1,16 @@
 #include "../src/player.hpp"
 #include "../src/world.hpp"
 #include "../src/command_handler.hpp"
-#include "test_connection.hpp"
-#include "test_services.hpp"
+#include <yarrr/protocol.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/chat_message.hpp>
 #include <yarrr/command.hpp>
 #include <yarrr/mission.hpp>
 #include <yarrr/mission_exporter.hpp>
 #include <igloo/igloo_alt.h>
+#include <yarrr/test_connection.hpp>
+#include "test_services.hpp"
+#include "test_protocol.hpp"
 
 using namespace igloo;
 
@@ -57,7 +59,7 @@ Describe( a_player )
     player = services->create_player( player_name );
     another_player = services->create_player( player_name );
 
-    services->players[ another_player->connection.connection.id ] = another_player->take_player_ownership();
+    services->players[ another_player->connection.connection->id ] = another_player->take_player_ownership();
 
     ship.reset( new yarrr::Object() );
     was_command_dispatched_to_ship = false;
@@ -83,7 +85,8 @@ Describe( a_player )
   {
     AssertThat( player->player.object_id(), Equals( ship->id() ) );
     AssertThat( player->connection.has_no_data(), Equals( false ) );
-    AssertThat( player->connection.get_entity< yarrr::ObjectAssigned >()->object_id(), Equals( ship->id() ) );
+
+    test::assert_object_assigned( player->connection, ship->id() );
   }
 
   It ( forwards_commands_from_the_network_to_the_object )
@@ -122,6 +125,13 @@ Describe( a_player )
     AssertThat( services->lua.assert_that(
           the::model::index_lua_table( yarrr::mission_contexts, std::to_string( mission_id ) ) ),
           Equals( false ) );
+  }
+
+  It( exports_player_model )
+  {
+    AssertThat( services->lua.assert_that(
+          the::model::index_lua_table( yarrrs::Models::players_key, player_name ) ),
+          Equals( true ) );
   }
 
   It( sends_mission_object_to_the_player_when_updated )

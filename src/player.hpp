@@ -7,6 +7,7 @@
 #include <yarrr/mission.hpp>
 #include <yarrr/mission_container.hpp>
 #include <yarrr/mission_exporter.hpp>
+#include <yarrr/object.hpp>
 #include <themodel/node_list.hpp>
 
 namespace yarrr
@@ -62,6 +63,9 @@ class Player
 
     using MissionModelContainer = std::unordered_map< yarrr::Mission::Id, std::unique_ptr< yarrr::MissionModel > >;
     MissionModelContainer m_own_mission_contexts;
+
+    Models::Players& m_players_model;
+    the::model::Variable< std::string > m_player_model;
 };
 
 void broadcast( const Player::Container& players, const yarrr::Entity& entity );

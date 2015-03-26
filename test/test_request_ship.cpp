@@ -1,8 +1,6 @@
 #include "../src/world.hpp"
 #include "../src/player.hpp"
 #include "../src/local_event_dispatcher.hpp"
-#include "test_connection.hpp"
-#include "test_services.hpp"
 
 #include <yarrr/object_factory.hpp>
 #include <yarrr/command.hpp>
@@ -13,6 +11,9 @@
 #include <yarrr/chat_message.hpp>
 #include <thectci/service_registry.hpp>
 #include <igloo/igloo_alt.h>
+#include <yarrr/test_connection.hpp>
+#include "test_protocol.hpp"
+#include "test_services.hpp"
 
 using namespace igloo;
 
@@ -76,7 +77,7 @@ Describe( a_ship_request )
     last_objects_type = "";
     player_bundle = services->log_in_player( "Kilgore Trout" );
     connection = &player_bundle->connection;
-    connection_id = connection->connection.id;
+    connection_id = connection->connection->id;
     check_help_message();
     connection->flush_connection();
     player = &player_bundle->player;
@@ -109,9 +110,9 @@ Describe( a_ship_request )
   It ( assigns_the_created_ship_to_the_player )
   {
     connection->wrapper.dispatch( giant_request );
-    AssertThat( connection->has_entity< yarrr::ObjectAssigned >(), Equals( true ) );
-    AssertThat( connection->get_entity< yarrr::ObjectAssigned >()->object_id(), Equals( last_objects_id ) );
-    AssertThat( player->object_id(), Equals( last_objects_id ) );
+    AssertThat( connection->has_entity< yarrr::Command >(), Equals( true ) );
+
+    test::assert_object_assigned( *connection, last_objects_id );
   }
 
   It ( does_not_change_anything_if_requested_ship_type_is_unknown )

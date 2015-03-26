@@ -3,9 +3,12 @@
 
 namespace yarrrs
 {
+const std::string
+Models::players_key( "players" );
 
 Models::Models( the::model::Lua& lua )
   : mission_contexts( yarrr::mission_contexts, lua )
+  , players( players_key, lua )
 {
 }
 

@@ -18,7 +18,15 @@ def run( command )
   end
 end
 
-watch( '.*pp' ) do | filename |
+def deploy
   run( "compile" ) && run( "unittest" ) && run( "local_deploy" ) && run( "cucumber21" )
+end
+
+to_watch = [ '.*pp', 'CMakeLists.txt', '.*rb', '.*feature' ]
+
+to_watch.each do | pattern |
+  watch( pattern ) do | filename |
+    deploy
+  end
 end
 

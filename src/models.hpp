@@ -14,6 +14,10 @@ class Models
 
     using MissionContexts = the::model::OwningNode;
     MissionContexts mission_contexts;
+
+    static const std::string players_key;
+    using Players = the::model::OwningNode;
+    Players players;
 };
 
 }
