@@ -1,6 +1,7 @@
 #include "db.hpp"
 
 #include <yarrr/log.hpp>
+#include <theconf/configuration.hpp>
 #include <hiredis/hiredis.h>
 #include <memory>
 #include <cassert>
@@ -25,7 +26,10 @@ class RedisCommand
   public:
     RedisCommand( std::string command )
       : m_command( std::move( command ) )
-      , m_context( redisConnect( "127.0.0.1", 6379 ), free_context )
+      , m_context( redisConnect(
+            the::conf::get_value( "redis_ip" ).c_str(),
+            the::conf::get< int >( "redis_port" ) ),
+          free_context )
       , m_reply( static_cast< redisReply* >( redisCommand( m_context.get(), m_command.c_str() ) ), free_reply )
     {
       if ( !is_ok() )

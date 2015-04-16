@@ -22,6 +22,7 @@
 #include <theconf/configuration.hpp>
 #include <themodel/zmq_remote.hpp>
 #include <themodel/json_exporter.hpp>
+#include <thenet/address.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -70,6 +71,8 @@ void
 print_help_and_exit()
 {
   std::cout << "usage: yarrrserver --port <port>" << std::endl;
+  std::cout << "  --loglevel <int>" << std::endl;
+  std::cout << "  --redis_url <ip:port>" << std::endl;
   exit( 0 );
 }
 
@@ -90,6 +93,18 @@ parse_and_handle_configuration( const the::conf::ParameterVector& parameters )
 
   the::log::Logger::set_loglevel( loglevel );
   thelog( yarrr::log::info )( "Loglevel is set to", loglevel );
+
+  if ( the::conf::has( "redis_url" ) )
+  {
+    const the::net::Address redis_address{ the::conf::get_value( "redis_url" ) };
+    the::conf::set( "redis_ip", redis_address.host );
+    the::conf::set( "redis_port", redis_address.port );
+  }
+  else
+  {
+    the::conf::set( "redis_ip", "127.0.0.1" );
+    the::conf::set( "redis_port", 6379 );
+  }
 }
 
 std::ostream&
