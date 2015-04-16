@@ -17,6 +17,13 @@ Describe( a_login_handler )
 
   void SetUp()
   {
+    registration_request = yarrr::Command{ {
+      yarrr::Protocol::registration_request,
+      username,
+      auth_token_sent_by_client } };
+    login_request = yarrr::Command{ {
+      yarrr::Protocol::login_request,
+      username } };
     create_new_db();
     login_handler.reset();
     dispatcher.clear();
@@ -254,18 +261,12 @@ Describe( a_login_handler )
   const std::string original_auth_token{ "original auth token" };
   const std::string username{ "Kilgore Trout" };
   const std::string auth_token_sent_by_client{ "auth_token" };
-  const yarrr::Command registration_request{ {
-      yarrr::Protocol::registration_request,
-      username,
-      auth_token_sent_by_client } };
   bool was_player_logged_in;
   std::string last_player_logged_in;
   std::unique_ptr< test::Db > database;
   bool was_player_logged_out;
 
-  const yarrr::Command login_request{ {
-      yarrr::Protocol::login_request,
-      username } };
-
+  yarrr::Command registration_request;
+  yarrr::Command login_request;
 };
 
