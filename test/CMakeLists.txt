@@ -11,7 +11,6 @@ set(TEST_SOURCE_FILES
     test_request_ship.cpp
     test_mission.cpp
     test_login_handler.cpp
-    test_db.cpp
     )
 
 

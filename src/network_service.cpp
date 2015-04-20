@@ -1,7 +1,7 @@
 #include "network_service.hpp"
 #include "local_event_dispatcher.hpp"
-#include "db.hpp"
 
+#include <yarrr/db.hpp>
 #include <yarrr/connection_wrapper.hpp>
 #include <yarrr/command.hpp>
 #include <yarrr/callback_queue.hpp>

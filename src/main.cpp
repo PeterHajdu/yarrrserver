@@ -3,7 +3,7 @@
 #include "world.hpp"
 #include "notifier.hpp"
 #include "models.hpp"
-#include "db.hpp"
+#include "redis.hpp"
 
 #include <yarrr/lua_setup.hpp>
 #include <yarrr/object_container.hpp>
@@ -121,7 +121,7 @@ create_notification_stream()
 
 int main( int argc, char ** argv )
 {
-  the::ctci::AutoServiceRegister< yarrrs::Db, yarrrs::RedisDb > db;
+  the::ctci::AutoServiceRegister< yarrr::Db, yarrrs::RedisDb > db;
   the::ctci::AutoServiceRegister< yarrrs::Models, yarrrs::Models > models( yarrr::LuaEngine::model() );
 
   parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );

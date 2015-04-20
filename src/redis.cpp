@@ -1,5 +1,4 @@
-#include "db.hpp"
-
+#include "redis.hpp"
 #include <yarrr/log.hpp>
 #include <theconf/configuration.hpp>
 #include <hiredis/hiredis.h>
@@ -146,13 +145,6 @@ RedisDb::key_exists( const std::string& key )
     does_exist.is_ok() &&
     does_exist.is_integer() &&
     does_exist.integer() == 1;
-}
-
-
-std::string
-user_key_from_id( const std::string& user_id )
-{
-  return std::string( "user:" ) + user_id;
 }
 
 }

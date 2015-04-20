@@ -5,7 +5,7 @@ set(LIBRARY_SOURCE_FILES
   notifier.cpp
   command_handler.cpp
   models.cpp
-  db.cpp
+  redis.cpp
   login_handler.cpp
   )
 

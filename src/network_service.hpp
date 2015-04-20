@@ -2,7 +2,7 @@
 
 #include "login_handler.hpp"
 #include "local_event_dispatcher.hpp"
-#include "db.hpp"
+#include <yarrr/db.hpp>
 #include <thectci/dispatcher.hpp>
 #include <thenet/service.hpp>
 #include <yarrr/command.hpp>
@@ -31,7 +31,7 @@ class ConnectionBundle
       , login_handler(
           connection_wrapper,
           the::ctci::service< LocalEventDispatcher >().dispatcher,
-          the::ctci::service< Db >() )
+          the::ctci::service< yarrr::Db >() )
     {
     }
 

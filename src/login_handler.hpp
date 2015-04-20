@@ -7,6 +7,7 @@ namespace yarrr
 {
 
 class Command;
+class Db;
 
 }
 
@@ -24,7 +25,6 @@ class Dispatcher;
 
 namespace yarrrs
 {
-class Db;
 
 using ConnectionWrapper = yarrr::ConnectionWrapper<the::net::Connection>;
 
@@ -62,7 +62,7 @@ class PlayerLoggedOut
 class LoginHandler
 {
   public:
-    LoginHandler( ConnectionWrapper& , the::ctci::Dispatcher&, Db& );
+    LoginHandler( ConnectionWrapper& , the::ctci::Dispatcher&, yarrr::Db& );
     ~LoginHandler();
 
   private:
@@ -77,7 +77,7 @@ class LoginHandler
     const int m_id;
     the::ctci::SmartListener m_command_callback;
     the::ctci::Dispatcher& m_dispatcher;
-    Db& m_db;
+    yarrr::Db& m_db;
     std::string m_username;
     std::string m_challenge;
     bool m_was_authentication_request_sent_out;

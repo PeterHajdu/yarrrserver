@@ -1,6 +1,6 @@
 #include "login_handler.hpp"
 #include "local_event_dispatcher.hpp"
-#include "db.hpp"
+#include <yarrr/db.hpp>
 #include <yarrr/command.hpp>
 #include <yarrr/crypto.hpp>
 #include <yarrr/log.hpp>
@@ -22,7 +22,7 @@ namespace yarrrs
 LoginHandler::LoginHandler(
     ConnectionWrapper& connection_wrapper,
     the::ctci::Dispatcher& dispatcher,
-    yarrrs::Db& db )
+    yarrr::Db& db )
   : m_connection_wrapper( connection_wrapper )
   , m_connection( connection_wrapper.connection )
   , m_id( m_connection->id )
@@ -75,7 +75,7 @@ LoginHandler::handle_registration_request( const yarrr::Command& request )
   }
 
   m_username = request.parameters()[ 0 ];
-  const std::string user_key( user_key_from_id( m_username ) );
+  const std::string user_key( yarrr::user_key_from_id( m_username ) );
   thelog( yarrr::log::debug )( "Using user key:", user_key );
   if ( m_db.key_exists( user_key ) )
   {
@@ -115,7 +115,7 @@ LoginHandler::handle_login_request( const yarrr::Command& request )
 
   m_username = request.parameters().back();
 
-  if ( !m_db.key_exists( user_key_from_id( m_username ) ) )
+  if ( !m_db.key_exists( yarrr::user_key_from_id( m_username ) ) )
   {
     thelog( yarrr::log::warning )( "Login request with unknown username: ", m_username );
     send_login_error_message( "Unknown username." );
@@ -148,7 +148,7 @@ LoginHandler::handle_authentication_response( const yarrr::Command& response ) c
 
   std::string auth_token;
   if ( !m_db.get_hash_field(
-        user_key_from_id( m_username ),
+        yarrr::user_key_from_id( m_username ),
         auth_token_field_name,
         auth_token ) )
   {
