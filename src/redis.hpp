@@ -23,6 +23,14 @@ class RedisDb : public yarrr::Db
         const std::string& value ) override;
 
     virtual bool key_exists( const std::string& key ) override;
+
+    virtual bool get_set_members(
+        const std::string& key,
+        Values& ) override;
+
+    virtual bool get_hash_fields(
+        const std::string& key,
+        Values& ) override;
 };
 
 }

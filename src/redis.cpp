@@ -147,5 +147,24 @@ RedisDb::key_exists( const std::string& key )
     does_exist.integer() == 1;
 }
 
+
+bool
+RedisDb::get_set_members( const std::string& key, Values& )
+{
+  //todo:implement this
+  return true;
+}
+
+
+bool
+RedisDb::get_hash_fields(
+    const std::string& key,
+    Values& )
+{
+  //todo:implement this
+  return true;
+}
+
+
 }
 
