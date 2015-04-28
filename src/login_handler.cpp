@@ -14,6 +14,14 @@ const std::string login_error_message( "Unable to log in.  Please restart the cl
 const std::string invalid_username_message( "Invalid username.  Username must not contain the following characters: space" );
 const std::string database_error( "There seems to be a problem with the database, please notify: info@yarrrthegame.com" );
 
+
+bool
+is_invalid_player_id( const std::string& player_id )
+{
+  //todo: implement proper email address check
+  return player_id.find_first_of( " \t!.$%^&*()#" ) != std::string::npos;
+}
+
 }
 
 namespace yarrrs
@@ -72,6 +80,12 @@ LoginHandler::handle_registration_request( const yarrr::Command& request )
   }
 
   m_player_id = request.parameters()[ 0 ];
+  if ( is_invalid_player_id( m_player_id ) )
+  {
+    thelog( yarrr::log::warning )( "Invalid player id." );
+    send_login_error_message( invalid_username_message );
+    return;
+  }
 
   if ( m_modells.exists( "player", m_player_id ) )
   {
@@ -80,7 +94,6 @@ LoginHandler::handle_registration_request( const yarrr::Command& request )
     return;
   }
 
-  //todo: check invalid player id
   auto& player( m_modells.create_with_id_if_needed( "player", m_player_id ) );
   const auto& auth_token( request.parameters()[ 1 ] );
   player[ auth_token_field_name ] = auth_token;

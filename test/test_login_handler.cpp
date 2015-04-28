@@ -223,8 +223,12 @@ Describe_Only( a_login_handler )
 
   It( sends_invalid_username_error_message_if_the_username_was_malformed )
   {
-    //todo
-    //assert_login_error_was_sent();
+    const auto invalid_registration_request( yarrr::Command{ {
+      yarrr::Protocol::registration_request,
+      invalid_username,
+      auth_token_sent_by_client } } );
+    connection->wrapper.dispatch( invalid_registration_request );
+    assert_login_error_was_sent();
   }
 
   std::unique_ptr< test::Services > services;
@@ -234,7 +238,8 @@ Describe_Only( a_login_handler )
   std::unique_ptr< yarrrs::LoginHandler > login_handler;
 
   const std::string original_auth_token{ "original auth token" };
-  const std::string username{ "Kilgore Trout" };
+  const std::string username{ "KilgorTrout" };
+  const std::string invalid_username{ "Kilgor Trout" };
   const std::string auth_token_sent_by_client{ "auth_token" };
   bool was_player_logged_in;
   std::string last_player_logged_in;
