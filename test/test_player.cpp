@@ -53,14 +53,23 @@ Describe_Only( a_player )
     player->player.update_missions();
   }
 
+  void set_up_another_player()
+  {
+    auto& player_modell( services->modell_container.create_with_id_if_needed( "player", another_player_name ) );
+    auto& character_modell( services->modell_container.create( "character" ) );
+    player_modell[ "character_id" ] = character_modell.get( "id" );
+    original_character_id_of_another_player = character_modell.get( "id" );
+    another_player = services->create_player( another_player_name );
+    services->players[ another_player->connection.connection->id ] = another_player->take_player_ownership();
+  }
+
   void SetUp()
   {
     services = std::make_unique< test::Services >();
     set_up_command_handler();
     player = services->create_player( player_name );
-    another_player = services->create_player( player_name );
 
-    services->players[ another_player->connection.connection->id ] = another_player->take_player_ownership();
+    set_up_another_player();
 
     ship.reset( new yarrr::Object() );
     was_command_dispatched_to_ship = false;
@@ -149,13 +158,21 @@ Describe_Only( a_player )
           Equals( true ) );
   }
 
-  It( creates_the_character_with_the_same_name_as_the_player )
+  yarrr::Hash& character_modell_of( const std::string& player_name )
   {
     const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
     const auto character_id( player_modell.get( "character_id" ) );
+    return services->modell_container.create_with_id_if_needed( "character", character_id );
+  }
 
-    const auto& character_modell( services->modell_container.create_with_id_if_needed( "character", character_id ) );
-    AssertThat( character_modell.get( "name" ), Equals( player_name ) );
+  It( creates_the_character_with_the_same_name_as_the_player )
+  {
+    AssertThat( character_modell_of( player_name ).get( "name" ), Equals( player_name ) );
+  }
+
+  It( does_not_create_a_new_if_it_existed_before )
+  {
+    AssertThat( character_modell_of( another_player_name ).get( "id" ), Equals( original_character_id_of_another_player ) );
   }
 
   It( sends_mission_object_to_the_player_when_updated )
@@ -221,6 +238,8 @@ Describe_Only( a_player )
   yarrr::Object::Pointer ship;
 
   const std::string player_name{ "KilgorTrout" };
+  const std::string another_player_name{ "Nakaya" };
+  std::string original_character_id_of_another_player;
 
   yarrr::Mission::Pointer mission;
   yarrr::Mission::Id mission_id;

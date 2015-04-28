@@ -17,8 +17,13 @@ namespace
 {
 
 void
-create_character_modell( yarrr::Hash& player_modell )
+create_character_modell_if_needed( yarrr::Hash& player_modell )
 {
+  if ( player_modell.has( "character_id" ) )
+  {
+    return;
+  }
+
   auto& character_modell( the::ctci::service< yarrr::ModellContainer >().create( "character" ) );
   character_modell[ "name" ] = player_modell.get( "id" );
   player_modell[ "character_id" ] = character_modell.get( "id" );
@@ -43,7 +48,7 @@ Player::Player(
   , m_command_handler( command_handler )
   , m_player_modell( the::ctci::service< yarrr::ModellContainer >().create_with_id_if_needed( "player", name ) )
 {
-  create_character_modell( m_player_modell );
+  create_character_modell_if_needed( m_player_modell );
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
 
