@@ -62,7 +62,7 @@ class PlayerLoggedOut
 class LoginHandler
 {
   public:
-    LoginHandler( ConnectionWrapper& , the::ctci::Dispatcher&, yarrr::Db& );
+    LoginHandler( ConnectionWrapper& , the::ctci::Dispatcher& );
     ~LoginHandler();
 
   private:
@@ -77,7 +77,6 @@ class LoginHandler
     const int m_id;
     the::ctci::SmartListener m_command_callback;
     the::ctci::Dispatcher& m_dispatcher;
-    yarrr::Db& m_db;
     std::string m_username;
     std::string m_challenge;
     bool m_was_authentication_request_sent_out;

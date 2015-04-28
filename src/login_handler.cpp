@@ -1,6 +1,5 @@
 #include "login_handler.hpp"
 #include "local_event_dispatcher.hpp"
-#include <yarrr/db.hpp>
 #include <yarrr/command.hpp>
 #include <yarrr/crypto.hpp>
 #include <yarrr/log.hpp>
@@ -19,10 +18,7 @@ const std::string database_error( "There seems to be a problem with the database
 namespace yarrrs
 {
 
-LoginHandler::LoginHandler(
-    ConnectionWrapper& connection_wrapper,
-    the::ctci::Dispatcher& dispatcher,
-    yarrr::Db& db )
+LoginHandler::LoginHandler( ConnectionWrapper& connection_wrapper, the::ctci::Dispatcher& dispatcher )
   : m_connection_wrapper( connection_wrapper )
   , m_connection( connection_wrapper.connection )
   , m_id( m_connection->id )
@@ -48,7 +44,6 @@ LoginHandler::LoginHandler(
           }
         }) )
   , m_dispatcher( dispatcher )
-  , m_db( db )
   , m_was_authentication_request_sent_out( false )
 {
 }
@@ -75,29 +70,29 @@ LoginHandler::handle_registration_request( const yarrr::Command& request )
   }
 
   m_username = request.parameters()[ 0 ];
-  const std::string user_key( yarrr::player_key_from_id( m_username ) );
-  thelog( yarrr::log::debug )( "Using user key:", user_key );
-  if ( m_db.key_exists( user_key ) )
-  {
-    thelog( yarrr::log::warning )( "Registration request for already existing user denied." );
-    send_login_error_message( "User already exists, please choose another username." );
-    return;
-  }
+  //const std::string user_key( yarrr::player_key_from_id( m_username ) );
+  //thelog( yarrr::log::debug )( "Using user key:", user_key );
+  //if ( m_db.key_exists( user_key ) )
+  //{
+  //  thelog( yarrr::log::warning )( "Registration request for already existing user denied." );
+  //  send_login_error_message( "User already exists, please choose another username." );
+  //  return;
+  //}
 
-  if ( !m_db.set_hash_field(
-      user_key,
-      auth_token_field_name,
-      request.parameters()[ 1 ] ) )
-  {
-    send_login_error_message( invalid_username_message );
-  }
+  //if ( !m_db.set_hash_field(
+  //    user_key,
+  //    auth_token_field_name,
+  //    request.parameters()[ 1 ] ) )
+  //{
+  //  send_login_error_message( invalid_username_message );
+  //}
 
-  if ( !m_db.add_to_set(
-      "users",
-      m_username ) )
-  {
-    send_login_error_message( database_error );
-  }
+  //if ( !m_db.add_to_set(
+  //    "users",
+  //    m_username ) )
+  //{
+  //  send_login_error_message( database_error );
+  //}
 
   m_dispatcher.dispatch(
       PlayerLoggedIn( m_connection_wrapper, m_id, m_username ) );
@@ -115,12 +110,12 @@ LoginHandler::handle_login_request( const yarrr::Command& request )
 
   m_username = request.parameters().back();
 
-  if ( !m_db.key_exists( yarrr::player_key_from_id( m_username ) ) )
-  {
-    thelog( yarrr::log::warning )( "Login request with unknown username: ", m_username );
-    send_login_error_message( "Unknown username." );
-    return;
-  }
+  //if ( !m_db.key_exists( yarrr::player_key_from_id( m_username ) ) )
+  //{
+  //  thelog( yarrr::log::warning )( "Login request with unknown username: ", m_username );
+  //  send_login_error_message( "Unknown username." );
+  //  return;
+  //}
 
   const size_t challenge_length( 256u );
   m_challenge = yarrr::random( challenge_length );
@@ -147,14 +142,14 @@ LoginHandler::handle_authentication_response( const yarrr::Command& response ) c
   }
 
   std::string auth_token;
-  if ( !m_db.get_hash_field(
-        yarrr::player_key_from_id( m_username ),
-        auth_token_field_name,
-        auth_token ) )
-  {
-    thelog( yarrr::log::error )( "Wasn't able to retrieve authentication token of user:", m_username );
-    return;
-  }
+  //if ( !m_db.get_hash_field(
+  //      yarrr::player_key_from_id( m_username ),
+  //      auth_token_field_name,
+  //      auth_token ) )
+  //{
+  //  thelog( yarrr::log::error )( "Wasn't able to retrieve authentication token of user:", m_username );
+  //  return;
+  //}
 
   if ( auth_token.empty() )
   {

@@ -30,8 +30,7 @@ class ConnectionBundle
       : connection_wrapper( connection )
       , login_handler(
           connection_wrapper,
-          the::ctci::service< LocalEventDispatcher >().dispatcher,
-          the::ctci::service< yarrr::Db >() )
+          the::ctci::service< LocalEventDispatcher >().dispatcher )
     {
     }
 
