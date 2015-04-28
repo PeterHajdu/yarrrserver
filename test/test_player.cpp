@@ -130,7 +130,7 @@ Describe( a_player )
   It( exports_player_model )
   {
     AssertThat( services->lua.assert_that(
-          the::model::index_lua_table( yarrrs::Models::players_key, player_name ) ),
+          the::model::index_lua_table( yarrrs::Models::players_path, player_name ) ),
           Equals( true ) );
   }
 
