@@ -1,8 +1,11 @@
 #pragma once
 
+#include <yarrr/id_generator.hpp>
 #include <yarrr/engine_dispatcher.hpp>
 #include <yarrr/object_container.hpp>
 #include <yarrr/main_thread_callback_queue.hpp>
+#include <yarrr/test_db.hpp>
+#include <yarrr/modell.hpp>
 #include <themodel/lua.hpp>
 #include <themodel/node_list.hpp>
 #include "../src/models.hpp"
@@ -33,6 +36,9 @@ class Services
     yarrr::ObjectContainer objects;
     yarrrs::CommandHandler command_handler;
     yarrrs::World world;
+    yarrr::IdGenerator id_generator;
+    test::Db database;
+    the::ctci::AutoServiceRegister< yarrr::ModellContainer, yarrr::ModellContainer > modell_container_register;
 
     ~Services()
     {

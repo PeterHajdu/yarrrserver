@@ -29,6 +29,9 @@ Services::Services()
   , objects()
   , command_handler()
   , world( players, objects )
+  , id_generator()
+  , database()
+  , modell_container_register( lua, id_generator, database )
 {
 }
 
