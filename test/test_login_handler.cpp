@@ -9,7 +9,7 @@
 
 using namespace igloo;
 
-Describe_Only( a_login_handler )
+Describe( a_login_handler )
 {
   void SetUp()
   {

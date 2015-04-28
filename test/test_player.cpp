@@ -11,10 +11,11 @@
 #include <yarrr/test_connection.hpp>
 #include "test_services.hpp"
 #include "test_protocol.hpp"
+#include <themodel/json_exporter.hpp>
 
 using namespace igloo;
 
-Describe( a_player )
+Describe_Only( a_player )
 {
   void set_up_command_handler()
   {
@@ -134,6 +135,21 @@ Describe( a_player )
           Equals( true ) );
   }
 
+  It( creates_character_modell_if_it_did_not_exist_befor )
+  {
+    std::cout << the::model::export_json( services->lua );
+    AssertThat( services->lua.assert_that( the::model::path_from( {
+          "modells", "player", player_name } ) ),
+          Equals( true ) );
+
+    const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
+    const auto character_id( player_modell.get( "character_id" ) );
+
+    AssertThat( services->lua.assert_that( the::model::path_from( {
+          "modells", "character", character_id } ) ),
+          Equals( true ) );
+  }
+
   It( sends_mission_object_to_the_player_when_updated )
   {
     player->player.update_missions();
@@ -196,7 +212,7 @@ Describe( a_player )
   bool was_command_dispatched_to_ship;
   yarrr::Object::Pointer ship;
 
-  const std::string player_name{ "Kilgor Trout" };
+  const std::string player_name{ "KilgorTrout" };
 
   yarrr::Mission::Pointer mission;
   yarrr::Mission::Id mission_id;

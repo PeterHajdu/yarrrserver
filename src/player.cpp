@@ -13,6 +13,18 @@
 
 #include <thectci/service_registry.hpp>
 
+namespace
+{
+
+void
+create_character_modell( yarrr::Hash& player_modell )
+{
+  const auto& character_modell( the::ctci::service< yarrr::ModellContainer >().create( "character" ) );
+  player_modell[ "character_id" ] = character_modell.get( "id" );
+}
+
+}
+
 namespace yarrrs
 {
 
@@ -28,7 +40,9 @@ Player::Player(
   , m_mission_contexts( the::ctci::service< yarrrs::Models >().mission_contexts )
   , m_missions( std::bind( &Player::handle_mission_finished, this, std::placeholders::_1 ) )
   , m_command_handler( command_handler )
+  , m_player_modell( the::ctci::service< yarrr::ModellContainer >().create_with_id_if_needed( "player", name ) )
 {
+  create_character_modell( m_player_modell );
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
 
