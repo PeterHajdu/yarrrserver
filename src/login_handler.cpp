@@ -75,7 +75,7 @@ LoginHandler::handle_registration_request( const yarrr::Command& request )
   }
 
   m_username = request.parameters()[ 0 ];
-  const std::string user_key( yarrr::user_key_from_id( m_username ) );
+  const std::string user_key( yarrr::player_key_from_id( m_username ) );
   thelog( yarrr::log::debug )( "Using user key:", user_key );
   if ( m_db.key_exists( user_key ) )
   {
@@ -115,7 +115,7 @@ LoginHandler::handle_login_request( const yarrr::Command& request )
 
   m_username = request.parameters().back();
 
-  if ( !m_db.key_exists( yarrr::user_key_from_id( m_username ) ) )
+  if ( !m_db.key_exists( yarrr::player_key_from_id( m_username ) ) )
   {
     thelog( yarrr::log::warning )( "Login request with unknown username: ", m_username );
     send_login_error_message( "Unknown username." );
@@ -148,7 +148,7 @@ LoginHandler::handle_authentication_response( const yarrr::Command& response ) c
 
   std::string auth_token;
   if ( !m_db.get_hash_field(
-        yarrr::user_key_from_id( m_username ),
+        yarrr::player_key_from_id( m_username ),
         auth_token_field_name,
         auth_token ) )
   {

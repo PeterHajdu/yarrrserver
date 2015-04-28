@@ -63,7 +63,7 @@ Describe( a_login_handler )
     std::string auth_token_in_db;
     AssertThat(
         database->get_hash_field(
-          yarrr::user_key_from_id( username ),
+          yarrr::player_key_from_id( username ),
           "auth_token",
           auth_token_in_db ),
         Equals( true ) );
@@ -91,7 +91,7 @@ Describe( a_login_handler )
   void set_up_user_in_db()
   {
     database->set_hash_field(
-        yarrr::user_key_from_id( username ),
+        yarrr::player_key_from_id( username ),
         "auth_token",
         original_auth_token );
   }
@@ -125,7 +125,7 @@ Describe( a_login_handler )
     std::string auth_token_in_db;
     AssertThat(
         database->get_hash_field(
-          yarrr::user_key_from_id( username ),
+          yarrr::player_key_from_id( username ),
           "auth_token",
           auth_token_in_db ),
         Equals( true ) );
