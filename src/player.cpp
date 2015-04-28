@@ -19,7 +19,8 @@ namespace
 void
 create_character_modell( yarrr::Hash& player_modell )
 {
-  const auto& character_modell( the::ctci::service< yarrr::ModellContainer >().create( "character" ) );
+  auto& character_modell( the::ctci::service< yarrr::ModellContainer >().create( "character" ) );
+  character_modell[ "name" ] = player_modell.get( "id" );
   player_modell[ "character_id" ] = character_modell.get( "id" );
 }
 

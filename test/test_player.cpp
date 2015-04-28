@@ -137,7 +137,6 @@ Describe_Only( a_player )
 
   It( creates_character_modell_if_it_did_not_exist_befor )
   {
-    std::cout << the::model::export_json( services->lua );
     AssertThat( services->lua.assert_that( the::model::path_from( {
           "modells", "player", player_name } ) ),
           Equals( true ) );
@@ -148,6 +147,15 @@ Describe_Only( a_player )
     AssertThat( services->lua.assert_that( the::model::path_from( {
           "modells", "character", character_id } ) ),
           Equals( true ) );
+  }
+
+  It( creates_the_character_with_the_same_name_as_the_player )
+  {
+    const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
+    const auto character_id( player_modell.get( "character_id" ) );
+
+    const auto& character_modell( services->modell_container.create_with_id_if_needed( "character", character_id ) );
+    AssertThat( character_modell.get( "name" ), Equals( player_name ) );
   }
 
   It( sends_mission_object_to_the_player_when_updated )
