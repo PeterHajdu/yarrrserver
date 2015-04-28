@@ -7,7 +7,7 @@ namespace yarrr
 {
 
 class Command;
-class Db;
+class ModellContainer;
 
 }
 
@@ -77,9 +77,10 @@ class LoginHandler
     const int m_id;
     the::ctci::SmartListener m_command_callback;
     the::ctci::Dispatcher& m_dispatcher;
-    std::string m_username;
+    std::string m_player_id;
     std::string m_challenge;
     bool m_was_authentication_request_sent_out;
+    yarrr::ModellContainer& m_modells;
 };
 
 }

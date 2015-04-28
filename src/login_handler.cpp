@@ -4,6 +4,7 @@
 #include <yarrr/crypto.hpp>
 #include <yarrr/log.hpp>
 #include <yarrr/protocol.hpp>
+#include <yarrr/modell.hpp>
 
 namespace
 {
@@ -45,6 +46,7 @@ LoginHandler::LoginHandler( ConnectionWrapper& connection_wrapper, the::ctci::Di
         }) )
   , m_dispatcher( dispatcher )
   , m_was_authentication_request_sent_out( false )
+  , m_modells( the::ctci::service< yarrr::ModellContainer >() )
 {
 }
 
@@ -69,33 +71,22 @@ LoginHandler::handle_registration_request( const yarrr::Command& request )
     return;
   }
 
-  m_username = request.parameters()[ 0 ];
-  //const std::string user_key( yarrr::player_key_from_id( m_username ) );
-  //thelog( yarrr::log::debug )( "Using user key:", user_key );
-  //if ( m_db.key_exists( user_key ) )
-  //{
-  //  thelog( yarrr::log::warning )( "Registration request for already existing user denied." );
-  //  send_login_error_message( "User already exists, please choose another username." );
-  //  return;
-  //}
+  m_player_id = request.parameters()[ 0 ];
 
-  //if ( !m_db.set_hash_field(
-  //    user_key,
-  //    auth_token_field_name,
-  //    request.parameters()[ 1 ] ) )
-  //{
-  //  send_login_error_message( invalid_username_message );
-  //}
+  if ( m_modells.exists( "player", m_player_id ) )
+  {
+    thelog( yarrr::log::warning )( "Registration request for already existing user denied." );
+    send_login_error_message( "User already exists, please choose another username." );
+    return;
+  }
 
-  //if ( !m_db.add_to_set(
-  //    "users",
-  //    m_username ) )
-  //{
-  //  send_login_error_message( database_error );
-  //}
+  //todo: check invalid player id
+  auto& player( m_modells.create_with_id_if_needed( "player", m_player_id ) );
+  const auto& auth_token( request.parameters()[ 1 ] );
+  player[ auth_token_field_name ] = auth_token;
 
   m_dispatcher.dispatch(
-      PlayerLoggedIn( m_connection_wrapper, m_id, m_username ) );
+      PlayerLoggedIn( m_connection_wrapper, m_id, m_player_id ) );
 }
 
 
@@ -108,14 +99,14 @@ LoginHandler::handle_login_request( const yarrr::Command& request )
     return;
   }
 
-  m_username = request.parameters().back();
+  m_player_id = request.parameters().back();
 
-  //if ( !m_db.key_exists( yarrr::player_key_from_id( m_username ) ) )
-  //{
-  //  thelog( yarrr::log::warning )( "Login request with unknown username: ", m_username );
-  //  send_login_error_message( "Unknown username." );
-  //  return;
-  //}
+  if ( !m_modells.exists( "player", m_player_id ) )
+  {
+    thelog( yarrr::log::warning )( "Login request with unknown username: ", m_player_id );
+    send_login_error_message( "Unknown username." );
+    return;
+  }
 
   const size_t challenge_length( 256u );
   m_challenge = yarrr::random( challenge_length );
@@ -131,36 +122,22 @@ LoginHandler::handle_authentication_response( const yarrr::Command& response ) c
 {
   if ( !m_was_authentication_request_sent_out )
   {
-    thelog( yarrr::log::warning )( "Authentication response received without request from:", m_username );
+    thelog( yarrr::log::warning )( "Authentication response received without request from:", m_player_id );
     return;
   }
 
   if ( response.parameters().empty() )
   {
-    thelog( yarrr::log::warning )( "Invalid authentication response received from:", m_username );
+    thelog( yarrr::log::warning )( "Invalid authentication response received from:", m_player_id );
     return;
   }
 
-  std::string auth_token;
-  //if ( !m_db.get_hash_field(
-  //      yarrr::player_key_from_id( m_username ),
-  //      auth_token_field_name,
-  //      auth_token ) )
-  //{
-  //  thelog( yarrr::log::error )( "Wasn't able to retrieve authentication token of user:", m_username );
-  //  return;
-  //}
-
-  if ( auth_token.empty() )
-  {
-    thelog( yarrr::log::warning )( "Invalid authentication token in the database for user:", m_username );
-    return;
-  }
+  const auto auth_token( m_modells.create_with_id_if_needed( "player", m_player_id ).get( auth_token_field_name ) );
 
   auto expected_response( yarrr::auth_hash( m_challenge + auth_token ) );
   if ( response.parameters().back() != expected_response )
   {
-    thelog( yarrr::log::warning )( "Invalid authentication response from user:", m_username );
+    thelog( yarrr::log::warning )( "Invalid authentication response from user:", m_player_id );
     send_login_error_message( "Invalid authentication." );
     return;
   }
@@ -171,7 +148,7 @@ LoginHandler::handle_authentication_response( const yarrr::Command& response ) c
 void
 LoginHandler::log_in() const
 {
-  m_dispatcher.dispatch( PlayerLoggedIn( m_connection_wrapper, m_id, m_username ) );
+  m_dispatcher.dispatch( PlayerLoggedIn( m_connection_wrapper, m_id, m_player_id ) );
 }
 
 

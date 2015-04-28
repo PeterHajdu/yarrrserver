@@ -32,6 +32,7 @@ Services::Services()
   , id_generator()
   , database()
   , modell_container_register( lua, id_generator, database )
+  , modell_container( the::ctci::service< yarrr::ModellContainer >() )
 {
 }
 

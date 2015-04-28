@@ -1,4 +1,5 @@
 #include "../src/login_handler.hpp"
+#include "test_services.hpp"
 #include <yarrr/test_connection.hpp>
 #include <yarrr/test_db.hpp>
 #include <yarrr/command.hpp>
@@ -12,6 +13,7 @@ Describe_Only( a_login_handler )
 {
   void SetUp()
   {
+    services = std::make_unique< test::Services >();
     registration_request = yarrr::Command{ {
       yarrr::Protocol::registration_request,
       username,
@@ -52,32 +54,17 @@ Describe_Only( a_login_handler )
 
   It( creates_player_model_if_it_did_not_exist_before )
   {
-    //todo
     connection->wrapper.dispatch( registration_request );
-    std::string auth_token_in_db;
-    //AssertThat(
-    //    database->get_hash_field(
-    //      yarrr::player_key_from_id( username ),
-    //      "auth_token",
-    //      auth_token_in_db ),
-    //    Equals( true ) );
+    AssertThat( services->modell_container.exists( "player", username ), Equals( true ) );
 
-    AssertThat( auth_token_in_db, Equals( auth_token_sent_by_client ) );
-  }
-
-  It( sends_invalid_username_error_message_if_the_username_was_malformed )
-  {
-    //todo
-    assert_login_error_was_sent();
+    const auto& player( services->modell_container.create_with_id_if_needed( "player", username ) );
+    AssertThat( player.get( "auth_token" ), Equals( auth_token_sent_by_client ) );
   }
 
   void set_up_player_modell()
   {
-    //todo
-    //database->set_hash_field(
-    //    yarrr::player_key_from_id( username ),
-    //    "auth_token",
-    //    original_auth_token );
+    auto& player( services->modell_container.create_with_id_if_needed( "player", username ) );
+    player[ "auth_token" ] = original_auth_token;
   }
 
   It( does_not_dispatch_player_logged_in_after_registration_request_for_existing_user )
@@ -104,18 +91,11 @@ Describe_Only( a_login_handler )
 
   It( does_not_modify_authentication_token_of_a_registered_player )
   {
-    //todo
     set_up_player_modell();
     connection->wrapper.dispatch( registration_request );
-    std::string auth_token_in_db;
-    //AssertThat(
-    //    database->get_hash_field(
-    //      yarrr::player_key_from_id( username ),
-    //      "auth_token",
-    //      auth_token_in_db ),
-    //    Equals( true ) );
 
-    AssertThat( auth_token_in_db, Equals( original_auth_token ) );
+    const auto& player( services->modell_container.create_with_id_if_needed( "player", username ) );
+    AssertThat( player.get( "auth_token" ), Equals( original_auth_token ) );
   }
 
   It( does_not_dispatch_logged_in_for_malformed_registratin_requests )
@@ -147,11 +127,14 @@ Describe_Only( a_login_handler )
   }
 
 
-  It( does_not_dispatch_player_logged_in_after_login_request )
+  It( does_not_dispatch_player_logged_in_after_login_request_for_non_existing_player )
   {
     connection->wrapper.dispatch( login_request );
     AssertThat( was_player_logged_in, Equals( false ) );
+  }
 
+  It( does_not_dispatch_player_logged_in_without_authentication )
+  {
     set_up_player_modell();
     connection->wrapper.dispatch( login_request );
     AssertThat( was_player_logged_in, Equals( false ) );
@@ -215,7 +198,7 @@ Describe_Only( a_login_handler )
     connection->wrapper.dispatch( invalid_authentication_response );
   }
 
-  It( does_not_dispatches_player_logged_in_if_authentication_tokens_differ )
+  It( does_not_dispatch_player_logged_in_if_authentication_tokens_differ )
   {
     make_invalid_login_attempt();
     AssertThat( was_player_logged_in, Equals( false ) );
@@ -238,6 +221,13 @@ Describe_Only( a_login_handler )
     connection->wrapper.dispatch( malformed_authentication_response );
   }
 
+  It( sends_invalid_username_error_message_if_the_username_was_malformed )
+  {
+    //todo
+    //assert_login_error_was_sent();
+  }
+
+  std::unique_ptr< test::Services > services;
 
   std::unique_ptr< test::Connection > connection;
   the::ctci::Dispatcher dispatcher;

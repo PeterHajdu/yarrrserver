@@ -39,6 +39,7 @@ class Services
     yarrr::IdGenerator id_generator;
     test::Db database;
     the::ctci::AutoServiceRegister< yarrr::ModellContainer, yarrr::ModellContainer > modell_container_register;
+    yarrr::ModellContainer& modell_container;
 
     ~Services()
     {
