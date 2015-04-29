@@ -14,6 +14,8 @@
 #include <yarrr/object_exporter.hpp>
 #include <yarrr/mission_exporter.hpp>
 #include <yarrr/clock_exporter.hpp>
+#include <yarrr/id_generator.hpp>
+#include <yarrr/modell.hpp>
 
 #include <thetime/frequency_stabilizer.hpp>
 #include <thetime/clock.hpp>
@@ -122,7 +124,13 @@ create_notification_stream()
 int main( int argc, char ** argv )
 {
   the::ctci::AutoServiceRegister< yarrr::Db, yarrrs::RedisDb > db;
+  //todo: move stuff to new models
   the::ctci::AutoServiceRegister< yarrrs::Models, yarrrs::Models > models( yarrr::LuaEngine::model() );
+  yarrr::IdGenerator id_generator;
+  the::ctci::AutoServiceRegister< yarrr::ModellContainer, yarrr::ModellContainer > modell_container(
+      yarrr::LuaEngine::model(),
+      id_generator,
+      db.get() );
 
   parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );
   const std::string home_folder( std::string( getenv( "HOME" ) ) + "/.yarrrserver/" );

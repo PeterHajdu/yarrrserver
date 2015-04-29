@@ -15,7 +15,7 @@
 
 using namespace igloo;
 
-Describe_Only( a_player )
+Describe( a_player )
 {
   void set_up_command_handler()
   {
