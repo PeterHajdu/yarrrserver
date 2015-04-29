@@ -123,6 +123,8 @@ create_notification_stream()
 
 int main( int argc, char ** argv )
 {
+  parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );
+
   the::ctci::AutoServiceRegister< yarrr::Db, yarrrs::RedisDb > db;
   //todo: move stuff to new models
   the::ctci::AutoServiceRegister< yarrrs::Models, yarrrs::Models > models( yarrr::LuaEngine::model() );
@@ -132,7 +134,6 @@ int main( int argc, char ** argv )
       id_generator,
       db.get() );
 
-  parse_and_handle_configuration( the::conf::ParameterVector( argv, argv + argc ) );
   const std::string home_folder( std::string( getenv( "HOME" ) ) + "/.yarrrserver/" );
   the::conf::set( "lua_configuration_path", home_folder );
 

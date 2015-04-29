@@ -5,6 +5,7 @@
 #include <memory>
 #include <cassert>
 #include <unordered_map>
+#include <iterator>
 
 namespace
 {
@@ -31,6 +32,10 @@ class RedisCommand
           free_context )
       , m_reply( static_cast< redisReply* >( redisCommand( m_context.get(), m_command.c_str() ) ), free_reply )
     {
+      //todo: only one connection should exist for all commands
+      assert( m_context.get() != nullptr );
+      assert( !m_context->err );
+
       if ( !is_ok() )
       {
         thelog( yarrr::log::error )( "Redis command finished with error:", m_reply->str, "command:", m_command );
@@ -72,6 +77,31 @@ class RedisCommand
       return std::string( m_reply->str, m_reply->len );
     }
 
+    bool is_array() const
+    {
+      assert( is_ok() );
+      return m_reply->type == REDIS_REPLY_ARRAY;
+    }
+
+    size_t size() const
+    {
+      return m_reply->elements;
+    }
+
+    template < typename Iterator >
+    void copy_to( Iterator output_iterator ) const
+    {
+      const auto number_of_elements( size() );
+      for ( auto i( 0u ); i < number_of_elements; ++i )
+      {
+        //todo: extract reply parser to separate class and use here for subreplies
+        const auto& sub_reply( m_reply->element[ i ] );
+        assert( sub_reply->type == REDIS_REPLY_STRING );
+        *output_iterator = std::string( sub_reply->str, sub_reply->len );
+        ++output_iterator;
+      }
+    }
+
     std::string string_value_of_reply()
     {
       if ( is_integer() )
@@ -92,6 +122,22 @@ class RedisCommand
     std::unique_ptr< redisContext, decltype( free_context ) > m_context;
     std::unique_ptr< redisReply, decltype( free_reply ) > m_reply;
 };
+
+bool
+array_command( const std::string& command, yarrr::Db::Values& values )
+{
+  RedisCommand array_command( command );
+  if (
+      !array_command.is_ok() ||
+      !array_command.is_array() )
+  {
+    return false;
+  }
+
+  array_command.copy_to( std::back_inserter( values ) );
+
+  return true;
+}
 
 }
 
@@ -149,20 +195,18 @@ RedisDb::key_exists( const std::string& key )
 
 
 bool
-RedisDb::get_set_members( const std::string& key, Values& )
+RedisDb::get_set_members( const std::string& key, Values& values )
 {
-  //todo:implement this
-  return true;
+  return array_command( std::string( "smembers " ) + key, values );
 }
 
 
 bool
 RedisDb::get_hash_fields(
     const std::string& key,
-    Values& )
+    Values& values )
 {
-  //todo:implement this
-  return true;
+  return array_command( std::string( "hkeys " ) + key, values );
 }
 
 
