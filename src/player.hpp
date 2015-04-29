@@ -35,6 +35,8 @@ class Player
         ConnectionWrapper& connection_wrapper,
         const CommandHandler& );
 
+    ~Player();
+
     Player( const Player& ) = delete;
     Player& operator=( const Player& ) = delete;
 

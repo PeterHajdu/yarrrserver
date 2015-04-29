@@ -48,6 +48,7 @@ Player::Player(
   , m_command_handler( command_handler )
   , m_player_modell( the::ctci::service< yarrr::ModellContainer >().create_with_id_if_needed( "player", name ) )
 {
+  m_player_modell[ "availability" ] = "online";
   create_character_modell_if_needed( m_player_modell );
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
@@ -55,6 +56,11 @@ Player::Player(
   thelog( yarrr::log::debug )( "registering command callback for", this );
   connection_wrapper.register_listener< yarrr::Command >(
       std::bind( &Player::handle_command, this, std::placeholders::_1 ) );
+}
+
+Player::~Player()
+{
+  m_player_modell[ "availability" ] = "offline";
 }
 
 void

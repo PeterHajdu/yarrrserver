@@ -158,6 +158,15 @@ Describe( a_player )
           Equals( true ) );
   }
 
+  It( gives_availability_information_via_the_player_modell )
+  {
+    const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
+    AssertThat( player_modell.get( "availability" ), Equals( "online" ) );
+
+    player.reset();
+    AssertThat( player_modell.get( "availability" ), Equals( "offline" ) );
+  }
+
   yarrr::Hash& character_modell_of( const std::string& player_name )
   {
     const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
@@ -170,7 +179,7 @@ Describe( a_player )
     AssertThat( character_modell_of( player_name ).get( "name" ), Equals( player_name ) );
   }
 
-  It( does_not_create_a_new_if_it_existed_before )
+  It( does_not_create_a_new_character_if_it_existed_before )
   {
     AssertThat( character_modell_of( another_player_name ).get( "id" ), Equals( original_character_id_of_another_player ) );
   }

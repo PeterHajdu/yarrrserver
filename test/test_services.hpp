@@ -28,6 +28,10 @@ class Services
     yarrr::EngineDispatcher& engine_dispatcher;
     the::ctci::AutoServiceRegister< LocalEventDispatcher, LocalEventDispatcher > local_event_dispatcher_register;
     LocalEventDispatcher& local_event_dispatcher;
+    yarrr::IdGenerator id_generator;
+    test::Db database;
+    the::ctci::AutoServiceRegister< yarrr::ModellContainer, yarrr::ModellContainer > modell_container_register;
+    yarrr::ModellContainer& modell_container;
     the::ctci::AutoServiceRegister< yarrrs::Models, yarrrs::Models > models_register;
     yarrrs::Models& models;
     the::ctci::AutoServiceRegister< yarrr::MainThreadCallbackQueue, yarrr::MainThreadCallbackQueue > callback_queue_register;
@@ -36,10 +40,6 @@ class Services
     yarrr::ObjectContainer objects;
     yarrrs::CommandHandler command_handler;
     yarrrs::World world;
-    yarrr::IdGenerator id_generator;
-    test::Db database;
-    the::ctci::AutoServiceRegister< yarrr::ModellContainer, yarrr::ModellContainer > modell_container_register;
-    yarrr::ModellContainer& modell_container;
 
     ~Services()
     {
