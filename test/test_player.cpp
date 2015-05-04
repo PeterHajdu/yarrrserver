@@ -234,6 +234,14 @@ Describe( a_player )
           "object_id" } ), std::to_string( new_ship.id() ) ), Equals( true ) );
   }
 
+  It( refreshes_exported_object_id_on_the_permanent_object_as_well )
+  {
+    yarrr::Object new_ship;
+    player->player.assign_object( new_ship );
+    const auto& permanent_object( get_assigned_modell_of_category( "object" ) );
+    AssertThat( permanent_object.get( "realtime_object_id" ), Equals( std::to_string( new_ship.id() ) ) );
+  }
+
   It ( executes_commands_with_the_command_handler )
   {
     player->connection.wrapper.dispatch( command );

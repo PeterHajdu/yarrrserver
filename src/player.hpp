@@ -68,6 +68,7 @@ class Player
     MissionModelContainer m_own_mission_contexts;
 
     yarrr::Hash& m_player_modell;
+    yarrr::Hash& m_permanent_object_modell;
 };
 
 void broadcast( const Player::Container& players, const yarrr::Entity& entity );
