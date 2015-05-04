@@ -38,7 +38,8 @@ create_assorted_modells_if_needed( yarrr::Hash& player_modell )
 {
   auto& character_modell( assign_new_modell_if_needed_to( player_modell, "character" ) );
   character_modell[ "name" ] = player_modell.get( "id" );
-  assign_new_modell_if_needed_to( player_modell, "object" );
+  auto& object_modell( assign_new_modell_if_needed_to( player_modell, "object" ) );
+  object_modell[ "type" ] = "player_controlled";
 }
 
 }

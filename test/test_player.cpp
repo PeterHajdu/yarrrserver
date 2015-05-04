@@ -194,6 +194,21 @@ Describe( a_player )
     assert_modell_of_category_is_assigned( "object" );
   }
 
+  yarrr::Hash& get_assigned_modell_of_category( const std::string& category )
+  {
+    AssertThat( services->modell_container.exists( "player", player_name ), Equals( true ) );
+    const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
+    const auto& assigned_id( player_modell.get( category + "_id" ) );
+    AssertThat( services->modell_container.exists( category, assigned_id ), Equals( true ) );
+    return services->modell_container.create_with_id_if_needed( category, assigned_id );
+  }
+
+  It( creates_the_permanent_object_with_type_player_controlled )
+  {
+    const auto& assigned_object( get_assigned_modell_of_category( "object" ) );
+    AssertThat( assigned_object.get( "type" ), Equals( "player_controlled" ) );
+  }
+
   It( sends_mission_object_to_the_player_when_updated )
   {
     player->player.update_missions();
