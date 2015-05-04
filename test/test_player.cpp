@@ -144,18 +144,23 @@ Describe( a_player )
           Equals( true ) );
   }
 
-  It( creates_character_modell_if_it_did_not_exist_befor )
+  void assert_modell_of_category_is_assigned( const std::string& category )
   {
     AssertThat( services->lua.assert_that( the::model::path_from( {
           "modells", "player", player_name } ) ),
           Equals( true ) );
 
     const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
-    const auto character_id( player_modell.get( "character_id" ) );
+    const auto assigned_modell_id( player_modell.get( category + "_id" ) );
 
     AssertThat( services->lua.assert_that( the::model::path_from( {
-          "modells", "character", character_id } ) ),
+          "modells", category, assigned_modell_id } ) ),
           Equals( true ) );
+  }
+
+  It( creates_character_modell_if_it_did_not_exist_before )
+  {
+    assert_modell_of_category_is_assigned( "character" );
   }
 
   It( gives_availability_information_via_the_player_modell )
@@ -182,6 +187,11 @@ Describe( a_player )
   It( does_not_create_a_new_character_if_it_existed_before )
   {
     AssertThat( character_modell_of( another_player_name ).get( "id" ), Equals( original_character_id_of_another_player ) );
+  }
+
+  It( creates_a_permanent_object_if_it_did_not_exist_before )
+  {
+    assert_modell_of_category_is_assigned( "object" );
   }
 
   It( sends_mission_object_to_the_player_when_updated )
