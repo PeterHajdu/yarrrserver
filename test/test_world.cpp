@@ -19,6 +19,19 @@
 #include "test_protocol.hpp"
 
 using namespace igloo;
+namespace test
+{
+
+yarrr::Object::Id
+object_id_from_string( const std::string& string_id )
+{
+  std::stringstream str( string_id );
+  yarrr::Object::Id object_id;
+  str >> object_id;
+  return object_id;
+}
+
+}
 
 Describe( a_world )
 {
@@ -35,6 +48,7 @@ Describe( a_world )
         [ this ]()
         {
           yarrr::Object* new_ship( new yarrr::Object() );
+          new_ship->add_behavior( std::make_unique< yarrr::PhysicalBehavior >() );
           last_object_id_created = new_ship->id();
           return yarrr::Object::Pointer( new_ship );
         });
@@ -44,6 +58,7 @@ Describe( a_world )
         [ this ]()
         {
           yarrr::Object* new_ship( new yarrr::Object() );
+          new_ship->add_behavior( std::make_unique< yarrr::PhysicalBehavior >() );
           another_ship_type_was_constructed = true;
           return yarrr::Object::Pointer( new_ship );
         });
@@ -80,12 +95,7 @@ Describe( a_world )
   {
     auto& an_object( services->modell_container.create( "object" ) );
     services->reset_world();
-    const auto realtime_object_id( an_object.get( "realtime_object_id" ) );
-
-    std::stringstream str( realtime_object_id );
-    yarrr::Object::Id object_id;
-    str >> object_id;
-
+    const auto object_id( test::object_id_from_string( an_object.get( "realtime_object_id" ) ) );
     AssertThat( services->objects.has_object_with_id( object_id ), Equals( true ) );
   }
 
@@ -103,6 +113,24 @@ Describe( a_world )
     an_object[ "ship_type" ] = "another_ship_type";
     services->reset_world();
     AssertThat( another_ship_type_was_constructed, Equals( true ) );
+  }
+
+  It ( creates_realtime_objects_on_startup_with_the_proper_physical_parameters )
+  {
+    auto& an_object( services->modell_container.create( "object" ) );
+    yarrr::Coordinate coordinate( 1000, 200 );
+    yarrr::Angle angular_velocity( 1234 );
+    an_object[ "x" ] = std::to_string( coordinate.x );
+    an_object[ "y" ] = std::to_string( coordinate.y );
+    an_object[ "angular_velocity" ] = std::to_string( angular_velocity );
+    services->reset_world();
+
+    const auto object_id( test::object_id_from_string( an_object.get( "realtime_object_id" ) ) );
+    auto& realtime_object( services->objects.object_with_id( object_id ) );
+    auto& physical_parameters( yarrr::component_of< yarrr::PhysicalBehavior >( realtime_object ).physical_parameters );
+
+    AssertThat( physical_parameters.coordinate, Equals( coordinate ) );
+    AssertThat( physical_parameters.angular_velocity, Equals( angular_velocity ) );
   }
 
   It ( does_not_create_new_ship_if_the_user_is_already_logged_in )
