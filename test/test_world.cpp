@@ -60,6 +60,19 @@ Describe( a_world )
     services->engine_dispatcher.dispatch( event );
   }
 
+  It ( creates_realtime_objects_on_startup_from_permanent_objects )
+  {
+    auto& an_object( services->modell_container.create( "object" ) );
+    services->reset_world();
+    const auto realtime_object_id( an_object.get( "realtime_object_id" ) );
+
+    std::stringstream str( realtime_object_id );
+    yarrr::Object::Id object_id;
+    str >> object_id;
+
+    AssertThat( services->objects.has_object_with_id( object_id ), Equals( true ) );
+  }
+
   It ( does_not_create_new_ship_if_the_user_is_already_logged_in )
   {
     auto first_players_ship_id( last_object_id_created );

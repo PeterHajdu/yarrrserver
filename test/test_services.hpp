@@ -8,6 +8,7 @@
 #include <yarrr/modell.hpp>
 #include <themodel/lua.hpp>
 #include <themodel/node_list.hpp>
+#include <themodel/json_exporter.hpp>
 #include "../src/models.hpp"
 #include "../src/player.hpp"
 #include "../src/command_handler.hpp"
@@ -15,6 +16,7 @@
 #include "../src/world.hpp"
 #include <yarrr/test_connection.hpp>
 #include <sstream>
+#include <iostream>
 
 namespace test
 {
@@ -39,7 +41,17 @@ class Services
     yarrrs::Player::Container players;
     yarrr::ObjectContainer objects;
     yarrrs::CommandHandler command_handler;
-    yarrrs::World world;
+    std::unique_ptr< yarrrs::World > world;
+
+    void reset_world()
+    {
+      world = std::make_unique< yarrrs::World >( players, objects );
+    }
+
+    void dump_modell() const
+    {
+      std::cout << the::model::export_json( lua ) << std::endl;
+    }
 
     ~Services()
     {

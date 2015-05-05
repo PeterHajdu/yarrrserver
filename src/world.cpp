@@ -16,9 +16,23 @@
 #include <yarrr/chat_message.hpp>
 #include <yarrr/command.hpp>
 #include <yarrr/basic_behaviors.hpp>
+#include <yarrr/modell.hpp>
 
 namespace
 {
+
+void
+create_permanent_objects( yarrr::ObjectContainer& realtime_objects )
+{
+  auto& models( the::ctci::service< yarrr::ModellContainer >() );
+  const auto& objects( models.get( "object" ) );
+  for ( const auto& object : objects )
+  {
+    yarrr::Object::Pointer realtime_object( the::ctci::service< yarrr::ObjectFactory >().create_a( "ship" ) );
+    (*object.second)[ "realtime_object_id" ] = std::to_string( realtime_object->id() );
+    realtime_objects.add_object( std::move( realtime_object ) );
+  }
+}
 
 yarrr::Object::Pointer
 create_player_ship( const std::string& type, const std::string& player_name_as_captain )
@@ -220,6 +234,7 @@ World::World( Player::Container& players, yarrr::ObjectContainer& objects )
       [ this ]( const yarrr::PlayerKilled& killed ){ handle_player_killed( killed ); } );
 
   add_command_handlers_to( m_command_handler, m_objects, m_players );
+  create_permanent_objects( objects );
 }
 
 void

@@ -31,8 +31,9 @@ Services::Services()
   , players()
   , objects()
   , command_handler()
-  , world( players, objects )
+  , world()
 {
+  reset_world();
 }
 
 }
