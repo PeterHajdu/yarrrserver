@@ -34,7 +34,11 @@ create_permanent_objects( yarrr::ObjectContainer& realtime_objects )
       continue;
     }
 
-    yarrr::Object::Pointer realtime_object( the::ctci::service< yarrr::ObjectFactory >().create_a( "ship" ) );
+    const auto ship_type( object_model.has( "ship_type" ) ?
+        object_model.get( "ship_type" ) :
+        "ship" );
+
+    yarrr::Object::Pointer realtime_object( the::ctci::service< yarrr::ObjectFactory >().create_a( ship_type ) );
     object_model[ "realtime_object_id" ] = std::to_string( realtime_object->id() );
     realtime_objects.add_object( std::move( realtime_object ) );
   }

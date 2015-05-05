@@ -27,9 +27,9 @@ Describe( a_world )
     services = std::make_unique< test::Services >();
   }
 
-  void SetUp()
+  void set_up_object_factory()
   {
-    cleanup();
+    another_ship_type_was_constructed = false;
     the::ctci::service< yarrr::ObjectFactory >().register_creator(
         "ship",
         [ this ]()
@@ -38,6 +38,22 @@ Describe( a_world )
           last_object_id_created = new_ship->id();
           return yarrr::Object::Pointer( new_ship );
         });
+
+    the::ctci::service< yarrr::ObjectFactory >().register_creator(
+        "another_ship_type",
+        [ this ]()
+        {
+          yarrr::Object* new_ship( new yarrr::Object() );
+          another_ship_type_was_constructed = true;
+          return yarrr::Object::Pointer( new_ship );
+        });
+  }
+
+  void SetUp()
+  {
+    cleanup();
+
+    set_up_object_factory();
 
     player_bundle = services->log_in_player( player_name );
     connection = &player_bundle->connection;
@@ -81,6 +97,13 @@ Describe( a_world )
     AssertThat( an_object.has( "realtime_object_id" ), Equals( false ) );
   }
 
+  It ( creates_realtime_objects_on_startup_with_the_proper_ship_type )
+  {
+    auto& an_object( services->modell_container.create( "object" ) );
+    an_object[ "ship_type" ] = "another_ship_type";
+    services->reset_world();
+    AssertThat( another_ship_type_was_constructed, Equals( true ) );
+  }
 
   It ( does_not_create_new_ship_if_the_user_is_already_logged_in )
   {
@@ -230,5 +253,6 @@ Describe( a_world )
   yarrrs::Player* player;
   yarrr::Object::Id last_object_id_created;
   std::unique_ptr< test::Services > services;
+  bool another_ship_type_was_constructed;
 };
 
