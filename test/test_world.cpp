@@ -73,6 +73,15 @@ Describe( a_world )
     AssertThat( services->objects.has_object_with_id( object_id ), Equals( true ) );
   }
 
+  It ( does_not_create_realtime_objects_on_startup_for_player_controlled_objects )
+  {
+    auto& an_object( services->modell_container.create( "object" ) );
+    an_object[ "type" ] = "player_controlled";
+    services->reset_world();
+    AssertThat( an_object.has( "realtime_object_id" ), Equals( false ) );
+  }
+
+
   It ( does_not_create_new_ship_if_the_user_is_already_logged_in )
   {
     auto first_players_ship_id( last_object_id_created );

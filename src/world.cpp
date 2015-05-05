@@ -28,8 +28,14 @@ create_permanent_objects( yarrr::ObjectContainer& realtime_objects )
   const auto& objects( models.get( "object" ) );
   for ( const auto& object : objects )
   {
+    auto& object_model( *object.second );
+    if ( object_model.has( "type" ) && object_model.get( "type" ) == "player_controlled" )
+    {
+      continue;
+    }
+
     yarrr::Object::Pointer realtime_object( the::ctci::service< yarrr::ObjectFactory >().create_a( "ship" ) );
-    (*object.second)[ "realtime_object_id" ] = std::to_string( realtime_object->id() );
+    object_model[ "realtime_object_id" ] = std::to_string( realtime_object->id() );
     realtime_objects.add_object( std::move( realtime_object ) );
   }
 }
