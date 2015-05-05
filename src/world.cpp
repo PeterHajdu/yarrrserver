@@ -1,7 +1,6 @@
 #include "world.hpp"
 #include "player.hpp"
 #include "local_event_dispatcher.hpp"
-#include "notifier.hpp"
 #include <thectci/service_registry.hpp>
 
 #include <yarrr/object_factory.hpp>
@@ -325,7 +324,6 @@ World::handle_player_logged_in( const PlayerLoggedIn& login ) const
   const std::string notification( std::string( "Player logged in: " ) + login.name );
   thelog( yarrr::log::info )( notification );
   yarrrs::broadcast( m_players, yarrr::ChatMessage( notification, "server" ) );
-  the::ctci::service< yarrrs::Notifier >().send( notification );
 }
 
 

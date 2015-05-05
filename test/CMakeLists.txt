@@ -4,7 +4,6 @@ add_definitions(-Wno-deprecated-declarations)
 set(TEST_SOURCE_FILES
     test_runner.cpp
     test_services.cpp
-    test_notifier.cpp
     test_world.cpp
     test_player.cpp
     test_command_handler.cpp

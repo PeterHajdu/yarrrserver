@@ -2,7 +2,6 @@ set(LIBRARY_SOURCE_FILES
   network_service.cpp
   player.cpp
   world.cpp
-  notifier.cpp
   command_handler.cpp
   models.cpp
   redis.cpp

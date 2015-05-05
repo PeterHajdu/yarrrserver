@@ -109,7 +109,5 @@ class Services
     }
 };
 
-std::stringstream& get_notification_stream();
-
 }
 

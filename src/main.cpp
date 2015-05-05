@@ -1,7 +1,6 @@
 #include "network_service.hpp"
 #include "player.hpp"
 #include "world.hpp"
-#include "notifier.hpp"
 #include "models.hpp"
 #include "redis.hpp"
 
@@ -109,16 +108,6 @@ parse_and_handle_configuration( const the::conf::ParameterVector& parameters )
   }
 }
 
-std::ostream&
-create_notification_stream()
-{
-  static std::ofstream notification_stream(
-      the::conf::has( "notify" ) ?
-        the::conf::get< std::string >( "notify" ).c_str() :
-        "dummy_notification_file" );
-  return notification_stream;
-}
-
 }
 
 int main( int argc, char ** argv )
@@ -142,9 +131,6 @@ int main( int argc, char ** argv )
       home_folder,
       "/usr/local/share/yarrr/",
       "/usr/share/yarrr/" } );
-
-  the::ctci::AutoServiceRegister< yarrrs::Notifier, yarrrs::Notifier > notifier_register(
-      create_notification_stream() );
 
   yarrr::initialize_lua_engine();
 

@@ -1,6 +1,5 @@
 #include "test_services.hpp"
 #include "../src/local_event_dispatcher.hpp"
-#include "../src/notifier.hpp"
 #include <yarrr/object_factory.hpp>
 #include <yarrr/mission_factory.hpp>
 #include <yarrr/engine_dispatcher.hpp>
@@ -36,23 +35,12 @@ Services::Services()
 {
 }
 
-
-std::stringstream&
-get_notification_stream()
-{
-  static std::stringstream notification_stream;
-  return notification_stream;
-}
-
 }
 
 namespace
 {
   the::ctci::AutoServiceRegister< yarrr::GraphicalEngine, yarrr::DummyGraphicalEngine >
     graphical_engine_register;
-
-  the::ctci::AutoServiceRegister< yarrrs::Notifier, yarrrs::Notifier > notifier_register(
-      test::get_notification_stream() );
 
   the::ctci::AutoServiceRegister< yarrr::ObjectFactory, yarrr::ObjectFactory >
     object_factory_register;
