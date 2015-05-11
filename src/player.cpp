@@ -17,35 +17,36 @@ namespace
 {
 
 yarrr::Hash&
-assign_new_modell_if_needed_to( yarrr::Hash& player_modell, const std::string& category )
+assign_new_modell_if_needed_to( yarrr::Hash& player_model, const std::string& category )
 {
   const std::string category_id_key{ category + "_id" };
-  if ( player_modell.has( category_id_key ) )
+  if ( player_model.has( category_id_key ) )
   {
-    auto assigned_modell_id( player_modell[ category_id_key ].get() );
+    auto assigned_modell_id( player_model[ category_id_key ].get() );
     return the::ctci::service< yarrr::ModellContainer >().create_with_id_if_needed(
         category,
         assigned_modell_id );
   }
 
   auto& assigned_modell( the::ctci::service< yarrr::ModellContainer >().create( category ) );
-  player_modell[ category_id_key ] = assigned_modell.get( "id" );
+  player_model[ category_id_key ] = assigned_modell.get( "id" );
   return assigned_modell;
 }
 
-void
-create_assorted_modells_if_needed( yarrr::Hash& player_modell )
+yarrr::Hash&
+create_character_model_if_needed_for(  yarrr::Hash& player_model )
 {
-  auto& character_modell( assign_new_modell_if_needed_to( player_modell, "character" ) );
-  character_modell[ "name" ] = player_modell.get( "id" );
+  auto& character_model( assign_new_modell_if_needed_to( player_model, "character" ) );
+  character_model[ "name" ] = player_model.get( "id" );
+  return character_model;
 }
 
 yarrr::Hash&
-create_permanent_object_if_needed_for(  yarrr::Hash& player_modell )
+create_permanent_object_if_needed_for(  yarrr::Hash& player_model )
 {
-  auto& object_modell( assign_new_modell_if_needed_to( player_modell, "object" ) );
-  object_modell[ "type" ] = "player_controlled";
-  return object_modell;
+  auto& object_model( assign_new_modell_if_needed_to( player_model, "object" ) );
+  object_model[ "type" ] = "player_controlled";
+  return object_model;
 }
 
 }
@@ -65,11 +66,11 @@ Player::Player(
   , m_mission_contexts( the::ctci::service< yarrrs::Models >().mission_contexts )
   , m_missions( std::bind( &Player::handle_mission_finished, this, std::placeholders::_1 ) )
   , m_command_handler( command_handler )
-  , m_player_modell( the::ctci::service< yarrr::ModellContainer >().create_with_id_if_needed( "player", name ) )
-  , m_permanent_object_modell( create_permanent_object_if_needed_for( m_player_modell ) )
+  , m_player_model( the::ctci::service< yarrr::ModellContainer >().create_with_id_if_needed( "player", name ) )
+  , m_character_model( create_character_model_if_needed_for( m_player_model ) )
+  , m_permanent_object_model( create_permanent_object_if_needed_for( m_player_model ) )
 {
-  m_player_modell[ "availability" ] = "online";
-  create_assorted_modells_if_needed( m_player_modell );
+  m_player_model[ "availability" ] = "online";
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
 
@@ -83,12 +84,13 @@ Player::Player(
 void
 Player::synchronize_modells()
 {
-  send( yarrr::ModellSerializer( m_player_modell ).serialize() );
+  send( yarrr::ModellSerializer( m_player_model ).serialize() );
+  send( yarrr::ModellSerializer( m_character_model ).serialize() );
 }
 
 Player::~Player()
 {
-  m_player_modell[ "availability" ] = "offline";
+  m_player_model[ "availability" ] = "offline";
 }
 
 void
@@ -136,7 +138,7 @@ Player::assign_object( yarrr::Object& object )
   }
 
   m_current_object = &object;
-  m_permanent_object_modell[ "realtime_object_id" ] = std::to_string( object.id() );
+  m_permanent_object_model[ "realtime_object_id" ] = std::to_string( object.id() );
   send( yarrr::Command( { yarrr::Protocol::object_assigned, std::to_string( object.id() ) } ).serialize() );
   thelog( yarrr::log::debug )( "Assigning object to user.", object.id(), name );
   m_connection_wrapper.register_dispatcher( object.dispatcher );

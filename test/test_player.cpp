@@ -191,12 +191,23 @@ Describe( a_player )
 
   It ( sends_player_model_to_the_player )
   {
-    AssertThat( player->connection.has_entity< yarrr::ModellSerializer >(), Equals( true ) );
-    auto serialized_modell( player->connection.get_entity< yarrr::ModellSerializer >() );
-    AssertThat( serialized_modell->category(), Equals( "player" ) );
-    AssertThat( serialized_modell->id(), Equals( player_name ) );
+    auto serialized_models( player->connection.entities< yarrr::ModellSerializer >() );
+    AssertThat( serialized_models.size(), IsGreaterThan( 0u ) );
+    auto& first_model( serialized_models.at( 0 ) );
+
+    AssertThat( first_model->category(), Equals( "player" ) );
+    AssertThat( first_model->id(), Equals( player_name ) );
   }
 
+  It ( sends_character_model_to_the_player )
+  {
+    auto serialized_models( player->connection.entities< yarrr::ModellSerializer >() );
+    AssertThat( serialized_models.size(), IsGreaterThan( 1u ) );
+    auto& second_model( serialized_models.at( 1 ) );
+
+    AssertThat( second_model->category(), Equals( "character" ) );
+    //AssertThat( serialized_modell->id(), Equals( player_name ) );
+  }
 
   It( creates_a_permanent_object_if_it_did_not_exist_before )
   {

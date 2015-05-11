@@ -68,8 +68,9 @@ class Player
     using MissionModelContainer = std::unordered_map< yarrr::Mission::Id, std::unique_ptr< yarrr::MissionModel > >;
     MissionModelContainer m_own_mission_contexts;
 
-    yarrr::Hash& m_player_modell;
-    yarrr::Hash& m_permanent_object_modell;
+    yarrr::Hash& m_player_model;
+    yarrr::Hash& m_character_model;
+    yarrr::Hash& m_permanent_object_model;
 };
 
 void broadcast( const Player::Container& players, const yarrr::Entity& entity );
