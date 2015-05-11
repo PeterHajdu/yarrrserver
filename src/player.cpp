@@ -76,6 +76,14 @@ Player::Player(
   thelog( yarrr::log::debug )( "registering command callback for", this );
   connection_wrapper.register_listener< yarrr::Command >(
       std::bind( &Player::handle_command, this, std::placeholders::_1 ) );
+
+  synchronize_modells();
+}
+
+void
+Player::synchronize_modells()
+{
+  send( yarrr::ModellSerializer( m_player_modell ).serialize() );
 }
 
 Player::~Player()

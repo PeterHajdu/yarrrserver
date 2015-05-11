@@ -51,6 +51,7 @@ class Player
     void player_killed();
 
   private:
+    void synchronize_modells();
     void refresh_mission_models();
     void add_mission_model_of( const yarrr::Mission&, const yarrr::Object::Id& );
     void handle_command( const yarrr::Command& );

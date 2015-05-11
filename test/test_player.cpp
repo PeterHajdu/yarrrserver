@@ -189,6 +189,15 @@ Describe( a_player )
     AssertThat( character_modell_of( another_player_name ).get( "id" ), Equals( original_character_id_of_another_player ) );
   }
 
+  It ( sends_player_model_to_the_player )
+  {
+    AssertThat( player->connection.has_entity< yarrr::ModellSerializer >(), Equals( true ) );
+    auto serialized_modell( player->connection.get_entity< yarrr::ModellSerializer >() );
+    AssertThat( serialized_modell->category(), Equals( "player" ) );
+    AssertThat( serialized_modell->id(), Equals( player_name ) );
+  }
+
+
   It( creates_a_permanent_object_if_it_did_not_exist_before )
   {
     assert_modell_of_category_is_assigned( "object" );
