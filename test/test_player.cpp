@@ -144,14 +144,19 @@ Describe( a_player )
           Equals( true ) );
   }
 
+  std::string assigned_model_id( const std::string& category )
+  {
+    const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
+    return player_modell.get( category + "_id" );
+  }
+
   void assert_modell_of_category_is_assigned( const std::string& category )
   {
     AssertThat( services->lua.assert_that( the::model::path_from( {
           "modells", "player", player_name } ) ),
           Equals( true ) );
 
-    const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
-    const auto assigned_modell_id( player_modell.get( category + "_id" ) );
+    const auto assigned_modell_id( assigned_model_id( category ) );
 
     AssertThat( services->lua.assert_that( the::model::path_from( {
           "modells", category, assigned_modell_id } ) ),
@@ -199,14 +204,24 @@ Describe( a_player )
     AssertThat( first_model->id(), Equals( player_name ) );
   }
 
-  It ( sends_character_model_to_the_player )
+  void assert_nth_model_synchronized( size_t n, const std::string& category )
   {
     auto serialized_models( player->connection.entities< yarrr::ModellSerializer >() );
-    AssertThat( serialized_models.size(), IsGreaterThan( 1u ) );
-    auto& second_model( serialized_models.at( 1 ) );
+    AssertThat( serialized_models.size(), IsGreaterThan( n ) );
+    auto& nth_model( serialized_models.at( n ) );
 
-    AssertThat( second_model->category(), Equals( "character" ) );
-    //AssertThat( serialized_modell->id(), Equals( player_name ) );
+    AssertThat( nth_model->category(), Equals( category ) );
+    AssertThat( nth_model->id(), Equals( assigned_model_id( category ) ) );
+  }
+
+  It ( sends_character_model_to_the_player )
+  {
+    assert_nth_model_synchronized( 1, "character" );
+  }
+
+  It ( sends_permanent_object_model_to_the_player )
+  {
+    assert_nth_model_synchronized( 2, "object" );
   }
 
   It( creates_a_permanent_object_if_it_did_not_exist_before )

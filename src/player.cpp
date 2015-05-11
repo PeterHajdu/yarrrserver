@@ -86,6 +86,7 @@ Player::synchronize_modells()
 {
   send( yarrr::ModellSerializer( m_player_model ).serialize() );
   send( yarrr::ModellSerializer( m_character_model ).serialize() );
+  send( yarrr::ModellSerializer( m_permanent_object_model ).serialize() );
 }
 
 Player::~Player()
