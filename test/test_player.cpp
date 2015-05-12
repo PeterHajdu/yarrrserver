@@ -83,6 +83,8 @@ Describe( a_player )
   void TearDown()
   {
     player.reset();
+    another_player.reset();
+    services.reset();
   }
 
   It ( broadcasts_chat_messages )
@@ -194,24 +196,24 @@ Describe( a_player )
     AssertThat( character_modell_of( another_player_name ).get( "id" ), Equals( original_character_id_of_another_player ) );
   }
 
-  It ( sends_player_model_to_the_player )
-  {
-    auto serialized_models( player->connection.entities< yarrr::ModellSerializer >() );
-    AssertThat( serialized_models.size(), IsGreaterThan( 0u ) );
-    auto& first_model( serialized_models.at( 0 ) );
-
-    AssertThat( first_model->category(), Equals( "player" ) );
-    AssertThat( first_model->id(), Equals( player_name ) );
-  }
-
-  void assert_nth_model_synchronized( size_t n, const std::string& category )
+  void assert_nth_model_synchronized_with_id( size_t n, const std::string& category, const std::string& id )
   {
     auto serialized_models( player->connection.entities< yarrr::ModellSerializer >() );
     AssertThat( serialized_models.size(), IsGreaterThan( n ) );
     auto& nth_model( serialized_models.at( n ) );
 
     AssertThat( nth_model->category(), Equals( category ) );
-    AssertThat( nth_model->id(), Equals( assigned_model_id( category ) ) );
+    AssertThat( nth_model->id(), Equals( id ) );
+  }
+
+  It ( sends_player_model_to_the_player )
+  {
+    assert_nth_model_synchronized_with_id( 0, "player", player_name );
+  }
+
+  void assert_nth_model_synchronized( size_t n, const std::string& category )
+  {
+    assert_nth_model_synchronized_with_id( n, category, assigned_model_id( category ) );
   }
 
   It ( sends_character_model_to_the_player )
@@ -222,6 +224,32 @@ Describe( a_player )
   It ( sends_permanent_object_model_to_the_player )
   {
     assert_nth_model_synchronized( 2, "object" );
+  }
+
+  It ( resends_player_model_if_it_changes )
+  {
+    player->connection.flush_connection();
+    auto& player_model( services->modell_container.create_with_id_if_needed( "player", player_name ) );
+    player_model[ "a_new_key"] = "a new value";
+    assert_nth_model_synchronized_with_id( 0, "player", player_name );
+  }
+
+  void assert_resends_model_if_it_changes( const std::string& category )
+  {
+    player->connection.flush_connection();
+    auto& model( services->modell_container.create_with_id_if_needed( category, assigned_model_id( category ) ) );
+    model[ "a_new_key"] = "a new value";
+    assert_nth_model_synchronized( 0, category );
+  }
+
+  It ( resends_character_model_if_it_changes )
+  {
+    assert_resends_model_if_it_changes( "character" );
+  }
+
+  It ( resends_object_model_if_it_changes )
+  {
+    assert_resends_model_if_it_changes( "object" );
   }
 
   It( creates_a_permanent_object_if_it_did_not_exist_before )
@@ -302,6 +330,8 @@ Describe( a_player )
     AssertThat( player->connection.get_entity< yarrr::ChatMessage >()->message(), Contains( the_error_message ) );
   }
 
+  std::unique_ptr< test::Services > services;
+
   const std::string command_name{ "some strange command" };
   const yarrr::Command command{ { command_name } };
   yarrrs::Player* dispatched_player{ nullptr };
@@ -322,6 +352,5 @@ Describe( a_player )
   yarrr::Mission::Id mission_id;
 
   bool should_finish_mission;
-  std::unique_ptr< test::Services > services;
 };
 

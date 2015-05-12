@@ -69,6 +69,7 @@ Player::Player(
   , m_player_model( the::ctci::service< yarrr::ModellContainer >().create_with_id_if_needed( "player", name ) )
   , m_character_model( create_character_model_if_needed_for( m_player_model ) )
   , m_permanent_object_model( create_permanent_object_if_needed_for( m_player_model ) )
+  , m_observers()
 {
   m_player_model[ "availability" ] = "online";
   connection_wrapper.register_listener< yarrr::ChatMessage >(
@@ -79,6 +80,16 @@ Player::Player(
       std::bind( &Player::handle_command, this, std::placeholders::_1 ) );
 
   synchronize_modells();
+
+  auto hash_changed_observer(
+    [ this ]( const yarrr::Hash& changed_hash )
+    {
+      send( yarrr::ModellSerializer( changed_hash ).serialize() );
+    } );
+
+  m_observers.emplace_back( m_player_model.auto_observe( hash_changed_observer ) );
+  m_observers.emplace_back( m_character_model.auto_observe( hash_changed_observer ) );
+  m_observers.emplace_back( m_permanent_object_model.auto_observe( hash_changed_observer ) );
 }
 
 void
@@ -91,6 +102,7 @@ Player::synchronize_modells()
 
 Player::~Player()
 {
+  m_observers.clear();
   m_player_model[ "availability" ] = "offline";
 }
 

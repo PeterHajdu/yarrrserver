@@ -71,6 +71,8 @@ class Player
     yarrr::Hash& m_player_model;
     yarrr::Hash& m_character_model;
     yarrr::Hash& m_permanent_object_model;
+
+    std::vector< yarrr::Hash::auto_observer_type > m_observers;
 };
 
 void broadcast( const Player::Container& players, const yarrr::Entity& entity );
