@@ -95,22 +95,22 @@ Describe( a_world )
   {
     auto& an_object( services->modell_container.create( "object" ) );
     services->reset_world();
-    const auto object_id( test::object_id_from_string( an_object.get( "realtime_object_id" ) ) );
+    const auto object_id( test::object_id_from_string( an_object.get( yarrr::model::realtime_object_id ) ) );
     AssertThat( services->objects.has_object_with_id( object_id ), Equals( true ) );
   }
 
   It ( does_not_create_realtime_objects_on_startup_for_player_controlled_objects )
   {
     auto& an_object( services->modell_container.create( "object" ) );
-    an_object[ "type" ] = "player_controlled";
+    an_object[ yarrr::model::object_type ] = yarrr::model::player_controlled;
     services->reset_world();
-    AssertThat( an_object.has( "realtime_object_id" ), Equals( false ) );
+    AssertThat( an_object.has( yarrr::model::realtime_object_id ), Equals( false ) );
   }
 
   It ( creates_realtime_objects_on_startup_with_the_proper_ship_type )
   {
     auto& an_object( services->modell_container.create( "object" ) );
-    an_object[ "ship_type" ] = "another_ship_type";
+    an_object[ yarrr::model::ship_type ] = "another_ship_type";
     services->reset_world();
     AssertThat( another_ship_type_was_constructed, Equals( true ) );
   }
@@ -120,12 +120,12 @@ Describe( a_world )
     auto& an_object( services->modell_container.create( "object" ) );
     yarrr::Coordinate coordinate( 1000, 200 );
     yarrr::Angle angular_velocity( 1234 );
-    an_object[ "x" ] = std::to_string( coordinate.x );
-    an_object[ "y" ] = std::to_string( coordinate.y );
-    an_object[ "angular_velocity" ] = std::to_string( angular_velocity );
+    an_object[ yarrr::model::hidden_x ] = std::to_string( coordinate.x );
+    an_object[ yarrr::model::hidden_y ] = std::to_string( coordinate.y );
+    an_object[ yarrr::model::hidden_angular_velocity ] = std::to_string( angular_velocity );
     services->reset_world();
 
-    const auto object_id( test::object_id_from_string( an_object.get( "realtime_object_id" ) ) );
+    const auto object_id( test::object_id_from_string( an_object.get( yarrr::model::realtime_object_id ) ) );
     auto& realtime_object( services->objects.object_with_id( object_id ) );
     auto& physical_parameters( yarrr::component_of< yarrr::PhysicalBehavior >( realtime_object ).physical_parameters );
 

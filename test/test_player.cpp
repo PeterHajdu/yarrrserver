@@ -15,6 +15,16 @@
 
 using namespace igloo;
 
+namespace
+{
+
+std::string assigned_id_key_from( const std::string& category )
+{
+  return "_" + category + "_id";
+}
+
+}
+
 Describe( a_player )
 {
   void set_up_command_handler()
@@ -57,8 +67,8 @@ Describe( a_player )
   {
     auto& player_modell( services->modell_container.create_with_id_if_needed( "player", another_player_name ) );
     auto& character_modell( services->modell_container.create( "character" ) );
-    player_modell[ "character_id" ] = character_modell.get( "id" );
-    original_character_id_of_another_player = character_modell.get( "id" );
+    player_modell[ yarrr::model::character_id ] = character_modell.get( yarrr::model::id );
+    original_character_id_of_another_player = character_modell.get( yarrr::model::id );
     another_player = services->create_player( another_player_name );
     services->players[ another_player->connection.connection->id ] = another_player->take_player_ownership();
   }
@@ -149,7 +159,7 @@ Describe( a_player )
   std::string assigned_model_id( const std::string& category )
   {
     const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
-    return player_modell.get( category + "_id" );
+    return player_modell.get( assigned_id_key_from( category ) );
   }
 
   void assert_modell_of_category_is_assigned( const std::string& category )
@@ -173,27 +183,27 @@ Describe( a_player )
   It( gives_availability_information_via_the_player_modell )
   {
     const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
-    AssertThat( player_modell.get( "availability" ), Equals( "online" ) );
+    AssertThat( player_modell.get( yarrr::model::availability ), Equals( "online" ) );
 
     player.reset();
-    AssertThat( player_modell.get( "availability" ), Equals( "offline" ) );
+    AssertThat( player_modell.get( yarrr::model::availability ), Equals( "offline" ) );
   }
 
   yarrr::Hash& character_modell_of( const std::string& player_name )
   {
     const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
-    const auto character_id( player_modell.get( "character_id" ) );
+    const auto character_id( player_modell.get( yarrr::model::character_id ) );
     return services->modell_container.create_with_id_if_needed( "character", character_id );
   }
 
   It( creates_the_character_with_the_same_name_as_the_player )
   {
-    AssertThat( character_modell_of( player_name ).get( "name" ), Equals( player_name ) );
+    AssertThat( character_modell_of( player_name ).get( yarrr::model::name ), Equals( player_name ) );
   }
 
   It( does_not_create_a_new_character_if_it_existed_before )
   {
-    AssertThat( character_modell_of( another_player_name ).get( "id" ), Equals( original_character_id_of_another_player ) );
+    AssertThat( character_modell_of( another_player_name ).get( yarrr::model::id ), Equals( original_character_id_of_another_player ) );
   }
 
   void assert_nth_model_synchronized_with_id( size_t n, const std::string& category, const std::string& id )
@@ -261,7 +271,7 @@ Describe( a_player )
   {
     AssertThat( services->modell_container.exists( "player", player_name ), Equals( true ) );
     const auto& player_modell( services->modell_container.create_with_id_if_needed( "player", player_name ) );
-    const auto& assigned_id( player_modell.get( category + "_id" ) );
+    const auto& assigned_id( player_modell.get( assigned_id_key_from( category ) ) );
     AssertThat( services->modell_container.exists( category, assigned_id ), Equals( true ) );
     return services->modell_container.create_with_id_if_needed( category, assigned_id );
   }
@@ -269,7 +279,7 @@ Describe( a_player )
   It( creates_the_permanent_object_with_type_player_controlled )
   {
     const auto& assigned_object( get_assigned_modell_of_category( "object" ) );
-    AssertThat( assigned_object.get( "type" ), Equals( "player_controlled" ) );
+    AssertThat( assigned_object.get( yarrr::model::object_type ), Equals( "player_controlled" ) );
   }
 
   It( sends_mission_object_to_the_player_when_updated )
@@ -302,7 +312,7 @@ Describe( a_player )
     yarrr::Object new_ship;
     player->player.assign_object( new_ship );
     const auto& permanent_object( get_assigned_modell_of_category( "object" ) );
-    AssertThat( permanent_object.get( "realtime_object_id" ), Equals( std::to_string( new_ship.id() ) ) );
+    AssertThat( permanent_object.get( yarrr::model::realtime_object_id ), Equals( std::to_string( new_ship.id() ) ) );
   }
 
   It ( executes_commands_with_the_command_handler )

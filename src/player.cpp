@@ -19,7 +19,7 @@ namespace
 yarrr::Hash&
 assign_new_modell_if_needed_to( yarrr::Hash& player_model, const std::string& category )
 {
-  const std::string category_id_key{ category + "_id" };
+  const std::string category_id_key{ "_" + category + "_id" };
   if ( player_model.has( category_id_key ) )
   {
     auto assigned_modell_id( player_model[ category_id_key ].get() );
@@ -29,7 +29,7 @@ assign_new_modell_if_needed_to( yarrr::Hash& player_model, const std::string& ca
   }
 
   auto& assigned_modell( the::ctci::service< yarrr::ModellContainer >().create( category ) );
-  player_model[ category_id_key ] = assigned_modell.get( "id" );
+  player_model[ category_id_key ] = assigned_modell.get( yarrr::model::id );
   return assigned_modell;
 }
 
@@ -37,7 +37,7 @@ yarrr::Hash&
 create_character_model_if_needed_for(  yarrr::Hash& player_model )
 {
   auto& character_model( assign_new_modell_if_needed_to( player_model, "character" ) );
-  character_model[ "name" ] = player_model.get( "id" );
+  character_model[ yarrr::model::name ] = player_model.get( yarrr::model::id );
   return character_model;
 }
 
@@ -45,7 +45,7 @@ yarrr::Hash&
 create_permanent_object_if_needed_for(  yarrr::Hash& player_model )
 {
   auto& object_model( assign_new_modell_if_needed_to( player_model, "object" ) );
-  object_model[ "type" ] = "player_controlled";
+  object_model[ yarrr::model::object_type ] = "player_controlled";
   return object_model;
 }
 
@@ -71,7 +71,7 @@ Player::Player(
   , m_permanent_object_model( create_permanent_object_if_needed_for( m_player_model ) )
   , m_observers()
 {
-  m_player_model[ "availability" ] = "online";
+  m_player_model[ yarrr::model::availability ] = "online";
   connection_wrapper.register_listener< yarrr::ChatMessage >(
       std::bind( &Player::handle_chat_message, this, std::placeholders::_1 ) );
 
@@ -103,7 +103,7 @@ Player::synchronize_modells()
 Player::~Player()
 {
   m_observers.clear();
-  m_player_model[ "availability" ] = "offline";
+  m_player_model[ yarrr::model::availability ] = "offline";
 }
 
 void
@@ -151,7 +151,7 @@ Player::assign_object( yarrr::Object& object )
   }
 
   m_current_object = &object;
-  m_permanent_object_model[ "realtime_object_id" ] = std::to_string( object.id() );
+  m_permanent_object_model[ yarrr::model::realtime_object_id ] = std::to_string( object.id() );
   send( yarrr::Command( { yarrr::Protocol::object_assigned, std::to_string( object.id() ) } ).serialize() );
   thelog( yarrr::log::debug )( "Assigning object to user.", object.id(), name );
   m_connection_wrapper.register_dispatcher( object.dispatcher );

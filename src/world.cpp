@@ -45,14 +45,14 @@ synchronize_realtime_and_permanent_objects(
     yarrr::Object& realtime,
     yarrr::Hash& permanent )
 {
-  permanent[ "realtime_object_id" ] = std::to_string( realtime.id() );
+  permanent[ yarrr::model::realtime_object_id ] = std::to_string( realtime.id() );
   auto& physical_parameters( yarrr::component_of< yarrr::PhysicalBehavior >( realtime ).physical_parameters );
   physical_parameters.coordinate.x = string_to< yarrr::Coordinate::type >(
-      has_key_or( permanent, "x", "0" ) );
+      has_key_or( permanent, yarrr::model::hidden_x, "0" ) );
   physical_parameters.coordinate.y = string_to< yarrr::Coordinate::type >(
-      has_key_or( permanent, "y", "0" ) );
+      has_key_or( permanent, yarrr::model::hidden_y, "0" ) );
   physical_parameters.angular_velocity = string_to< yarrr::Angle >(
-      has_key_or( permanent, "angular_velocity", "0" ) );
+      has_key_or( permanent, yarrr::model::hidden_angular_velocity, "0" ) );
 }
 
 
@@ -64,12 +64,12 @@ create_permanent_objects( yarrr::ObjectContainer& realtime_objects )
   for ( const auto& object : objects )
   {
     auto& object_model( *object.second );
-    if ( object_model.has( "type" ) && object_model.get( "type" ) == "player_controlled" )
+    if ( object_model.has( yarrr::model::object_type ) && object_model.get( yarrr::model::object_type ) == yarrr::model::player_controlled )
     {
       continue;
     }
 
-    const auto ship_type( has_key_or( object_model, "ship_type", "ship" ) );
+    const auto ship_type( has_key_or( object_model, yarrr::model::ship_type, "ship" ) );
     yarrr::Object::Pointer realtime_object( the::ctci::service< yarrr::ObjectFactory >().create_a( ship_type ) );
     synchronize_realtime_and_permanent_objects( *realtime_object, object_model );
     realtime_objects.add_object( std::move( realtime_object ) );

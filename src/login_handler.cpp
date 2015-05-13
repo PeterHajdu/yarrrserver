@@ -9,7 +9,6 @@
 namespace
 {
 
-const std::string auth_token_field_name( "auth_token" );
 const std::string login_error_message( "Unable to log in.  Please restart the client with the --username command line parameter.  If you are unable to solve the issue send an email to info@yarrrthegame.com" );
 const std::string invalid_username_message( "Invalid username.  Username must not contain the following characters: space" );
 const std::string database_error( "There seems to be a problem with the database, please notify: info@yarrrthegame.com" );
@@ -96,7 +95,7 @@ LoginHandler::handle_registration_request( const yarrr::Command& request )
 
   auto& player( m_modells.create_with_id_if_needed( "player", m_player_id ) );
   const auto& auth_token( request.parameters()[ 1 ] );
-  player[ auth_token_field_name ] = auth_token;
+  player[ yarrr::model::auth_token ] = auth_token;
 
   m_dispatcher.dispatch(
       PlayerLoggedIn( m_connection_wrapper, m_id, m_player_id ) );
@@ -145,7 +144,7 @@ LoginHandler::handle_authentication_response( const yarrr::Command& response ) c
     return;
   }
 
-  const auto auth_token( m_modells.create_with_id_if_needed( "player", m_player_id ).get( auth_token_field_name ) );
+  const auto auth_token( m_modells.create_with_id_if_needed( "player", m_player_id ).get( yarrr::model::auth_token ) );
 
   auto expected_response( yarrr::auth_hash( m_challenge + auth_token ) );
   if ( response.parameters().back() != expected_response )

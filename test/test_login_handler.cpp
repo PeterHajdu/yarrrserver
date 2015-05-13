@@ -58,13 +58,13 @@ Describe( a_login_handler )
     AssertThat( services->modell_container.exists( "player", username ), Equals( true ) );
 
     const auto& player( services->modell_container.create_with_id_if_needed( "player", username ) );
-    AssertThat( player.get( "auth_token" ), Equals( auth_token_sent_by_client ) );
+    AssertThat( player.get( yarrr::model::auth_token ), Equals( auth_token_sent_by_client ) );
   }
 
   void set_up_player_modell()
   {
     auto& player( services->modell_container.create_with_id_if_needed( "player", username ) );
-    player[ "auth_token" ] = original_auth_token;
+    player[ yarrr::model::auth_token ] = original_auth_token;
   }
 
   It( does_not_dispatch_player_logged_in_after_registration_request_for_existing_user )
@@ -95,7 +95,7 @@ Describe( a_login_handler )
     connection->wrapper.dispatch( registration_request );
 
     const auto& player( services->modell_container.create_with_id_if_needed( "player", username ) );
-    AssertThat( player.get( "auth_token" ), Equals( original_auth_token ) );
+    AssertThat( player.get( yarrr::model::auth_token ), Equals( original_auth_token ) );
   }
 
   It( does_not_dispatch_logged_in_for_malformed_registratin_requests )
