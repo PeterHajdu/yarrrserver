@@ -258,7 +258,6 @@ Describe( a_player )
 
   It ( sends_permanent_object_model_to_the_player )
   {
-    const auto& character_model( character_model_of( player_name ) );
     assert_nth_model_synchronized_with_id( 2, "object", assigned_object_id() );
   }
 
