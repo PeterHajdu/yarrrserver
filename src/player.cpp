@@ -42,9 +42,9 @@ create_character_model_if_needed_for(  yarrr::Hash& player_model )
 }
 
 yarrr::Hash&
-create_permanent_object_if_needed_for(  yarrr::Hash& player_model )
+create_permanent_object_if_needed_for(  yarrr::Hash& character_model )
 {
-  auto& object_model( assign_new_modell_if_needed_to( player_model, "object" ) );
+  auto& object_model( assign_new_modell_if_needed_to( character_model, "object" ) );
   object_model[ yarrr::model::object_type ] = "player_controlled";
   return object_model;
 }
@@ -68,7 +68,7 @@ Player::Player(
   , m_command_handler( command_handler )
   , m_player_model( the::ctci::service< yarrr::ModellContainer >().create_with_id_if_needed( "player", name ) )
   , m_character_model( create_character_model_if_needed_for( m_player_model ) )
-  , m_permanent_object_model( create_permanent_object_if_needed_for( m_player_model ) )
+  , m_permanent_object_model( create_permanent_object_if_needed_for( m_character_model ) )
   , m_observers()
 {
   m_player_model[ yarrr::model::availability ] = "online";
